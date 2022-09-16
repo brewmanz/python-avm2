@@ -2,6 +2,27 @@ Adobe Flash SWF file parser and AVM2 virtual machine implementation in pure Pyth
 
 Development is still ongoing.
 
+## To get the thing up and running after cloning repository (brewmanz with Ubuntu 20.04, python 3.8)
+
+Run the following from top level:
+
+```
+python setup.py build           # to fix error: ModuleNotFoundError: No module named 'avm2'
+sudo python setup.py install    # to fix error: ModuleNotFoundError: No module named 'avm2'
+pip install pytest              # to get some tests running
+pip install testdata            # to fix error: ModuleNotFoundError: No module named 'testdata'
+#sudo apt install python-pytest # to fix tests not being able to run #### WRONG VERSION
+sudo apt upgrade python3-pytest # to fix tests not being able to run
+
+pytest-3                        # runs all test; one failure: NotImplementedError: ConstructProp(index=68, arg_count=0
+```
+
+# unable to run from ./tests
+```
+python conftest.py            # error: ModuleNotFoundError: No module named 'unittest._log'
+
+```
+
 ## Assumptions
 
 - I just needed to run a particular SWF and not to implement a full-featured virtual machine.
@@ -97,11 +118,11 @@ perforce.
 
 
 U30 - This is a 30 bit integer value encoded with a variable number of bytes to save space.
-All U30's are encoded as 1-5 bytes depending on the value (larger values need more space).  
+All U30's are encoded as 1-5 bytes depending on the value (larger values need more space).
 The encoding method is if the hi bit in the current byte is set, then the next byte is also
 part of the value.  Each bit in a byte contributes 7 bits to the value, with the hi bit telling
-us whether to use the next byte, or if this is the last byte for the value.  This enables us to 
-use 30 bit numbers for everything, but still not take up enormous amounts of space.     
+us whether to use the next byte, or if this is the last byte for the value.  This enables us to
+use 30 bit numbers for everything, but still not take up enormous amounts of space.
 
 If more than 30 nonzero bits are present for a U30 field, a verify error will occur.
 
@@ -168,7 +189,7 @@ ConstantNamespace {
 }
 
 ConstantNamespaceSet {
-   U30 namespace_count  
+   U30 namespace_count
    U30[namespace_count] // CONSTANT_Namespace
 }
 
@@ -181,19 +202,19 @@ ConstantMultiname {
       }
       kind=9,14 { // CONSTANT_Multiname, CONSTANT_MultinameA
          U30 name_index                    // CONSTANT_Utf8  simple name.  0=AnyName wildcard
-         U30 namespace_set_index           
+         U30 namespace_set_index
       }
       kind=15,16 { // CONSTANT_RTQname + CONSTANT_RTQnameA
          U30 name_index				// CONSTANT_utf8, 0=AnyName wildcard
       }
-      kind=27 { // CONSTANT_MultinameL	
-	 U30 namespace_set_index	
+      kind=27 { // CONSTANT_MultinameL
+	 U30 namespace_set_index
       kind=17,18 // CONSTANT_RTQnameL + CONSTANT_RTQnameLA
    }
 }
 
 Traits {
-    U30 count              
+    U30 count
     Trait[count] {
 	    U30 name_index                     // CONSTANT_QName
         U8  kind                           // hi 4 bits are flags, 0x04: (1=has_metadata, 0=no metadata)
@@ -231,7 +252,7 @@ MetadataInfo {
     U30 name_index                         // CONSTANT_utf8
     U30 values_count                       // # of values in this metadata
     U30 keys[values_count]                 // CONSTANT_utf8, 0 = keyless
-    U30 values[values_count]               // CONSTANT_utf8 
+    U30 values[values_count]               // CONSTANT_utf8
 }
 
 InstanceInfo {
@@ -264,7 +285,7 @@ MethodInfo {
     U30 param_types[param_count]	  // CONSTANT_Multiname, 0=any type (*)
     U30 name_index                    // 0=no name.
     // 1=need_arguments, 2=need_activation, 4=need_rest 8=has_optional 16=ignore_rest, 32=explicit, 64=setsdxns, 128=has_paramnames
-    U8 flags                          
+    U8 flags
     U30 optional_count                // if has_optional
     ValueKind[optional_count]         // if has_optional
     U30 param_names[param_count]      // if has_paramnames
@@ -275,7 +296,7 @@ ValueKind {
     U8 value_kind     // the kind indicating which cpool the value is in
 }
 
-// A MethodBody describes the method implementation.  
+// A MethodBody describes the method implementation.
 // not required for native methods or interface methods.
 MethodBody {
 	U30 method_info
