@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Optional, List, Union, NewType
 
+from colorama import Fore, Style
+
 from avm2.abc.enums import (
     ClassFlags,
     ConstantKind,
@@ -125,6 +127,21 @@ class ASMultiname:
         assert self.namespace_index
         assert self.name_index
         namespace = constant_pool.namespaces[self.namespace_index]
+        if not namespace.name_index:
+          print(f'type(self.namespace_index)={type(self.namespace_index)}, self.namespace_index={self.namespace_index}')
+          print(f'type(constant_pool.namespaces)={type(constant_pool.namespaces)}')  #, constant_pool.namespaces={constant_pool.namespaces}')
+          for ns in sorted(constant_pool.namespaces, key=lambda x: x.name_index if x else 0):
+            if ns is None:
+              col = Fore.RED
+            elif ns.name_index == self.namespace_index:
+              col = Fore.GREEN
+            elif abs(ns.name_index - self.namespace_index) < 10:
+              col = Fore.YELLOW
+            else:
+              col = Style.RESET_ALL
+            print(f'{col}type(ns)={type(ns)}, ns={ns}{Style.RESET_ALL}')
+          print(f'type(namespace)={type(namespace)}, namespace={namespace}')
+          print(f'.. about to crash on <assert namespace.name_index> ..')
         assert namespace.name_index
         return f'{constant_pool.strings[namespace.name_index]}.{constant_pool.strings[self.name_index]}'.strip('.')
 
