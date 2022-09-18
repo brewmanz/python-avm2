@@ -122,12 +122,16 @@ class ASMultiname:
         else:
             assert False, 'unreachable code'
 
+    def DEBUG_Q_N(self, constant_pool: ASConstantPool, ns_ix) -> str:
+      ns = constant_pool.namespaces[ns_ix]
+      return f'{constant_pool.strings[ns.name_index]}##.##{constant_pool.strings[self.name_index]}'.strip('.')
+
     def qualified_name(self, constant_pool: ASConstantPool) -> str:
         assert self.kind == MultinameKind.Q_NAME, self.kind
         assert self.namespace_index
         assert self.name_index
         namespace = constant_pool.namespaces[self.namespace_index]
-        if not namespace.name_index:
+        if not namespace.name_index: # this will become as assert failure; grab some debug info
           print(f'type(self.namespace_index)={type(self.namespace_index)}, self.namespace_index={self.namespace_index}')
           print(f'type(constant_pool.namespaces)={type(constant_pool.namespaces)}')  #, constant_pool.namespaces={constant_pool.namespaces}')
           for ns in sorted(constant_pool.namespaces, key=lambda x: x.name_index if x else 0):
@@ -139,7 +143,8 @@ class ASMultiname:
               col = Fore.YELLOW
             else:
               col = Style.RESET_ALL
-            print(f'{col}type(ns)={type(ns)}, ns={ns}{Style.RESET_ALL}')
+            qn = ASMultiname.DEBUG_Q_N(self, constant_pool, self.namespace_index)
+            print(f'{col}type(ns)={type(ns)}, ns={ns}{Style.RESET_ALL}, qn={qn}')
           print(f'type(namespace)={type(namespace)}, namespace={namespace}')
           print(f'.. about to crash on <assert namespace.name_index> ..')
         assert namespace.name_index

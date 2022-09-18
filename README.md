@@ -14,13 +14,8 @@ pip install testdata            # to fix error: ModuleNotFoundError: No module n
 #sudo apt install python-pytest # to fix tests not being able to run #### WRONG VERSION
 sudo apt upgrade python3-pytest # to fix tests not being able to run
 
+sudo python setup.py install    # to do make and install
 pytest-3                        # runs all test; one failure: NotImplementedError: ConstructProp(index=68, arg_count=0
-```
-
-# unable to run from ./tests
-```
-python conftest.py            # error: ModuleNotFoundError: No module named 'unittest._log'
-
 ```
 
 ## Assumptions
