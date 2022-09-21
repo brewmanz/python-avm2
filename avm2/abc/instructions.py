@@ -181,9 +181,26 @@ class Construct(Instruction):
 
 
 @instruction(74)
-class ConstructProp(Instruction):
-    index: u30
+class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, value
+    index: u30 # must be an index into the multiname constant pool.
+    # If the multiname at that index is a runtime multiname the name and/or namespace will also appear on the stack
+    # so that the multiname can be constructed correctly at runtime.
     arg_count: u30
+    """
+    TODO add proper code
+    """
+    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+      print(f'i={self.index} a#={self.arg_count}')
+      argN=[]
+      for ix in range(self.arg_count)[::-1]:
+        theArg = environment.operand_stack.pop()
+        print(f'arg[{ix}]={theArg}')
+        argN.insert(0, theArg)
+      theName = environment.operand_stack.pop()
+      theNS = environment.operand_stack.pop()
+      theObj = environment.operand_stack.pop()
+      theValue = '#TODO#'
+      environment.operand_stack.append(theValue)
 
 
 @instruction(73)
