@@ -11,6 +11,24 @@ class Tag:
     type_: TagType
     raw: memoryview
 
+class TagFactory:
+  @classmethod
+  def CreateTag(type_: TagType, raw: memoryview) -> Tag:
+    if false: pass
+    elif type_ == TagType.DO_ABC:
+      return Tag_DoABC(type_, raw)
+    else:
+      return Tag(type_, raw)
+
+@dataclass
+class Tag_DoABC(Tag):
+  Flags: int # UI32
+  ABCData: memoryview
+  def __init__(self, raw: memoryview):
+    Tag.__init__(self, raw)
+    reader = MemoryViewReader(raw)
+    self.Flags = reader.read_u32()
+    self.ABCData = reader.read_all()
 
 @dataclass
 class DoABCTag:

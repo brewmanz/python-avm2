@@ -12,8 +12,9 @@ from avm2.abc.enums import MultinameKind
 
 
 def read_instruction(reader: MemoryViewReader) -> Instruction:
+    opcode: int = reader.read_u8()
     # noinspection PyCallingNonCallable
-    return opcode_to_instruction[reader.read_u8()](reader)
+    return opcode_to_instruction[opcode](opcode, reader)
 
 
 u8 = NewType('u8', int)
@@ -30,9 +31,11 @@ class Instruction:
         uint.__name__: MemoryViewReader.read_u32,
         s24.__name__: MemoryViewReader.read_s24,
     }
-
-    def __init__(self, reader: MemoryViewReader):
+    opcode: int
+    def __init__(self, opcode: int, reader: MemoryViewReader):
+        self.opcode = opcode
         for field in fields(self):
+            if field.name == 'opcode': continue
             setattr(self, field.name, self.readers[field.type](reader))
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment) -> Optional[int]:
@@ -55,15 +58,14 @@ def instruction(opcode: int) -> Callable[[], Type[T]]:
 # ----------------------------------------------------------------------------------------------------------------------
 
 @instruction(160)
-class Add(Instruction):
+class Add(Instruction): # …, value1, value2 => …, value3
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
         value_1 = environment.operand_stack.pop()
         environment.operand_stack.append(value_1 + value_2)
 
-
 @instruction(197)
-class AddInteger(Instruction):
+class AddInteger(Instruction): # …, value1, value2 => …, value3
     """
     Pop value1 and value2 off of the stack and convert them to int values using the ToInt32
     algorithm (ECMA-262 section 9.5). Add the two int values and push the result onto the
@@ -107,36 +109,36 @@ class BitXor(Instruction):
 
 
 @instruction(65)
-class Call(Instruction):
+class Call(Instruction): # …, function, receiver, arg1, arg2, ..., argn => …, value
     arg_count: u30
 
 
 @instruction(67)
-class CallMethod(Instruction):
+class CallMethod(Instruction): # …, receiver, arg1, arg2, ..., argn => …, value
     index: u30
     arg_count: u30
 
 
 @instruction(70)
-class CallProperty(Instruction):
+class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, value
     index: u30
     arg_count: u30
 
 
 @instruction(76)
-class CallPropLex(Instruction):
+class CallPropLex(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, value
     index: u30
     arg_count: u30
 
 
 @instruction(79)
-class CallPropVoid(Instruction):
+class CallPropVoid(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     index: u30
     arg_count: u30
 
 
 @instruction(68)
-class CallStatic(Instruction):
+class CallStatic(Instruction): # …, receiver, arg1, arg2, ..., argn => …, value
     index: u30
     arg_count: u30
 
@@ -195,7 +197,7 @@ class ConvertToBoolean(Instruction):
 
 
 @instruction(115)
-class ConvertToInteger(Instruction):
+class ConvertToInteger(Instruction): # …, value => …, intvalue
     """
     `value` is popped off of the stack and converted to an integer. The result, `intvalue`, is pushed
     onto the stack. This uses the `ToInt32` algorithm, as described in ECMA-262 section 9.5, to
@@ -207,7 +209,7 @@ class ConvertToInteger(Instruction):
 
 
 @instruction(117)
-class ConvertToDouble(Instruction):
+class ConvertToDouble(Instruction): # …, value => …, doublevalue
     """
     `value` is popped off of the stack and converted to a double. The result, `doublevalue`, is pushed
     onto the stack. This uses the `ToNumber` algorithm, as described in ECMA-262 section 9.3,
@@ -277,7 +279,7 @@ class DeleteProperty(Instruction):
 
 
 @instruction(163)
-class Divide(Instruction):
+class Divide(Instruction): # …, value1, value2 => …, value3
     """
     Pop `value1` and `value2` off of the stack, convert `value1` and `value2` to `Number` to create
     `value1_number` and `value2_number`. Divide `value1_number` by `value2_number` and push the
@@ -291,7 +293,7 @@ class Divide(Instruction):
 
 
 @instruction(42)
-class Dup(Instruction):
+class Dup(Instruction): # …, value => …, value, value
     """
     Duplicates the top value of the stack, and then pushes the duplicated value onto the stack.
     """
@@ -332,7 +334,7 @@ class FindProperty(Instruction):
 
 
 @instruction(93)
-class FindPropStrict(Instruction):
+class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
     """
     `index` is a `u30` that must be an index into the `multiname` constant pool. If the multiname at
     that index is a runtime multiname the name and/or namespace will also appear on the stack
@@ -385,7 +387,7 @@ class GetGlobalSlot(Instruction):
 
 
 @instruction(96)
-class GetLex(Instruction):
+class GetLex(Instruction): # … => …, obj
     """
     `index` is a `u30` that must be an index into the multiname constant pool. The multiname at
     `index` must not be a runtime multiname, so there are never any optional namespace or name
@@ -422,7 +424,7 @@ class GetLocal(Instruction):
 
 
 @instruction(208)
-class GetLocal0(Instruction):
+class GetLocal0(Instruction): # … => …, value
     """
     `<n>` is the index of a local register. The value of that register is pushed onto the stack.
     """
@@ -432,19 +434,19 @@ class GetLocal0(Instruction):
 
 
 @instruction(209)
-class GetLocal1(Instruction):
+class GetLocal1(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         environment.operand_stack.append(environment.registers[1])
 
 
 @instruction(210)
-class GetLocal2(Instruction):
+class GetLocal2(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         environment.operand_stack.append(environment.registers[2])
 
 
 @instruction(211)
-class GetLocal3(Instruction):
+class GetLocal3(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         environment.operand_stack.append(environment.registers[3])
 
@@ -455,7 +457,7 @@ class GetProperty(Instruction):
 
 
 @instruction(101)
-class GetScopeObject(Instruction):
+class GetScopeObject(Instruction): # … => …, scope
     """
     `index` is an unsigned byte that specifies the index of the scope object to retrieve from the local
     scope stack. `index` must be less than the current depth of the scope stack. The scope at that
@@ -480,7 +482,7 @@ class GetSuper(Instruction):
 
 
 @instruction(176)
-class GreaterEquals(Instruction):
+class GreaterEquals(Instruction): # …, value1, value2 => …, result
     """
     Pop `value1` and `value2` off of the stack. Compute `value1 < value2` using the Abstract
     Relational Comparison Algorithm, as described in ECMA-262 section 11.8.5. If the result of
@@ -515,7 +517,7 @@ class IfEq(Instruction):
 
 
 @instruction(18)
-class IfFalse(Instruction):
+class IfFalse(Instruction): # …, value => …
     """
     Pop value off the stack and convert it to a `Boolean`. If the converted value is `false`, jump the
     number of bytes indicated by `offset`. Otherwise continue executing code from this point.
@@ -544,7 +546,7 @@ class IfLE(Instruction):
 
 
 @instruction(21)
-class IfLT(Instruction):
+class IfLT(Instruction): # …, value1, value2 => …
     """
     `offset` is an `s24` that is the number of bytes to jump if `value1` is less than `value2`.
 
@@ -568,7 +570,7 @@ class IfNGE(Instruction):
 
 
 @instruction(14)
-class IfNGT(Instruction):
+class IfNGT(Instruction): # …, value1, value2 => …
     """
     Compute `value2 < value1` using the abstract relational comparison algorithm in ECMA-262
     section 11.8.5. If the result of the comparison is not `true`, jump the number of bytes
@@ -591,7 +593,7 @@ class IfNLE(Instruction):
 
 
 @instruction(12)
-class IfNLT(Instruction):
+class IfNLT(Instruction): # …, value1, value2 => …
     """
     Compute `value1 < value2` using the abstract relational comparison algorithm in ECMA-262
     section 11.8.5. If the result of the comparison is false, then jump the number of bytes
@@ -704,7 +706,7 @@ class LessThan(Instruction):
 
 
 @instruction(27)
-class LookupSwitch(Instruction):
+class LookupSwitch(Instruction): # …, index => …
     default_offset: s24
     case_offsets: Tuple[s24, ...]
 
@@ -796,7 +798,7 @@ class Not(Instruction):
 
 
 @instruction(41)
-class Pop(Instruction):
+class Pop(Instruction): # …, value => …
     """
     Pops the top value from the stack and discards it.
     """
@@ -811,7 +813,7 @@ class PopScope(Instruction):
 
 
 @instruction(36)
-class PushByte(Instruction):
+class PushByte(Instruction): # … => …, value
     byte_value: u8
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
@@ -819,7 +821,7 @@ class PushByte(Instruction):
 
 
 @instruction(47)
-class PushDouble(Instruction):
+class PushDouble(Instruction): # … => …, value
     """
     `index` is a `u30` that must be an index into the `double` constant pool. The double value at
     `index` in the `double` constant pool is pushed onto the stack.
@@ -832,7 +834,7 @@ class PushDouble(Instruction):
 
 
 @instruction(39)
-class PushFalse(Instruction):
+class PushFalse(Instruction): # … => …, false
     """
     Push the false value onto the stack.
     """
@@ -842,7 +844,7 @@ class PushFalse(Instruction):
 
 
 @instruction(45)
-class PushInteger(Instruction):
+class PushInteger(Instruction): # … => …, value
     """
     `index` is a `u30` that must be an index into the `integer` constant pool. The int value at `index` in
     the integer constant pool is pushed onto the stack.
@@ -870,7 +872,7 @@ class PushNull(Instruction):
 
 
 @instruction(48)
-class PushScope(Instruction):
+class PushScope(Instruction): # …, value => …  ??? # methinks the doc'n is wrong, and s/b … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
         assert value is not None and value is not undefined
@@ -888,7 +890,7 @@ class PushString(Instruction):
 
 
 @instruction(38)
-class PushTrue(Instruction):
+class PushTrue(Instruction): # … => …, true
     """
     Push the `true` value onto the stack.
     """
@@ -913,7 +915,7 @@ class PushWith(Instruction):
 
 
 @instruction(72)
-class ReturnValue(Instruction):
+class ReturnValue(Instruction): # …, return_value => …
     """
     Return from the currently executing method. This returns the top value on the stack.
     `return_value` is popped off of the stack, and coerced to the expected return type of the
@@ -929,7 +931,7 @@ class ReturnValue(Instruction):
 
 
 @instruction(71)
-class ReturnVoid(Instruction):
+class ReturnVoid(Instruction): # … => …
     """
     Return from the currently executing method. This returns the value `undefined`. If the
     method has a return type, then undefined is coerced to that type and then returned.
@@ -950,19 +952,19 @@ class SetLocal(Instruction):
 
 
 @instruction(212)
-class SetLocal0(Instruction):
+class SetLocal0(Instruction): # …, value => …
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         environment.registers[0] = environment.operand_stack.pop()
 
 
 @instruction(213)
-class SetLocal1(Instruction):
+class SetLocal1(Instruction): # …, value => …
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         environment.registers[1] = environment.operand_stack.pop()
 
 
 @instruction(214)
-class SetLocal2(Instruction):
+class SetLocal2(Instruction): # …, value => …
     """
     `<n>` is an index of a local register. The register at that index is set to value, and value is
     popped off the stack.
@@ -973,7 +975,7 @@ class SetLocal2(Instruction):
 
 
 @instruction(215)
-class SetLocal3(Instruction):
+class SetLocal3(Instruction): # …, value => …
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         environment.registers[3] = environment.operand_stack.pop()
 
@@ -1009,7 +1011,7 @@ class Subtract(Instruction):
 
 
 @instruction(198)
-class SubtractInteger(Instruction):
+class SubtractInteger(Instruction): # …, value1, value2 => …, value3
     """
     Pop `value1` and `value2` off of the stack and convert `value1` and `value2` to int to create
     `value1_int` and `value2_int`. Subtract `value2_int` from `value1_int`. Push the result onto the
