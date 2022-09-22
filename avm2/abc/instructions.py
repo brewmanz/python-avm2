@@ -22,21 +22,35 @@ u30 = NewType('u30', int)
 uint = NewType('uint', int)
 s24 = NewType('s24', int)
 
+#__globalInstructionExecuteCount: int = 0
 
 @dataclass
 class Instruction:
+    maxLastNInstructions = 5
     readers: ClassVar[Dict[str, Callable[[MemoryViewReader], Any]]] = {
         u8.__name__: MemoryViewReader.read_u8,
         u30.__name__: MemoryViewReader.read_int,
         uint.__name__: MemoryViewReader.read_u32,
         s24.__name__: MemoryViewReader.read_s24,
     }
+
+    # add some way to track things
+    def tallyProgress(theInstance: Instruction, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+        environment.instructionExecuteCount += 1
+        environment.lastNInstructions.append(f'S#{len(environment.scope_stack)}, O#{len(environment.operand_stack)}, I={type(theInstance).__name__}')
+        if len(environment.lastNInstructions) > Instruction.maxLastNInstructions:
+          del environment.lastNInstructions[0]
+
     opcode: int
     def __init__(self, opcode: int, reader: MemoryViewReader):
         self.opcode = opcode
         for field in fields(self):
             if field.name == 'opcode': continue
             setattr(self, field.name, self.readers[field.type](reader))
+
+    def doExecute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment) -> Optional[int]:
+        self.tallyProgress(machine, environment)
+        return self.execute(machine, environment)
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment) -> Optional[int]:
         raise NotImplementedError(self)
@@ -190,18 +204,31 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     TODO add proper code
     """
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'i={self.index} a#={self.arg_count}')
+      #print(f'i={self.index} a#={self.arg_count}') # e.g. 'i=68 a#=0'
       argN=[]
       for ix in range(self.arg_count)[::-1]:
         theArg = environment.operand_stack.pop()
         print(f'arg[{ix}]={theArg}')
         argN.insert(0, theArg)
-      theName = environment.operand_stack.pop()
-      theNS = environment.operand_stack.pop()
+
+      # TODO is it a runtime multiname?
+      # cf FindPropStrict for some ideas
+
+      isMultinameRuntimeName = False # Add code to determine Name
+      isMultinameRuntimeNS = False # Add code to determine Namespace
+
+      if isMultinameRuntimeName:
+        pass
+        #theName = ???
+
+      if isMultinameRuntimeNS:
+        pass
+        #theNS = ???
+
       theObj = environment.operand_stack.pop()
+
       theValue = '#TODO#'
       environment.operand_stack.append(theValue)
-
 
 @instruction(73)
 class Construct(Instruction):
@@ -348,6 +375,27 @@ class EscXElem(Instruction):
 @instruction(94)
 class FindProperty(Instruction):
     index: u30
+    """
+    TODO add proper code
+    """
+    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+
+      # TODO is it a runtime multiname?
+      # cf FindPropStrict for some ideas
+
+      isMultinameRuntimeName = False # Add code to determine Name
+      isMultinameRuntimeNS = False # Add code to determine Namespace
+
+      if isMultinameRuntimeName:
+        pass
+        #theName = ???
+
+      if isMultinameRuntimeNS:
+        pass
+        #theNS = ???
+
+      theValue = '#TODO#'
+      environment.operand_stack.append(theValue)
 
 
 @instruction(93)
@@ -889,7 +937,7 @@ class PushNull(Instruction):
 
 
 @instruction(48)
-class PushScope(Instruction): # …, value => …  ??? # methinks the doc'n is wrong, and s/b … => …, value
+class PushScope(Instruction): # …, value => …
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
         assert value is not None and value is not undefined
