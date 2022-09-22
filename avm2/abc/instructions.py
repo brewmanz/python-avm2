@@ -23,11 +23,9 @@ u30 = NewType('u30', int)
 uint = NewType('uint', int)
 s24 = NewType('s24', int)
 
-#__globalInstructionExecuteCount: int = 0
-
 @dataclass
 class Instruction:
-    maxLastNInstructions = 5
+    maxlastNInstr = 5
     readers: ClassVar[Dict[str, Callable[[MemoryViewReader], Any]]] = {
         u8.__name__: MemoryViewReader.read_u8,
         u30.__name__: MemoryViewReader.read_int,
@@ -36,26 +34,37 @@ class Instruction:
     }
 
     # add some way to track things
-    def tallyProgress(theInstance: Instruction, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        environment.instructionExecuteCount += 1
-        environment.lastNInstructions.append(f'S#{len(environment.scope_stack)}, O#{len(environment.operand_stack)}, I={type(theInstance).__name__}')
-        if len(environment.lastNInstructions) > Instruction.maxLastNInstructions:
-          del environment.lastNInstructions[0]
+    def tallyProgress(theInstance: Instruction, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment, offsetOfInstruction: int):
+        environment.instrExeCnt += 1
+        environment.lastNInstr.append(f'+{hex(offsetOfInstruction)} S#{len(environment.scope_stack)}, O#{len(environment.operand_stack)}, I={type(theInstance).__name__}')
+        if len(environment.lastNInstr) > Instruction.maxlastNInstr:
+          del environment.lastNInstr[0]
+
+        # any callback?
+        if machine.callbackOnInstructionExecuting is not None:
+          machine.callbackOnInstructionExecuting.ObserveInstructionExecuting(theInstance, machine, environment, offsetOfInstruction)
 
     opcode: int
+
     def __init__(self, opcode: int, reader: MemoryViewReader):
         self.opcode = opcode
         for field in fields(self):
             if field.name == 'opcode': continue
             setattr(self, field.name, self.readers[field.type](reader))
 
-    def doExecute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment) -> Optional[int]:
-        self.tallyProgress(machine, environment)
+    def doExecute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment, offsetOfInstruction: int) -> Optional[int]:
+        self.tallyProgress(machine, environment, offsetOfInstruction)
         return self.execute(machine, environment)
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment) -> Optional[int]:
         raise NotImplementedError(self)
 
+class CallbackOnInstructionExecuting:
+  """
+  Derive your callback listener from here
+  """
+  def ObserveInstructionExecuting(self, theInstruction: Instruction, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment, offsetOfInstruction: int):
+    raise NotImplementedError(F'Someone forgot to derive their listener from here ({self})')
 
 T = TypeVar('T', bound=Instruction)
 opcode_to_instruction: Dict[int, Type[T]] = {}
@@ -273,7 +282,7 @@ class ConstructSuper(Instruction): # …, object, arg1, arg2, ..., argn => …
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
       print(f'If you see this, you need to properly implement {type(self).__name__}', file=sys.stderr)
       # TODO add proper code
-      print(f'a#={self.arg_count}')
+      #print(f'a#={self.arg_count}')
       argN=[]
       for ix in range(self.arg_count)[::-1]:
         theArg = environment.operand_stack.pop()

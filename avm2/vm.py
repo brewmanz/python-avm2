@@ -46,6 +46,9 @@ class VirtualMachine:
             ('flash.utils', 'Dictionary'): ASObject(),
         })  # FIXME: unsure, prototypes again?
 
+        # callbacks
+        self.callbackOnInstructionExecuting: CallbackOnInstructionExecuting = None
+
     # Linking.
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -174,7 +177,8 @@ class VirtualMachine:
         while True:
             try:
                 # FIXME: cache already read instructions.
-                avm2.abc.instructions.read_instruction(reader).doExecute(self, environment)
+                offsetOfInst = reader.position
+                avm2.abc.instructions.read_instruction(reader).doExecute(self, environment, offsetOfInst)
             except ASReturnException as e:
                 return e.return_value
             except ASJumpException as e:
@@ -241,8 +245,8 @@ class MethodEnvironment:
     registers: List[Any]  # FIXME: should be ASObject's too.
     scope_stack: List[ASObject]
     operand_stack: List[Any] = field(default_factory=list)  # FIXME: should be ASObject's too.
-    lastNInstructions: List(str) = field(default_factory=list)
-    instructionExecuteCount: int = 0
+    lastNInstr: List(str) = field(default_factory=list)
+    instrExeCnt: int = 0
 
 def execute_tag(tag: Tag) -> VirtualMachine:
     """
