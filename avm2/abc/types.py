@@ -132,6 +132,7 @@ class ASMultiname:
         assert self.name_index
         namespace = constant_pool.namespaces[self.namespace_index]
         if not namespace.name_index: # this will become as assert failure; grab some debug info
+          print('(from ../avm2/abc/type.py qualified_name(), having NOT found namespace.name_index ...)')
           print(f'type(self.namespace_index)={type(self.namespace_index)}, self.namespace_index={self.namespace_index}')
           print(f'type(constant_pool.namespaces)={type(constant_pool.namespaces)}')  #, constant_pool.namespaces={constant_pool.namespaces}')
           for ns in sorted(constant_pool.namespaces, key=lambda x: x.name_index if x else 0):
