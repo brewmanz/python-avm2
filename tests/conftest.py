@@ -52,19 +52,19 @@ def raw_do_abc_tag_heroes(swf_2_heroes: memoryview) -> Tag:
 
 
 @fixture(scope='session')
-def do_abc_tag(raw_do_abc_tag_heroes: Tag) -> DoABCTag:
+def do_abc_tag_heroes(raw_do_abc_tag_heroes: Tag) -> DoABCTag:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     return DoABCTag(raw_do_abc_tag_heroes.raw)
 
 
 @fixture(scope='session')
-def abc_file(do_abc_tag: DoABCTag) -> ABCFile:
+def abc_file_heroes(do_abc_tag_heroes: DoABCTag) -> ABCFile:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    return ABCFile(MemoryViewReader(do_abc_tag.abc_file))
+    return ABCFile(MemoryViewReader(do_abc_tag_heroes.abc_file))
 
 
 @fixture(scope='session')
-def machine(abc_file: ABCFile) -> VirtualMachine:
+def machine(abc_file_heroes: ABCFile) -> VirtualMachine:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    return VirtualMachine(abc_file)
+    return VirtualMachine(abc_file_heroes)
 

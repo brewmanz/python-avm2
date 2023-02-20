@@ -20,7 +20,7 @@ def test_parse_swf_4_EpicGame(swf_4_EpicGame: memoryview):
     assert len(list(parse_swf(swf_4_EpicGame))) == 9
 
 
-def test_do_abc_tag_2(do_abc_tag: DoABCTag):
-    assert do_abc_tag.flags == DoABCTagFlags.LAZY_INITIALIZE
-    assert do_abc_tag.name == 'merged'
-    assert do_abc_tag.abc_file
+def test_do_abc_tag_2_heroes(do_abc_tag_heroes: DoABCTag):
+    assert do_abc_tag_heroes.flags == DoABCTagFlags.LAZY_INITIALIZE
+    assert do_abc_tag_heroes.name == 'merged'
+    assert do_abc_tag_heroes.abc_file

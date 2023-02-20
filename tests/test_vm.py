@@ -10,9 +10,9 @@ def test_execute_tag(raw_do_abc_tag_heroes: Tag):
     execute_tag(raw_do_abc_tag_heroes)
 
 
-def test_execute_do_abc_tag(do_abc_tag: DoABCTag):
+def test_execute_do_abc_tag_heroes(do_abc_tag_heroes: DoABCTag):
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    execute_do_abc_tag(do_abc_tag)
+    execute_do_abc_tag(do_abc_tag_heroes)
 
 
 def test_lookup_class(machine: VirtualMachine):
