@@ -5,9 +5,9 @@ import inspect, sys
 
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
 
-def test_execute_tag(raw_do_abc_tag: Tag):
+def test_execute_tag(raw_do_abc_tag_heroes: Tag):
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    execute_tag(raw_do_abc_tag)
+    execute_tag(raw_do_abc_tag_heroes)
 
 
 def test_execute_do_abc_tag(do_abc_tag: DoABCTag):

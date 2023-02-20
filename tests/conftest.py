@@ -16,7 +16,7 @@ base_path = Path(tests.__file__).parent.parent / 'data'
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
 
 @fixture(scope='session')
-def swf_1() -> bytes:
+def swf_1_HexChunk() -> bytes:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     return bytes.fromhex(
         '465753034F0000007800055F00000FA000000C01004302FFFFFFBF0023000000'
@@ -26,35 +26,35 @@ def swf_1() -> bytes:
 
 
 @fixture(scope='session')
-def swf_2() -> bytes:
+def swf_2_heroes() -> bytes:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     return (base_path / 'heroes.swf').read_bytes()
 
 
 @fixture(scope='session')
-def swf_3() -> bytes:
+def swf_3_Farm() -> bytes:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     return (base_path / 'Farm_d_13_9_2_2198334.swf').read_bytes()
 
 
 @fixture(scope='session')
-def swf_4() -> bytes:
+def swf_4_EpicGame() -> bytes:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     return (base_path / 'EpicGame.swf').read_bytes()
 
 
 @fixture(scope='session')
-def raw_do_abc_tag(swf_2: memoryview) -> Tag:
+def raw_do_abc_tag_heroes(swf_2_heroes: memoryview) -> Tag:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    for tag in parse_swf(swf_2):
+    for tag in parse_swf(swf_2_heroes):
         if tag.type_ == TagType.DO_ABC:
             return tag
 
 
 @fixture(scope='session')
-def do_abc_tag(raw_do_abc_tag: Tag) -> DoABCTag:
+def do_abc_tag(raw_do_abc_tag_heroes: Tag) -> DoABCTag:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    return DoABCTag(raw_do_abc_tag.raw)
+    return DoABCTag(raw_do_abc_tag_heroes.raw)
 
 
 @fixture(scope='session')

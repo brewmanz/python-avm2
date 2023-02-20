@@ -25,7 +25,7 @@ s24 = NewType('s24', int)
 
 @dataclass
 class Instruction:
-    maxlastNInstr = 5
+    maxlastNInstr = 5 # maximum number of previous instructions to track
     readers: ClassVar[Dict[str, Callable[[MemoryViewReader], Any]]] = {
         u8.__name__: MemoryViewReader.read_u8,
         u30.__name__: MemoryViewReader.read_int,
