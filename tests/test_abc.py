@@ -4,8 +4,10 @@ from avm2.abc.instructions import Instruction, read_instruction
 from avm2.abc.types import ABCFile, ASMethodBody
 from avm2.io import MemoryViewReader
 
+import inspect
 
-def test_abc_file(abc_file_heroes: ABCFile):
+def test_abc_file_heroes(abc_file_heroes: ABCFile):
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     assert abc_file_heroes.major_version == 46
     assert abc_file_heroes.minor_version == 16
     assert len(abc_file_heroes.constant_pool.integers) == 463

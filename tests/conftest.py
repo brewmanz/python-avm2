@@ -64,7 +64,7 @@ def abc_file_heroes(do_abc_tag_heroes: DoABCTag) -> ABCFile:
 
 
 @fixture(scope='session')
-def machine(abc_file_heroes: ABCFile) -> VirtualMachine:
+def machine_heroes(abc_file_heroes: ABCFile) -> VirtualMachine:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     return VirtualMachine(abc_file_heroes)
 

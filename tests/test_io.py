@@ -1,9 +1,11 @@
 import pytest
+import inspect
 
 from avm2.io import MemoryViewReader
 
 
 def test_memory_view_reader_read():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     reader = MemoryViewReader(b'abc')
     assert reader.read(1) == b'a'
     assert reader.read(2) == b'bc'
@@ -11,10 +13,12 @@ def test_memory_view_reader_read():
 
 
 def test_memory_view_reader_skip():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     assert MemoryViewReader(b'abc').skip(1) == 1
 
 
 def test_memory_view_reader_read_all():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     reader = MemoryViewReader(b'abc')
     reader.skip(1)
     assert reader.read_all() == b'bc'
@@ -22,14 +26,17 @@ def test_memory_view_reader_read_all():
 
 
 def test_memory_view_reader_read_u8():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     assert MemoryViewReader(b'\x0A').read_u8() == 0x0A
 
 
 def test_memory_view_reader_read_u16():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     assert MemoryViewReader(b'WS').read_u16() == 0x5357
 
 
 def test_memory_view_reader_read_u32():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     assert MemoryViewReader(b'\x0D\x0C\x0B\x0A').read_u32() == 0x0A0B0C0D
 
 
@@ -38,10 +45,12 @@ def test_memory_view_reader_read_u32():
     (b'\xFF\xFF\xFF', -1),
 ])
 def test_memory_view_reader_read_s24(bytes_: bytes, expected: int):
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     assert MemoryViewReader(bytes_).read_s24() == expected
 
 
 def test_memory_view_reader_read_until():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     reader = MemoryViewReader(b'ABCDE')
     reader.skip(1)
     assert reader.read_until(ord('D')) == b'BC'
@@ -49,6 +58,7 @@ def test_memory_view_reader_read_until():
 
 
 def test_memory_view_reader_read_string():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     assert MemoryViewReader(b'AB\x00CD').read_string() == 'AB'
 
 
@@ -63,10 +73,12 @@ def test_memory_view_reader_read_string():
     (b'\x0F', False, 15),
 ])
 def test_memory_view_reader_read_int(bytes_: bytes, unsigned: bool, value: int):
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     assert MemoryViewReader(bytes_).read_int(unsigned) == value
 
 
 def test_is_eof():
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     reader = MemoryViewReader(b'ABCDE')
     assert not reader.is_eof()
     reader.read(4)
