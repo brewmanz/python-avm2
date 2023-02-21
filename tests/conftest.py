@@ -16,37 +16,39 @@ from avm2.vm import VirtualMachine
 base_path = Path(tests.__file__).parent.parent / 'data'
 
 @fixture(scope='session')
-def swf_EvonyClient(ver: str) -> bytes:
+# def swf_EvonyClient_N(ver: str) -> bytes: # somehow maybe do it like this, but so it works!
+def swf_EvonyClient_N() -> bytes:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    if ver == '1922':
-      return (base_path / 'EvonyClient1922.swf').read_bytes()
+    # if ver == '1922':
+    return (base_path / 'EvonyClient1922.swf').read_bytes()
 
 @fixture(scope='session')
-def raw_do_abc_tag_evonyClient_N(swf_EvonyClient: memoryview, N: int) -> Tag:
+def raw_do_abc_tag_EvonyClient_N(swf_EvonyClient_N: memoryview) -> Tag: # , N: int) -> Tag:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     count = 0
-    for tag in parse_swf(swf_EvonyClient):
+    for tag in parse_swf(swf_EvonyClient_N):
         if tag.type_ == TagType.DO_ABC:
             ++count
-            if count == N:
-              return tag
+            #if count == N:
+              # return tag
+            return tag
 
 @fixture(scope='session')
-def do_abc_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient: Tag, N: int) -> DoABCTag:
+def do_abc_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient_N: Tag) -> DoABCTag: # , N: int) -> DoABCTag:
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    return DoABCTag(raw_do_abc_tag_EvonyClient_N(N).raw)
-
-
-@fixture(scope='session')
-def abc_file_EvonyClient_N(do_abc_tag_EvonyClient: DoABCTag, N: int) -> ABCFile:
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    return ABCFile(MemoryViewReader(do_abc_tag_EvonyClient_N(N).abc_file))
+    return DoABCTag(raw_do_abc_tag_EvonyClient_N.raw)
 
 
 @fixture(scope='session')
-def machine_EvonyClient_N(abc_file_EvonyClient: ABCFile, N: int) -> VirtualMachine:
+def abc_file_EvonyClient_N(do_abc_tag_EvonyClient_N: DoABCTag) -> ABCFile: # , N: int
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
-    return VirtualMachine(abc_file_EvonyClient_N(N))
+    return ABCFile(MemoryViewReader(do_abc_tag_EvonyClient_N.abc_file))
+
+
+@fixture(scope='session')
+def machine_EvonyClient_N(abc_file_EvonyClient_N: ABCFile) -> VirtualMachine: # , N: int) -> VirtualMachine:
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    return VirtualMachine(abc_file_EvonyClient_N)
 
 ####
 

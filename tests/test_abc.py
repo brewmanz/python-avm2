@@ -8,25 +8,27 @@ import inspect
 
 DEBUG = True or False # toggle and/or
 
+
+
 def test_abc_file_heroes(abc_file_heroes: ABCFile):
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     print(f'--==--')
 
-    dr = dir(abc_file_heroes)
-    print(dr)
+    dro = dir(abc_file_heroes)
+    print(dro)
     print(f'--==--')
 
     # for it in dr if it[:2] != '__' and it[-2:] != '__' :
-    for nm in dr:
-      if nm[:2] == '__' or nm[-2:] == '__': continue
-      at = getattr(abc_file_heroes, nm)
-      tp = type(at).__name__
-      if tp == '' : ats = '= !!!'
-      elif tp == 'int' : ats = f'= {at}'
-      elif tp == 'list' : ats = f'#{len(at)}'
-      else: ats = f'= ???'
+    for nam in dro :
+      if nam[:2] == '__' or nam[-2:] == '__': continue
+      att = getattr(abc_file_heroes, nam)
+      typStr = type(att).__name__
+      if typStr == '' : attStr = '= !!!'
+      elif typStr == 'int' : attStr = f'= {att}'
+      elif typStr == 'list' : attStr = f'#{len(att)}'
+      else: attStr = f'= ???'
 
-      print(f'[{nm}]:{tp} {ats}')
+      print(f'[{nam}]:{typStr} {attStr}')
 
 
     print(f'--==--')
