@@ -6,8 +6,34 @@ from avm2.io import MemoryViewReader
 
 import inspect
 
+DEBUG = True or False # toggle and/or
+
 def test_abc_file_heroes(abc_file_heroes: ABCFile):
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'--==--')
+
+    dr = dir(abc_file_heroes)
+    print(dr)
+    print(f'--==--')
+
+    # for it in dr if it[:2] != '__' and it[-2:] != '__' :
+    for nm in dr:
+      if nm[:2] == '__' or nm[-2:] == '__': continue
+      at = getattr(abc_file_heroes, nm)
+      tp = type(at).__name__
+      if tp == '' : ats = '= !!!'
+      elif tp == 'int' : ats = f'= {at}'
+      elif tp == 'list' : ats = f'#{len(at)}'
+      else: ats = f'= ???'
+
+      print(f'[{nm}]:{tp} {ats}')
+
+
+    print(f'--==--')
+
+    # dc = abc_file_heroes.__dict__
+    # print(dc)
+
     assert abc_file_heroes.major_version == 46
     assert abc_file_heroes.minor_version == 16
     assert len(abc_file_heroes.constant_pool.integers) == 463

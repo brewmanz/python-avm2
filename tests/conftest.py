@@ -11,9 +11,44 @@ from avm2.swf.parser import parse_swf
 from avm2.swf.types import DoABCTag, Tag
 from avm2.vm import VirtualMachine
 
+# run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
+
 base_path = Path(tests.__file__).parent.parent / 'data'
 
-# run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
+@fixture(scope='session')
+def swf_EvonyClient(ver: str) -> bytes:
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    if ver == '1922':
+      return (base_path / 'EvonyClient1922.swf').read_bytes()
+
+@fixture(scope='session')
+def raw_do_abc_tag_evonyClient_N(swf_EvonyClient: memoryview, N: int) -> Tag:
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    count = 0
+    for tag in parse_swf(swf_EvonyClient):
+        if tag.type_ == TagType.DO_ABC:
+            ++count
+            if count == N:
+              return tag
+
+@fixture(scope='session')
+def do_abc_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient: Tag, N: int) -> DoABCTag:
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    return DoABCTag(raw_do_abc_tag_EvonyClient_N(N).raw)
+
+
+@fixture(scope='session')
+def abc_file_EvonyClient_N(do_abc_tag_EvonyClient: DoABCTag, N: int) -> ABCFile:
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    return ABCFile(MemoryViewReader(do_abc_tag_EvonyClient_N(N).abc_file))
+
+
+@fixture(scope='session')
+def machine_EvonyClient_N(abc_file_EvonyClient: ABCFile, N: int) -> VirtualMachine:
+    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    return VirtualMachine(abc_file_EvonyClient_N(N))
+
+####
 
 @fixture(scope='session')
 def swf_1_HexChunk() -> bytes:
