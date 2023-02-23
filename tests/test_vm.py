@@ -2,7 +2,12 @@ from avm2.runtime import undefined
 from avm2.swf.types import DoABCTag, Tag
 from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
 import inspect, sys
-import MyGamesHelper as MGH # ln -s ~/git/BDL/Games/Evony/PythonBits/MyGamesHelper.py (in git/python-avm2_AdobeSwfActionScript)
+
+# ln -s ~/git/BDL/Games/Evony/PythonBits/MyGamesHelper.py (in git/python-avm2_AdobeSwfActionScript)
+# ln -s ~/git/BDL/Games/Evony/PythonBits/BrewMaths.py (in git/python-avm2_AdobeSwfActionScript)
+import MyGamesHelper as MGH
+import BrewMaths as BM
+
 #from /home/bryan/git/BDL/Games/Evony/PythonBits/MyGamesHelper import MyGamesHelper as MGH
 
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
@@ -18,15 +23,19 @@ def test_T1100_execute_do_abc_tag_heroes(do_abc_tag_heroes: DoABCTag):
 def test_T1200_lookup_class(machine_heroes: VirtualMachine):
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
     ix = 0
-    for nm in machine_heroes.name_to_class:
-      if IsSignificantBinary(ix): print(f' ## n@c={nm}')
-      ++ix
+    for item in machine_heroes.name_to_class:
+      if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2c={item}')
+      ix += 1
     assert machine_heroes.lookup_class('battle.BattleCore') == 2241
     assert machine_heroes.lookup_class('game.battle.controller.BattleController') == 989
     assert machine_heroes.lookup_class('game.battle.controller.BattleEnemyReward') == 2308
 
 def test_T1300_lookup_method(machine_heroes: VirtualMachine):
     print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    ix = 0
+    for item in machine_heroes.name_to_method:
+      if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2m={item}')
+      ix += 1
     assert machine_heroes.lookup_method('battle.BattleCore.getElementalPenetration') == 24363
     assert machine_heroes.lookup_method('battle.BattleCore.hitrateIntensity') == 24360
 
