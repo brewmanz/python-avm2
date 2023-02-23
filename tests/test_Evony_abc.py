@@ -13,7 +13,7 @@ def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
 
     dro = dir(abc_file_EvonyClient)
     print(dro)
-    print(f'--==--')
+    print(f'--==-- abc_file_EvonyClient')
     # for it in dr if it[:2] != '__' and it[-2:] != '__' :
     for nam in dro :
       if nam[:2] == '__' or nam[-2:] == '__': continue
@@ -27,11 +27,25 @@ def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
 
     dro = dir(abc_file_EvonyClient.constant_pool)
     print(dro)
-    print(f'--==--')
+    print(f'--==-- abc_file_EvonyClient.constant_pool')
     # for it in dr if it[:2] != '__' and it[-2:] != '__' :
     for nam in dro :
       if nam[:2] == '__' or nam[-2:] == '__': continue
       att = getattr(abc_file_EvonyClient.constant_pool, nam)
+      typStr = type(att).__name__
+      if typStr == '' : attStr = '= !!!'
+      elif typStr == 'int' : attStr = f'= {att}'
+      elif typStr == 'list' : attStr = f'#{len(att)}'
+      else: attStr = f'= ???'
+      print(f'[{nam}]:{typStr} {attStr}')
+
+    dro = dir(abc_file_EvonyClient.constant_pool.doubles)
+    print(dro)
+    print(f'--==-- abc_file_EvonyClient.constant_pool.doubles')
+    # for it in dr if it[:2] != '__' and it[-2:] != '__' :
+    for nam in dro :
+      if nam[:2] == '__' or nam[-2:] == '__': continue
+      att = getattr(abc_file_EvonyClient.constant_pool.doubles, nam)
       typStr = type(att).__name__
       if typStr == '' : attStr = '= !!!'
       elif typStr == 'int' : attStr = f'= {att}'

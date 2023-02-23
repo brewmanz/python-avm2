@@ -16,7 +16,7 @@ def test_abc_file_heroes(abc_file_heroes: ABCFile):
 
     dro = dir(abc_file_heroes)
     print(dro)
-    print(f'--==--')
+    print(f'--==-- abc_file_heroes')
 
     # for it in dr if it[:2] != '__' and it[-2:] != '__' :
     for nam in dro :
