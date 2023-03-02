@@ -11,7 +11,7 @@ from avm2.swf.parser import parse_swf
 from avm2.swf.types import DoABCTag, Tag
 from avm2.vm import VirtualMachine
 
-# run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
+# run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages. in ~/git/python-avm2_AdobeSwfActionScript
 
 base_path = Path(tests.__file__).parent.parent / 'data'
 
