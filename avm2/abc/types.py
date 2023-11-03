@@ -113,33 +113,33 @@ class ASMultiname:
             self.namespace_index = reader.read_int()
             self.name_index = reader.read_int()
             if self.name_index == 61:
-              print(f'ASMultiname.__init__; self.kind={self.kind} = Q_NAME[_A]; self.namespace_index={self.namespace_index}, self.name_index={self.name_index}')
+              print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = Q_NAME[_A]; self.namespace_index={self.namespace_index}, self.name_index={self.name_index}')
         elif self.kind in (MultinameKind.RTQ_NAME, MultinameKind.RTQ_NAME_A):
             self.name_index = reader.read_int()
             if self.name_index == 61:
-              print(f'ASMultiname.__init__; self.kind={self.kind} = RTQ_NAME_A; self.name_index={self.name_index}')
+              print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = RTQ_NAME_A; self.name_index={self.name_index}')
         elif self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA):
-            # print(f'= RTQ_NAME_LA')
+            # print(f'@{BM.LINE()} = RTQ_NAME_LA')
             pass
         elif self.kind in (MultinameKind.MULTINAME, MultinameKind.MULTINAME_A):
             self.name_index = reader.read_int()
             self.namespace_set_index = reader.read_int()
             if self.name_index == 61:
-              print(f'ASMultiname.__init__; self.kind={self.kind} = MULTINAME[_A]; self.name_index={self.name_index}, self.namespace_set_index={self.namespace_set_index}')
+              print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = MULTINAME[_A]; self.name_index={self.name_index}, self.namespace_set_index={self.namespace_set_index}')
         elif self.kind in (MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA):
             self.namespace_set_index = reader.read_int()
-            # print(f'= MULTINAME_L[A]; self.namespace_set_index={self.namespace_set_index}')
+            # print(f'@{BM.LINE()} = MULTINAME_L[A]; self.namespace_set_index={self.namespace_set_index}')
         elif self.kind == MultinameKind.TYPE_NAME:
             self.q_name_index = reader.read_int()
             self.type_indices = read_array(reader, MemoryViewReader.read_int)
-            # print(f'= TYPE_NAME; self.q_name_index={self.q_name_index}, self.type_indices={type_indices}')
+            # print(f'@{BM.LINE()} = TYPE_NAME; self.q_name_index={self.q_name_index}, self.type_indices={type_indices}')
         else:
-            print(f'ASMultiname.__init__; self.kind={self.kind} FAILING')
+            print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} FAILING')
             assert False, 'unreachable code'
 
     def DEBUG_Q_N(self, constant_pool: ASConstantPool, ns_ix) -> str:
       ns = constant_pool.namespaces[ns_ix]
-      return f'{constant_pool.strings[ns.name_index]}##.##{constant_pool.strings[self.name_index]}'.strip('.')
+      return f'<#[{ns_ix}]>{constant_pool.strings[ns.name_index]}##.##<#[{self.name_index}]>{constant_pool.strings[self.name_index]}'.strip('.')
 
     def qualified_name(self, constant_pool: ASConstantPool) -> str:
         assert self.kind == MultinameKind.Q_NAME, self.kind
@@ -147,9 +147,9 @@ class ASMultiname:
         assert self.name_index
         namespace = constant_pool.namespaces[self.namespace_index]
         if not namespace.name_index: # this will become an assert failure; grab some debug info
-          print('(from ../avm2/abc/type.py qualified_name(), having NOT found namespace.name_index ...)')
-          print(f'type(self.namespace_index)={type(self.namespace_index)}, self.namespace_index={self.namespace_index}')
-          print(f'type(constant_pool.namespaces)={type(constant_pool.namespaces)}, #={len(constant_pool.namespaces)}')  #, constant_pool.namespaces={constant_pool.namespaces}')
+          print(f'@{BM.LINE()} (from ../avm2/abc/type.py, having NOT found namespace.name_index ...)')
+          print(f'@{BM.LINE()} type(self.namespace_index)={type(self.namespace_index)}, self.namespace_index={self.namespace_index}')
+          print(f'@{BM.LINE()} type(constant_pool.namespaces)={type(constant_pool.namespaces)}, #={len(constant_pool.namespaces)}')  #, constant_pool.namespaces={constant_pool.namespaces}')
           for ns in sorted(constant_pool.namespaces, key=lambda x: x.name_index if x else 0):
             if ns is None:
               col = Fore.RED

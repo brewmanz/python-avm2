@@ -18,10 +18,15 @@ def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
     # voluminous # print(f'{" "*indent}@@14@ att={att}')
     # print(f'{" "*indent}@@15@ dir(type(att))={dir(type(att))}')
 
-    if typStr == '' : attStr = f'= @{BM.LINE()} !!22!attrNam=<{attrNam}>!att=<{att}>!'
-    elif typStr == 'int' : attStr = f'= {att}'
-    elif typStr == 'list' : attStr = f'#{len(att)}'
-    elif typStr == 'ASConstantPool' :
+    if typStr == '': attStr = f'= @{BM.LINE()} !!22!attrNam=<{attrNam}>!att=<{att}>!'
+    elif typStr == 'int': attStr = f'= {att}'
+    elif typStr == 'list':
+      lenAtt = len(att)
+      attStr = f'#{lenAtt}'
+      if lenAtt > 0:
+        attStr += f'; 1st has type {type(att[0])}'
+
+    elif typStr == 'ASConstantPool':
       if typStr == clsStr:
         print(f'{" "*indent}[{attrNam}]:{typStr}=')
       else:
@@ -32,10 +37,10 @@ def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
         if subNam[:2] == '__' or subNam[-2:] == '__': continue
         DumpAttribute(att, subNam, indent+1)
       return
-    elif typStr == 'method-wrapper' : attStr = f'= {attrNam}'
-    elif typStr == 'type' : attStr = f'= {attrNam}'
-    elif typStr == 'builtin_function_or_method' : attStr = f'= {attrNam}'
-    elif typStr == 'str' :
+    elif typStr == 'method-wrapper': attStr = f'= {attrNam}'
+    elif typStr == 'type': attStr = f'= {attrNam}'
+    elif typStr == 'builtin_function_or_method': attStr = f'= {attrNam}'
+    elif typStr == 'str':
       attStr = f'= {att}'
       if len(attStr) > 20: attStr = attStr[:18] + '..'
     else: attStr = f'= @{BM.LINE()} ??25?? typStr=<{typStr}> attrNam=<{attrNam}> att=<{att}>'
@@ -44,8 +49,18 @@ def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
       print(f'{" "*indent}[{attrNam}]:{typStr} {attStr}')
     else:
       print(f'{" "*indent}[{attrNam}]:{typStr}/{clsStr} {attStr}')
-    if typStr == 'ASConstantPool' :
-      sys.exit(-97)
+    #if typStr == 'ASConstantPool' :
+    #  sys.exit(-97)
+
+    # maybe dump first & last 5
+    if typStr == 'list':
+      # print(f'@{BM.LINE()} att={att}')
+      for ix in range(len(att)):
+        if ix > 4 and ix < (len(att) - 5): continue
+        strVal = f'{att[ix]}'
+        lenLim = 200
+        if len(strVal) > lenLim: strVal = strVal[:lenLim-2] + '..'
+        print(f'{" "*(indent+2)}[{ix}]={strVal}')
 
 def DumpAttributes(item: object, title: str, detail: int) -> str:
   print(f'## @{BM.LINE()} $$31$$ title:{title}, dir={dir(item)}')
@@ -54,7 +69,8 @@ def DumpAttributes(item: object, title: str, detail: int) -> str:
   for nam in dro :
     if detail < 5:
       if nam[:2] == '__' or nam[-2:] == '__': continue
-    DumpAttribute(item, nam, 1)
+    indent = 1
+    DumpAttribute(item, nam, indent)
 
 def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     abc_file_EvonyClient: ABCFile = abc_file_EvonyClient_N # TODO fix HACK

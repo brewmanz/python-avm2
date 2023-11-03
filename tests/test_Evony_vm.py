@@ -14,7 +14,7 @@ import BrewMaths as BM
 
 def test_T1000_EvC_execute_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient_N: Tag):
     print(f'## @{BM.LINE()} being run ##')
-    print(f'## type(raw_do_abc_tag_EvonyClient_N)={type(raw_do_abc_tag_EvonyClient_N)}')
+    print(f'## @{BM.LINE()} type(raw_do_abc_tag_EvonyClient_N)={type(raw_do_abc_tag_EvonyClient_N)}')
     execute_tag(raw_do_abc_tag_EvonyClient_N)
 
 def test_T1100_execute_do_abc_tag_EvonyClient_N(do_abc_tag_EvonyClient_N: DoABCTag):
