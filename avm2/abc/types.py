@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import math
+import BrewMaths as BM
+
 from dataclasses import dataclass
 from functools import partial
 from typing import Optional, List, Union, NewType
 
 from colorama import Fore, Style
+
+import math
+import BrewMaths as BM
 
 from avm2.abc.enums import (
     ClassFlags,
@@ -156,9 +160,9 @@ class ASMultiname:
             else:
               col = Style.RESET_ALL
             qn = ASMultiname.DEBUG_Q_N(self, constant_pool, self.namespace_index)
-            print(f'{col}type(ns)={type(ns)}, ns={ns}{Style.RESET_ALL}, qn={qn}')
-          print(f'type(namespace)={type(namespace)}, namespace={namespace}')
-          print(f'.. about to crash on <assert namespace.name_index> ..')
+            print(f'{col}@{BM.LINE()} type(ns)={type(ns)}, ns={ns}{Style.RESET_ALL}, qn={qn}')
+          print(f'@{BM.LINE()} type(namespace)={type(namespace)}, namespace={namespace}')
+          print(f'@{BM.LINE()} .. about to crash on <assert namespace.name_index> ..')
         assert namespace.name_index
         return f'{constant_pool.strings[namespace.name_index]}.{constant_pool.strings[self.name_index]}'.strip('.')
 

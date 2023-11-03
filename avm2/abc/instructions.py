@@ -4,6 +4,8 @@ from dataclasses import dataclass, fields
 import sys
 from typing import Any, Callable, ClassVar, Dict, Tuple, Type, TypeVar, NewType, Optional
 
+import BrewMaths as BM
+
 import avm2.vm
 from avm2.exceptions import ASReturnException, ASJumpException
 from avm2.runtime import undefined
@@ -211,7 +213,7 @@ class Construct(Instruction): # …, object, arg1, arg2, ..., argn => …, value
     arg_count: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW a#={self.arg_count}', file=sys.stderr)
+      print(f'!!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW a#={self.arg_count}', file=sys.stderr)
       # TODO add proper code
       argN=[]
       for ix in range(self.arg_count)[::-1]:
@@ -246,7 +248,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     arg_count: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}, a#={self.arg_count}', file=sys.stderr)
+      print(f'!!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}, a#={self.arg_count}', file=sys.stderr)
       # TODO add proper code
       argN=[]
       for ix in range(self.arg_count)[::-1]:
@@ -281,7 +283,7 @@ class ConstructSuper(Instruction): # …, object, arg1, arg2, ..., argn => …
     arg_count: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}', file=sys.stderr)
+      print(f'!!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}', file=sys.stderr)
       # TODO add proper code
       #print(f'a#={self.arg_count}')
       argN=[]
@@ -452,7 +454,7 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
     """
     index: u30
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
+      print(f'!!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
 
       # TODO add proper code
 
@@ -496,7 +498,7 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
     index: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        print(f'If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
+        print(f'!!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
         multiname = machine.multinames[self.index]
         # TODO: other kinds of multinames.
         assert multiname.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A), multiname
@@ -1143,7 +1145,7 @@ class SetProperty(Instruction): # …, obj, [ns], [name], value => …
     """
     index: u30
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
+      print(f'!!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
 
       # TODO is it a runtime multiname?
       # cf FindPropStrict for some ideas

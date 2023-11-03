@@ -1,63 +1,74 @@
 from typing import Iterable, List
 
+import BrewMaths as BM
+
 from avm2.abc.instructions import Instruction, read_instruction
 from avm2.abc.types import ABCFile, ASMethodBody
 from avm2.io import MemoryViewReader
 
 import inspect
 
+def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
+    #print(f'{" "*indent}@@10@ [{attrNam}]:{indent}')
+    att = getattr(item, attrNam)
+    typStr = type(att).__name__
+    cls = att.__class__
+    clsStr = att.__class__.__name__
+    # print(f'{" "*indent}@@13@ type(att)={type(att)}')
+    # voluminous # print(f'{" "*indent}@@14@ att={att}')
+    # print(f'{" "*indent}@@15@ dir(type(att))={dir(type(att))}')
+
+    if typStr == '' : attStr = f'= @{BM.LINE()} !!22!attrNam=<{attrNam}>!att=<{att}>!'
+    elif typStr == 'int' : attStr = f'= {att}'
+    elif typStr == 'list' : attStr = f'#{len(att)}'
+    elif typStr == 'ASConstantPool' :
+      if typStr == clsStr:
+        print(f'{" "*indent}[{attrNam}]:{typStr}=')
+      else:
+        print(f'{" "*indent}[{attrNam}]:{typStr}/{clsStr}=')
+      #print(f'$$18$$ dir={dir(att)}')
+      subDro = dir(att)
+      for subNam in subDro:
+        if subNam[:2] == '__' or subNam[-2:] == '__': continue
+        DumpAttribute(att, subNam, indent+1)
+      return
+    elif typStr == 'method-wrapper' : attStr = f'= {attrNam}'
+    elif typStr == 'type' : attStr = f'= {attrNam}'
+    elif typStr == 'builtin_function_or_method' : attStr = f'= {attrNam}'
+    elif typStr == 'str' :
+      attStr = f'= {att}'
+      if len(attStr) > 20: attStr = attStr[:18] + '..'
+    else: attStr = f'= @{BM.LINE()} ??25?? typStr=<{typStr}> attrNam=<{attrNam}> att=<{att}>'
+
+    if typStr == clsStr:
+      print(f'{" "*indent}[{attrNam}]:{typStr} {attStr}')
+    else:
+      print(f'{" "*indent}[{attrNam}]:{typStr}/{clsStr} {attStr}')
+    if typStr == 'ASConstantPool' :
+      sys.exit(-97)
+
+def DumpAttributes(item: object, title: str, detail: int) -> str:
+  print(f'## @{BM.LINE()} $$31$$ title:{title}, dir={dir(item)}')
+  dro = dir(item)
+  # for it in dr if it[:2] != '__' and it[-2:] != '__' :
+  for nam in dro :
+    if detail < 5:
+      if nam[:2] == '__' or nam[-2:] == '__': continue
+    DumpAttribute(item, nam, 1)
 
 def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     abc_file_EvonyClient: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
 
-    dro = dir(abc_file_EvonyClient)
-    print(dro)
-    print(f'--==-- abc_file_EvonyClient')
-    # for it in dr if it[:2] != '__' and it[-2:] != '__' :
-    for nam in dro :
-      if nam[:2] == '__' or nam[-2:] == '__': continue
-      att = getattr(abc_file_EvonyClient, nam)
-      typStr = type(att).__name__
-      if typStr == '' : attStr = '= !!!'
-      elif typStr == 'int' : attStr = f'= {att}'
-      elif typStr == 'list' : attStr = f'#{len(att)}'
-      else: attStr = f'= ???'
-      print(f'[{nam}]:{typStr} {attStr}')
-
-    dro = dir(abc_file_EvonyClient.constant_pool)
-    print(dro)
-    print(f'--==-- abc_file_EvonyClient.constant_pool')
-    # for it in dr if it[:2] != '__' and it[-2:] != '__' :
-    for nam in dro :
-      if nam[:2] == '__' or nam[-2:] == '__': continue
-      att = getattr(abc_file_EvonyClient.constant_pool, nam)
-      typStr = type(att).__name__
-      if typStr == '' : attStr = '= !!!'
-      elif typStr == 'int' : attStr = f'= {att}'
-      elif typStr == 'list' : attStr = f'#{len(att)}'
-      else: attStr = f'= ???'
-      print(f'[{nam}]:{typStr} {attStr}')
-
-    dro = dir(abc_file_EvonyClient.constant_pool.doubles)
-    print(dro)
-    print(f'--==-- abc_file_EvonyClient.constant_pool.doubles')
-    # for it in dr if it[:2] != '__' and it[-2:] != '__' :
-    for nam in dro :
-      if nam[:2] == '__' or nam[-2:] == '__': continue
-      att = getattr(abc_file_EvonyClient.constant_pool.doubles, nam)
-      typStr = type(att).__name__
-      if typStr == '' : attStr = '= !!!'
-      elif typStr == 'int' : attStr = f'= {att}'
-      elif typStr == 'list' : attStr = f'#{len(att)}'
-      else: attStr = f'= ???'
-      print(f'[{nam}]:{typStr} {attStr}')
+    DumpAttributes(type(getattr(abc_file_EvonyClient, 'constant_pool')).__name__, f'--==-- class name??', 99)
+    DumpAttributes(abc_file_EvonyClient, f'--==-- abc_file_EvonyClient', 0)
 
     print(f'--==--')
 
     assert abc_file_EvonyClient.major_version == 46
     assert abc_file_EvonyClient.minor_version == 16
 
+    assert len(abc_file_EvonyClient.constant_pool) == 7
     assert len(abc_file_EvonyClient.constant_pool.integers) == 44 # 463
     assert len(abc_file_EvonyClient.constant_pool.unsigned_integers) == 1 # 27
     assert len(abc_file_EvonyClient.constant_pool.doubles) == 17 # 376
@@ -65,6 +76,7 @@ def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     assert len(abc_file_EvonyClient.constant_pool.namespaces) == 240 # 9048
     assert len(abc_file_EvonyClient.constant_pool.ns_sets) == 49 # 1406
     assert len(abc_file_EvonyClient.constant_pool.multinames) == 1696 # 38608
+
     assert len(abc_file_EvonyClient.methods) == 1214 # 35243
     assert len(abc_file_EvonyClient.metadata) == 1 # 196
     assert len(abc_file_EvonyClient.instances) == 97 # 3739

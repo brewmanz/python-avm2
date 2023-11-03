@@ -13,16 +13,16 @@ import BrewMaths as BM
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
 
 def test_T1000_EvC_execute_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient_N: Tag):
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
     print(f'## type(raw_do_abc_tag_EvonyClient_N)={type(raw_do_abc_tag_EvonyClient_N)}')
     execute_tag(raw_do_abc_tag_EvonyClient_N)
 
 def test_T1100_execute_do_abc_tag_EvonyClient_N(do_abc_tag_EvonyClient_N: DoABCTag):
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
     execute_do_abc_tag(do_abc_tag_EvonyClient_N)
 
 def test_T1200_lookup_class_EvonyClient_N(machine_EvonyClient_N: VirtualMachine):
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
     ix = 0
     for item in machine_EvonyClient_N.name_to_class:
       if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2c={item} > {machine_EvonyClient_N.lookup_class(item)}')
@@ -36,7 +36,7 @@ def test_T1200_lookup_class_EvonyClient_N(machine_EvonyClient_N: VirtualMachine)
     # assert machine_EvonyClient_N.lookup_class('game.battle.controller.BattleEnemyReward') == 2308
 
 def test_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
     ix = 0
     for item in machine_EvonyClient_N.name_to_method:
       if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2m={item} > {machine_EvonyClient_N.lookup_method(item)}')
@@ -46,17 +46,17 @@ def test_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
     assert machine_EvonyClient_N.lookup_method('battle.BattleCore.hitrateIntensity') == 24360
 
 def test_T1400_call_get_elemental_penetration_EvonyClient_N(machine_EvonyClient_N: VirtualMachine):
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
     assert machine_EvonyClient_N.call_method('battle.BattleCore.getElementalPenetration', undefined, 2, 300000) == 1
     assert machine_EvonyClient_N.call_method('battle.BattleCore.getElementalPenetration', undefined, 42, -100500) == 42
 
 def test_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, -100, 0) == 1
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 100, 0) == 1
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 0, 100) == 0
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 4, 8) == 0.5
 
 def test_T1600_new_battle_enemy_reward(machine_EvonyClient_N: VirtualMachine):
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
     machine_EvonyClient_N.new_instance('game.battle.controller.BattleEnemyReward')

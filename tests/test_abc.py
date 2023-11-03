@@ -1,5 +1,7 @@
 from typing import Iterable, List
 
+import BrewMaths as BM
+
 from avm2.abc.instructions import Instruction, read_instruction
 from avm2.abc.types import ABCFile, ASMethodBody
 from avm2.io import MemoryViewReader
@@ -9,9 +11,8 @@ import inspect
 DEBUG = True or False # toggle and/or
 
 
-
 def test_abc_file_heroes(abc_file_heroes: ABCFile):
-    print(f'## {inspect.currentframe().f_code.co_filename}:{inspect.currentframe().f_code.co_firstlineno}({inspect.currentframe().f_code.co_name}) being run ##')
+    print(f'## @{BM.LINE()} being run ##')
     print(f'--==--')
 
     dro = dir(abc_file_heroes)
