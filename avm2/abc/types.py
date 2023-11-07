@@ -146,8 +146,12 @@ class ASMultiname:
         assert self.namespace_index
         assert self.name_index
         namespace = constant_pool.namespaces[self.namespace_index]
+        if namespace.name_index == 0 and namespace.kind == NamespaceKind.PRIVATE_NS:
+          return '' # return empty value
         if not namespace.name_index: # this will become an assert failure; grab some debug info
           print(f'@{BM.LINE()} (from ../avm2/abc/type.py, having NOT found namespace.name_index ...)')
+          print(f'@{BM.LINE()} type(namespace.name_index)={type(namespace.name_index)}, namespace.name_index={namespace.name_index}')
+          print(f'@{BM.LINE()} type(namespace.kind)={type(namespace.kind)}, namespace.kind={namespace.kind}')
           print(f'@{BM.LINE()} type(self.namespace_index)={type(self.namespace_index)}, self.namespace_index={self.namespace_index}')
           print(f'@{BM.LINE()} type(constant_pool.namespaces)={type(constant_pool.namespaces)}, #={len(constant_pool.namespaces)}')  #, constant_pool.namespaces={constant_pool.namespaces}')
           for ns in sorted(constant_pool.namespaces, key=lambda x: x.name_index if x else 0):

@@ -8,6 +8,36 @@ from avm2.io import MemoryViewReader
 
 import inspect
 
+def BuildColourNameLookup():
+  global g_ColourNameLookupFromNumber
+  g_ColourNameLookupFromNumber = dict()
+  namNum = {
+         "black":0,
+         "blue":255,
+         "green":32768,
+         "gray":8421504,
+         "silver":12632256,
+         "lime":65280,
+         "olive":8421376,
+         "white":16777215,
+         "yellow":16776960,
+         "maroon":8388608,
+         "navy":128,
+         "red":16711680,
+         "purple":8388736,
+         "teal":32896,
+         #"fuchsia":16711935,
+         "aqua":65535,
+         "magenta":16711935,
+         "cyan":65535,
+         "halogreen":8453965,
+         "haloblue":40447,
+         "haloorange":16758272,
+         "halosilver":11455193
+        }
+  for k, v in namNum.items(): # 'reverse' dictionary
+    g_ColourNameLookupFromNumber[v] = k
+
 def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
     #print(f'{" "*indent}@@10@ [{attrNam}]:{indent}')
     att = getattr(item, attrNam)
@@ -24,7 +54,7 @@ def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
       lenAtt = len(att)
       attStr = f'#{lenAtt}'
       if lenAtt > 0:
-        attStr += f'; 1st has type {type(att[0])}'
+        attStr += f'; final type={type(att[lenAtt-1])}'
 
     elif typStr == 'ASConstantPool':
       if typStr == clsStr:
@@ -52,15 +82,31 @@ def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
     #if typStr == 'ASConstantPool' :
     #  sys.exit(-97)
 
+    global g_ColourNameLookupFromNumber
+    global g_cp_list_strings
     # maybe dump first & last 5
     if typStr == 'list':
-      # print(f'@{BM.LINE()} att={att}')
-      for ix in range(len(att)):
-        if ix > 4 and ix < (len(att) - 5): continue
-        strVal = f'{att[ix]}'
-        lenLim = 200
-        if len(strVal) > lenLim: strVal = strVal[:lenLim-2] + '..'
-        print(f'{" "*(indent+2)}[{ix}]={strVal}')
+      print(f'@{BM.LINE()} $$attrNam=[{attrNam}] att=[{f"{att}"[:120]}]')
+      with open(f'list_{attrNam}.$txt', "w") as fTxt:
+        for ix in range(len(att)):
+          val = att[ix]
+          strVal = f'{val}'
+          lenLim = 220
+          if len(strVal) > lenLim: strVal = strVal[:lenLim-2] + '..'
+          fTxt.write(strVal) # actual value, up to length lenLim
+          # do we want some comments?
+          if False: pass
+          elif attrNam == 'integers':
+            fTxt.write(f' # {hex(val)}') # add hex. Colours = x RED GRN BLU
+            if val in g_ColourNameLookupFromNumber:
+              fTxt.write(f' # {g_ColourNameLookupFromNumber[val]}') # add colour name
+          elif attrNam == 'namespaces' and val != None:
+            ix = val.name_index
+            fTxt.write(f' # n[ix]> {g_cp_list_strings[ix]}') # convert ns# to string value
+
+          fTxt.write('\n') # end line
+          if ix > 4 and ix < (len(att) - 5): continue
+          print(f'{" "*(indent+2)}[{ix}]«{strVal}»')
 
 def DumpAttributes(item: object, title: str, detail: int) -> str:
   print(f'## @{BM.LINE()} $$31$$ title:{title}, dir={dir(item)}')
@@ -69,14 +115,20 @@ def DumpAttributes(item: object, title: str, detail: int) -> str:
   for nam in dro :
     if detail < 5:
       if nam[:2] == '__' or nam[-2:] == '__': continue
-    indent = 1
-    DumpAttribute(item, nam, indent)
+    indent = 1; DumpAttribute(item, nam, indent)
 
 def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     abc_file_EvonyClient: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
     print(f'## @{BM.LINE()} being run ##')
+    BuildColourNameLookup()
 
+    print(f'## @{BM.LINE()} grab various constant_pool value ...')
+    global g_cp_list_strings; g_cp_list_strings = abc_file_EvonyClient.constant_pool.strings
+    print(f'## @{BM.LINE()} len(g_cp_list_strings)={len(g_cp_list_strings)}')
+
+    print(f'## @{BM.LINE()} about to DmpAtts c_p...')
     DumpAttributes(type(getattr(abc_file_EvonyClient, 'constant_pool')).__name__, f'--==-- class name??', 99)
+    print(f'## @{BM.LINE()} about to DmpAtts a_f_EC...')
     DumpAttributes(abc_file_EvonyClient, f'--==-- abc_file_EvonyClient', 0)
 
     print(f'--==--')
@@ -84,7 +136,7 @@ def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     assert abc_file_EvonyClient.major_version == 46
     assert abc_file_EvonyClient.minor_version == 16
 
-    assert len(abc_file_EvonyClient.constant_pool) == 7
+    #assert len(abc_file_EvonyClient.constant_pool) == 7 # TypeError: object of type 'ASConstantPool' has no len() #
     assert len(abc_file_EvonyClient.constant_pool.integers) == 44 # 463
     assert len(abc_file_EvonyClient.constant_pool.unsigned_integers) == 1 # 27
     assert len(abc_file_EvonyClient.constant_pool.doubles) == 17 # 376

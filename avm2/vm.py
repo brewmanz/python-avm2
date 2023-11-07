@@ -19,6 +19,7 @@ from avm2.io import MemoryViewReader
 from avm2.runtime import ASObject, undefined
 from avm2.swf.types import DoABCTag, Tag, TagType
 
+import BrewMaths as BM
 
 class VirtualMachine:
     def __init__(self, abc_file: ABCFile):
@@ -48,6 +49,8 @@ class VirtualMachine:
 
         # callbacks
         self.callbackOnInstructionExecuting: CallbackOnInstructionExecuting = None
+
+        self.GDictFails = 0
 
     # Linking.
     # ------------------------------------------------------------------------------------------------------------------
@@ -107,10 +110,30 @@ class VirtualMachine:
         # TODO: prototype chain.
 
     def lookup_class(self, qualified_name: str) -> ABCClassIndex:
+      try:
         return self.name_to_class[qualified_name]
+      except KeyError:
+        self.GDictFails += 1
+        if self.GDictFails < 5:
+          print(F'!! @{BM.LINE()} n2c KeyError [{qualified_name}]')
+          if self.GDictFails == 1:
+            print(F'!! @{BM.LINE()} n2c Keys(#{len(self.name_to_class)}) are ...')
+            for k, v in self.name_to_class.items():
+              print(F'!! @{BM.LINE()} n2c Key:[{k}]>[{v}]')
+        raise
 
     def lookup_method(self, qualified_name: str) -> ABCMethodIndex:
+      try:
         return self.name_to_method[qualified_name]
+      except KeyError:
+        self.GDictFails += 1
+        if self.GDictFails < 5:
+          print(F'!! @{BM.LINE()} n2m KeyError [{qualified_name}]')
+          if self.GDictFails == 1:
+            print(F'!! @{BM.LINE()} n2m Keys(#{len(self.name_to_method)}) are ...')
+            for k, v in self.name_to_class.items():
+              print(F'!! @{BM.LINE()} n2m Key:[{k}]>[{v}]')
+        raise
 
     # Scripts.
     # ------------------------------------------------------------------------------------------------------------------
