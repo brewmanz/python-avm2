@@ -4,7 +4,8 @@ Pipfile*
 
 ### manual: ignore some work files ###
 *.$txt
-BryanHomeGamesEvony
+BryanHomeGamesEvony*
+EvonyHugeAllAction*
 
 ### Git ###
 *.orig

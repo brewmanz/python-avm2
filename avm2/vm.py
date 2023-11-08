@@ -131,7 +131,7 @@ class VirtualMachine:
           print(F'!! @{BM.LINE()} n2m KeyError [{qualified_name}]')
           if self.GDictFails == 1:
             print(F'!! @{BM.LINE()} n2m Keys(#{len(self.name_to_method)}) are ...')
-            for k, v in self.name_to_class.items():
+            for k, v in self.name_to_method.items():
               print(F'!! @{BM.LINE()} n2m Key:[{k}]>[{v}]')
         raise
 
@@ -270,6 +270,7 @@ class MethodEnvironment:
     operand_stack: List[Any] = field(default_factory=list)  # FIXME: should be ASObject's too.
     lastNInstr: List(str) = field(default_factory=list)
     instrExeCnt: int = 0
+
 
 def execute_tag(tag: Tag) -> VirtualMachine:
     """

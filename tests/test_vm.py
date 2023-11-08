@@ -1,6 +1,7 @@
 from avm2.runtime import undefined
 from avm2.swf.types import DoABCTag, Tag
 from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
+from avm2.abc.instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
 import inspect, sys
 import os
 
@@ -50,7 +51,10 @@ def test_T1300_lookup_method_heroes(machine_heroes: VirtualMachine):
 def test_T1400_call_get_elemental_penetration_heroes(machine_heroes: VirtualMachine):
     print(f'## @{BM.LINE()} being run ##')
     # scripts/battle/BattleCore.as:85 public static function getElementalPenetration(param1:Number, param2:Number) : int
+    callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
+    machine_heroes.callbackOnInstructionExecuting = callback
     assert machine_heroes.call_method('battle.BattleCore.getElementalPenetration', undefined, 2, 300000) == 1
+    print(f'## @{BM.LINE()} mark ##')
     assert machine_heroes.call_method('battle.BattleCore.getElementalPenetration', undefined, 42, -100500) == 42
 
 def test_T1500_call_hitrate_intensity_heroes(machine_heroes: VirtualMachine):

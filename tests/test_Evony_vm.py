@@ -1,6 +1,7 @@
 from avm2.runtime import undefined
 from avm2.swf.types import DoABCTag, Tag
 from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
+from avm2.abc.instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
 import inspect, sys
 
 # ln -s ~/git/BDL/Games/Evony/PythonBits/MyGamesHelper.py (in git/python-avm2_AdobeSwfActionScript)
@@ -48,14 +49,25 @@ def test_E_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
     assert len(machine_EvonyClient_N.name_to_method) == 77 # -111
     assert machine_EvonyClient_N.lookup_method('mx.managers.SystemManager.getSWFRoot') == 127
     assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trimArrayElements') == 951
+    # not found # assert machine_EvonyClient_N.lookup_method('view.ui.TimeLabel.getDateStr') == 9999
+    # not found # assert machine_EvonyClient_N.lookup_method('com.evony.Context.getTimeDiff') == 9999
+    assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trim') == 950 # Mainflash/mx/utils/StringUtil.as:18
+    assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trim') == -123 # expected # AssertionError: assert 950 == -123
 
-def test_E_T1400_call_get_elemental_penetration_EvonyClient_N(machine_EvonyClient_N: VirtualMachine):
+def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
     print(f'## @{BM.LINE()} being run ##')
-    assert machine_EvonyClient_N.call_method('battle.BattleCore.getElementalPenetration', undefined, 2, 300000) == 1
-    assert machine_EvonyClient_N.call_method('battle.BattleCore.getElementalPenetration', undefined, 42, -100500) == 42
+    # EvonyHuge.txt:147605 # public static function trim(param1:String) : String
+    callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
+    machine_EvonyClient_N.callbackOnInstructionExecuting = callback
+    act = machine_EvonyClient_N.call_method('mx.utils.StringUtil.trim', undefined, 987)
+    machine_EvonyClient_N.callbackOnInstructionExecuting = None
+    print(f'## @{BM.LINE()} SU_T act=<{act}>')
+    assert machine_EvonyClient_N.call_method('mx.utils.StringUtil.trim', undefined, "xyz") == "xyz"
+    assert machine_EvonyClient_N.call_method('mx.utils.StringUtil.trim', undefined, "  abc  ") == "abc"
 
 def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
     print(f'## @{BM.LINE()} being run ##')
+    # scripts/battle/BattleCore.as:57 public static function hitrateIntensity(param1:int, param2:int, param3:int = 4) : Number
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, -100, 0) == 1
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 100, 0) == 1
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 0, 100) == 0
