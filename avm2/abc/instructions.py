@@ -606,6 +606,10 @@ class GetLocal0(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.registers[0]
         if machine.callbackOnInstructionExecuting is not None: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'value=<{value}>')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 0: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 0={environment.registers[0]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 1: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 1={environment.registers[1]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 2: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 2={environment.registers[2]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 3: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 3={environment.registers[3]}')
         environment.operand_stack.append(value)
 
 
@@ -614,6 +618,10 @@ class GetLocal1(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.registers[1]
         if machine.callbackOnInstructionExecuting is not None: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'value=<{value}>')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 0: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 0={environment.registers[0]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 1: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 1={environment.registers[1]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 2: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 2={environment.registers[2]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 3: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 3={environment.registers[3]}')
         environment.operand_stack.append(value)
 
 
@@ -622,6 +630,10 @@ class GetLocal2(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.registers[2]
         if machine.callbackOnInstructionExecuting is not None: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'value=<{value}>')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 0: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 0={environment.registers[0]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 1: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 1={environment.registers[1]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 2: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 2={environment.registers[2]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 3: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 3={environment.registers[3]}')
         environment.operand_stack.append(value)
 
 
@@ -630,6 +642,10 @@ class GetLocal3(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.registers[3]
         if machine.callbackOnInstructionExecuting is not None: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'value=<{value}>')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 0: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 0={environment.registers[0]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 1: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 1={environment.registers[1]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 2: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 2={environment.registers[2]}')
+        if machine.callbackOnInstructionExecuting is not None and len(environment.registers) > 3: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'BTW 3={environment.registers[3]}')
         environment.operand_stack.append(value)
 
 
@@ -1261,7 +1277,7 @@ class SubtractInteger(Instruction): # …, value1, value2 => …, value3
         value_1 = environment.operand_stack.pop()
         result = int(value_1) - int(value_2)
         if machine.callbackOnInstructionExecuting is not None: machine.callbackOnInstructionExecuting.MakeExtraObservation(f'result=<{result}>')
-        environment.operand_stack.append(value)
+        environment.operand_stack.append(result)
 
 
 @instruction(43)

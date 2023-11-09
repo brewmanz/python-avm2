@@ -4,6 +4,7 @@ from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
 from avm2.abc.instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
 import inspect, sys
 
+# to run selected tests # pytest -k "test_E_T1400 or test_T1400" -s
 # ln -s ~/git/BDL/Games/Evony/PythonBits/MyGamesHelper.py (in git/python-avm2_AdobeSwfActionScript)
 # ln -s ~/git/BDL/Games/Evony/PythonBits/BrewMaths.py (in git/python-avm2_AdobeSwfActionScript)
 import MyGamesHelper as MGH
@@ -12,6 +13,14 @@ import BrewMaths as BM
 #from /home/bryan/git/BDL/Games/Evony/PythonBits/MyGamesHelper import MyGamesHelper as MGH
 
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
+
+def test_E_T0000_EvC_SomeHints(raw_do_abc_tag_EvonyClient_N: Tag):
+    print(f'## @{BM.LINE()} being run ##')
+    print(f'# ## Parameters for machine_EvonyClient_N.call_method')
+    print(f'# some info in: ActionScript Virtual Machine 2 Overview (108pp)')
+    print(f'# 3.3.3 Method Entry: talks about three local data areas are allocated for it, as outlined in Chapter 2.')
+    print(f'# >> 2.5.8 for calling class (static) methods, use callstatic')
+    print(f'# ')
 
 def test_E_T1000_EvC_execute_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient_N: Tag):
     print(f'## @{BM.LINE()} being run ##')
@@ -59,11 +68,11 @@ def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
     # EvonyHuge.txt:147605 # public static function trim(param1:String) : String
     callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
     machine_EvonyClient_N.callbackOnInstructionExecuting = callback
-    act = machine_EvonyClient_N.call_method('mx.utils.StringUtil.trim', undefined, 987)
+    act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz")
     machine_EvonyClient_N.callbackOnInstructionExecuting = None
     print(f'## @{BM.LINE()} SU_T act=<{act}>')
-    assert machine_EvonyClient_N.call_method('mx.utils.StringUtil.trim', undefined, "xyz") == "xyz"
-    assert machine_EvonyClient_N.call_method('mx.utils.StringUtil.trim', undefined, "  abc  ") == "abc"
+    assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz") == "xyz"
+    assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "  abc  ") == "abc"
 
 def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
     print(f'## @{BM.LINE()} being run ##')
