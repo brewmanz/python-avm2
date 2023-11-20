@@ -3,6 +3,7 @@ from avm2.swf.types import DoABCTag, Tag
 from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
 from avm2.abc.instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
 import inspect, sys
+import pytest
 
 # to run selected tests # pytest -k "test_E_T1400 or test_T1400" -s
 # ln -s ~/git/BDL/Games/Evony/PythonBits/MyGamesHelper.py (in git/python-avm2_AdobeSwfActionScript)
@@ -61,7 +62,6 @@ def test_E_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
     # not found # assert machine_EvonyClient_N.lookup_method('view.ui.TimeLabel.getDateStr') == 9999
     # not found # assert machine_EvonyClient_N.lookup_method('com.evony.Context.getTimeDiff') == 9999
     assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trim') == 950 # Mainflash/mx/utils/StringUtil.as:18
-    assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trim') == -123 # expected # AssertionError: assert 950 == -123
 
 def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
     print(f'## @{BM.LINE()} being run ##')
@@ -74,6 +74,7 @@ def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
     assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz") == "xyz"
     assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "  abc  ") == "abc"
 
+@pytest.mark.skip(reason="change to fit Evony") # import pytest
 def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
     print(f'## @{BM.LINE()} being run ##')
     # scripts/battle/BattleCore.as:57 public static function hitrateIntensity(param1:int, param2:int, param3:int = 4) : Number
@@ -82,6 +83,7 @@ def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 0, 100) == 0
     assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 4, 8) == 0.5
 
+@pytest.mark.skip(reason="change to fit Evony") # import pytest
 def test_E_T1600_new_battle_enemy_reward(machine_EvonyClient_N: VirtualMachine):
     print(f'## @{BM.LINE()} being run ##')
     machine_EvonyClient_N.new_instance('game.battle.controller.BattleEnemyReward')
