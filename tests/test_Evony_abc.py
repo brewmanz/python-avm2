@@ -7,6 +7,9 @@ from avm2.abc.types import ABCFile, ASMethodBody
 from avm2.io import MemoryViewReader
 
 import inspect
+import logging
+
+gDebugLevel = logging.WARNING # DEBUG, INFO, WARNING, ERROR, CRITICAL # import logging
 
 def BuildColourNameLookup():
   global g_ColourNameLookupFromNumber
@@ -126,10 +129,13 @@ def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     global g_cp_list_strings; g_cp_list_strings = abc_file_EvonyClient.constant_pool.strings
     print(f'## @{BM.LINE()} len(g_cp_list_strings)={len(g_cp_list_strings)}')
 
-    print(f'## @{BM.LINE()} about to DmpAtts c_p...')
-    DumpAttributes(type(getattr(abc_file_EvonyClient, 'constant_pool')).__name__, f'--==-- class name??', 99)
-    print(f'## @{BM.LINE()} about to DmpAtts a_f_EC...')
-    DumpAttributes(abc_file_EvonyClient, f'--==-- abc_file_EvonyClient', 0)
+    if gDebugLevel <= logging.INFO:
+      print(f'## @{BM.LINE()} about to DmpAtts c_p...')
+      DumpAttributes(type(getattr(abc_file_EvonyClient, 'constant_pool')).__name__, f'--==-- class name??', 99)
+      print(f'## @{BM.LINE()} about to DmpAtts a_f_EC...')
+      DumpAttributes(abc_file_EvonyClient, f'--==-- abc_file_EvonyClient', 0)
+    else:
+      print(f'## @{BM.LINE()} (skipping various DmpAtts)')
 
     print(f'--==--')
 

@@ -68,11 +68,11 @@ def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
     # EvonyHuge.txt:147605 # public static function trim(param1:String) : String
     callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
     machine_EvonyClient_N.callbackOnInstructionExecuting = callback
-    act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz")
+    act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz")
     machine_EvonyClient_N.callbackOnInstructionExecuting = None
     print(f'## @{BM.LINE()} SU_T act=<{act}>')
-    assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz") == "xyz"
-    assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "  abc  ") == "abc"
+    assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz") == "xyz"
+    assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "  abc  ") == "abc"
 
 @pytest.mark.skip(reason="change to fit Evony") # import pytest
 def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):

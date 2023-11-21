@@ -176,9 +176,9 @@ class VirtualMachine:
         """
         self.init_script(ABCScriptIndex(-1))
 
-    def call_static(self, index_or_name: Union[ABCMethodIndex, str], this: Any, *args) -> Any:
+    def call_static(self, index_or_name: Union[ABCMethodIndex, str], *args) -> Any:
         """
-        Call the specified method and get a return value.
+        Call the specified static method and get a return value.
         """
         if isinstance(index_or_name, int):
             index = ABCMethodIndex(index_or_name)
@@ -189,7 +189,7 @@ class VirtualMachine:
 
         # TODO: init script on demand.
         method_body = self.abc_file.method_bodies[self.method_to_body[index]]
-        environment = self.create_method_environment(method_body, this, *args)
+        environment = self.create_method_environment(method_body, *args)
         return self.execute_code(method_body.code, environment)
 
     def call_method(self, index_or_name: Union[ABCMethodIndex, str], this: Any, *args) -> Any:
