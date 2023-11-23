@@ -15,13 +15,30 @@ import BrewMaths as BM
 
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
 
-def test_E_T3000_EvC_HospitalWin_bits(raw_do_abc_tag_EvonyClient_N: Tag):
+def test_E_T4000_EvC_HospitalWin_bits(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} being run ##')
   assert 1 == 2
 
-def test_E_T2000_EvC_toDebugString_VariousBeans(raw_do_abc_tag_EvonyClient_N: Tag):
+def test_E_T3000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} being run ##')
   assert 1 == 2
+
+@pytest.mark.skip(reason="cannot find class com.evony.factory.ImageManager") # import pytest
+def test_E_T2000_EvC_ImageManager_initAllianceLevelMap(machine_EvonyClient_N: VirtualMachine):
+  print(f'## @{BM.LINE()} being run ##')
+
+  ixClass = machine_EvonyClient_N.lookup_class('com.evony.factory.ImageManager')
+  assert ixClass == -1
+  ixMethod = machine_EvonyClient_N.lookup_method('com.evony.factory.ImageManager.initAllianceLevelMap')
+  assert ixMethod == -1
+
+  # private function initAllianceLevelMap() : void
+  item = Object()
+  print(f'@{BM.LINE()} item={item}')
+  assert machine_EvonyClient_N.call_method('com.evony.factory.ImageManager.initAllianceLevelMap', item) == None
+  print(f'@{BM.LINE()} item={item}')
+
+  assert 'check' == f'output @{BM.LINE()}'
 
 def test_E_T0000_EvC_SomeHints(raw_do_abc_tag_EvonyClient_N: Tag):
   print(f'## @{BM.LINE()} being run ##')

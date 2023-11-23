@@ -3,13 +3,40 @@ from typing import Iterable, List
 import BrewMaths as BM
 
 from avm2.abc.instructions import Instruction, read_instruction
-from avm2.abc.types import ABCFile, ASMethodBody
+from avm2.abc.types import ABCFile, ASMethodBody, ASMultiname, ASNamespace, ASNamespaceBis
+from avm2.abc.enums import NamespaceKind
 from avm2.io import MemoryViewReader
+from datetime import datetime
 
 import inspect
 import logging
 
-gDebugLevel = logging.WARNING # DEBUG, INFO, WARNING, ERROR, CRITICAL # import logging
+gDebugLevel = logging.INFO # DEBUG, INFO, WARNING, ERROR, CRITICAL # import logging
+
+def BuildSymbolsLookup():
+  # int;str matches swf/MainFlash/sprites/DefineSprite_ numbers and strings
+  global g_SymbolsLookupFromNumber
+  g_SymbolsLookupFromNumber = dict()
+  with open(f'data/BryanHomeGamesEvonyCachstuffSwfMainflash/symbols.csv', 'r') as fCsv:
+    strLines = fCsv.readlines()
+  with open(f'dict_symbols.$txt', 'w') as fTxt:
+    fTxt.writelines(strLines)
+  kMin = 99999; kMax = -1
+  for strLine in strLines:
+    frags = strLine.strip().split(';')
+    #print(f'@{BM.LINE()} frags={frags}')
+    k = int(frags[0])
+    if kMin > k and k > 0: kMin = k
+    if kMax < k and k > 0: kMax = k
+    v = frags[1]
+    g_SymbolsLookupFromNumber[k] = v
+  print(f'@{BM.LINE()} g_SymbolsLookupFromNumber#={len(g_SymbolsLookupFromNumber)} from {len(strLines)} lines; kMin/Max={kMin}/{kMax}')
+  if gDebugLevel <= logging.INFO:
+    for k,v in g_SymbolsLookupFromNumber.items():
+      if v.startswith('EvonyClient') or v.startswith('_EvonyClient') or v.startswith('com.evony.'):
+        if '____' in v: continue
+        if '_swf_' in v: continue
+        print(f'@{BM.LINE()} [{k}] = {v}')
 
 def BuildColourNameLookup():
   global g_ColourNameLookupFromNumber
@@ -41,64 +68,85 @@ def BuildColourNameLookup():
   for k, v in namNum.items(): # 'reverse' dictionary
     g_ColourNameLookupFromNumber[v] = k
 
-def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
+def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> str:
     #print(f'{" "*indent}@@10@ [{attrNam}]:{indent}')
     att = getattr(item, attrNam)
-    typStr = type(att).__name__
+    typ = type(att)
+    typStr = str(typ) # att.__name__ # typStr = type(att).__name__
+    typNam = typ.__name__
     cls = att.__class__
-    clsStr = att.__class__.__name__
+    clsStr = str(cls)
+    clsNam = cls.__name__
+
+    # print(f'@{BM.LINE()} !!!!att attrNam={attrNam} typ={typ} typStr={typStr} typNam={typNam} cls={cls} clsStr={clsStr}  clsNam={clsNam} dir(att)={dir(att)}')
+    # if True: return
+
     # print(f'{" "*indent}@@13@ type(att)={type(att)}')
     # voluminous # print(f'{" "*indent}@@14@ att={att}')
     # print(f'{" "*indent}@@15@ dir(type(att))={dir(type(att))}')
 
-    if typStr == '': attStr = f'= @{BM.LINE()} !!22!attrNam=<{attrNam}>!att=<{att}>!'
-    elif typStr == 'int': attStr = f'= {att}'
-    elif typStr == 'list':
+    if typNam == '': attStr = f'= @{BM.LINE()} {BM.TERM_GRY_ON_RED()}!!22!attrNam=<{attrNam}>!att=<{att}>!{BM.TERM_RESET()}'
+    elif typNam == 'int': attStr = f'= {att}'
+    elif typNam == 'list':
       lenAtt = len(att)
       attStr = f'#{lenAtt}'
       if lenAtt > 0:
         attStr += f'; final type={type(att[lenAtt-1])}'
 
-    elif typStr == 'ASConstantPool':
-      if typStr == clsStr:
-        print(f'{" "*indent}[{attrNam}]:{typStr}=')
+    elif typNam == 'ASConstantPool':
+      if typNam == clsNam:
+        print(f'@{BM.LINE()}{"  "*indent}[{attrNam}]:{typNam}=')
       else:
-        print(f'{" "*indent}[{attrNam}]:{typStr}/{clsStr}=')
+        print(f'@{BM.LINE()}{"  "*indent}[{attrNam}]:{typNam}/{clsNam}=')
       #print(f'$$18$$ dir={dir(att)}')
       subDro = dir(att)
       for subNam in subDro:
         if subNam[:2] == '__' or subNam[-2:] == '__': continue
-        DumpAttribute(att, subNam, indent+1)
+        DumpAttribute(att, subNam, 'cp_', indent+1)
       return
-    elif typStr == 'method-wrapper': attStr = f'= {attrNam}'
-    elif typStr == 'type': attStr = f'= {attrNam}'
-    elif typStr == 'builtin_function_or_method': attStr = f'= {attrNam}'
-    elif typStr == 'str':
-      attStr = f'= {att}'
+    elif typNam == 'method-wrapper': attStr = f'=mw {attrNam}'
+    elif typNam == 'type': attStr = f'=t {attrNam}'
+    elif typNam == 'builtin_function_or_method': attStr = f'=bifom {attrNam}'
+    elif typNam == 'function': attStr = f'=fn {attrNam}'
+    elif typNam == 'str':
+      attStr = f"=s '{att}'"
       if len(attStr) > 20: attStr = attStr[:18] + '..'
-    else: attStr = f'= @{BM.LINE()} ??25?? typStr=<{typStr}> attrNam=<{attrNam}> att=<{att}>'
+    else: attStr = f'= @{BM.LINE()} {BM.TERM_GRY_ON_RED()}??25?? typNam=<{typNam}> attrNam=<{attrNam}> att=<{att}{BM.TERM_RESET()}>'
 
-    if typStr == clsStr:
-      print(f'{" "*indent}[{attrNam}]:{typStr} {attStr}')
+    if typNam == clsNam:
+      print(f'@{BM.LINE()}{"  "*indent}{BM.TERM_GRY_ON_BLU()}[{attrNam}]:{typNam} {attStr}{BM.TERM_RESET()}')
     else:
-      print(f'{" "*indent}[{attrNam}]:{typStr}/{clsStr} {attStr}')
-    #if typStr == 'ASConstantPool' :
+      print(f'@{BM.LINE()}{"  "*indent}{BM.TERM_WHT_ON_BLU()}[{attrNam}]:{typNam}/{clsNam} {attStr}{BM.TERM_RESET()}')
+    #if typNam == 'ASConstantPool' :
     #  sys.exit(-97)
 
     global g_ColourNameLookupFromNumber
+    global g_cp
     global g_cp_list_strings
     # maybe dump first & last 5
-    if typStr == 'list':
-      print(f'@{BM.LINE()} $$attrNam=[{attrNam}] att=[{f"{att}"[:120]}]')
-      with open(f'list_{attrNam}.$txt', "w") as fTxt:
+
+    # if True: return #########################################
+
+    if typNam == 'list':
+      # print(f'@{BM.LINE()} $$att type(att)={type(att)} typNam={typNam} dir(att)={dir(att)}')
+      print(f'@{BM.LINE()} {BM.TERM_WHT_ON_GRN()}$$attrPref/Nam=[{attrPrefix}/{attrNam}] att=[{f"{att}"[:120]}]{BM.TERM_RESET()}')
+      fn = f'list_{attrPrefix}{attrNam}.$txt'
+      with open(fn, "w") as fTxt:
         for ix in range(len(att)):
           val = att[ix]
           strVal = f'{val}'
           lenLim = 220
           if len(strVal) > lenLim: strVal = strVal[:lenLim-2] + '..'
           fTxt.write(strVal) # actual value, up to length lenLim
+
           # do we want some comments?
+          if ix == 0:
+            fTxt.write(f' # {datetime.now()} attrNam={attrNam} fn={fn}') # add timestamp, fn, etc
+
           if False: pass
+          #elif val is ASMultiname: # seems to not trigger
+          elif attrNam == 'multinamesXXX' and val != None:
+            fTxt.write(f' # qn={val.qualified_name(g_cp)}') # add QN
           elif attrNam == 'integers':
             fTxt.write(f' # {hex(val)}') # add hex. Colours = x RED GRN BLU
             if val in g_ColourNameLookupFromNumber:
@@ -111,31 +159,91 @@ def DumpAttribute(item: object, attrNam: str, indent: int) -> str:
           if ix > 4 and ix < (len(att) - 5): continue
           print(f'{" "*(indent+2)}[{ix}]«{strVal}»')
 
-def DumpAttributes(item: object, title: str, detail: int) -> str:
-  print(f'## @{BM.LINE()} $$31$$ title:{title}, dir={dir(item)}')
-  dro = dir(item)
-  # for it in dr if it[:2] != '__' and it[-2:] != '__' :
-  for nam in dro :
+def DumpAttributes(item: object, title: str, prefix: str, detail: int) -> str:
+  print(f'## @{BM.LINE()} $$31$$ title:{title}, prefix:{prefix}, dir={dir(item)}')
+  dir_i = dir(item)
+  # for it in dir_i if it[:2] != '__' and it[-2:] != '__' :
+  for nam in dir_i :
     if detail < 5:
       if nam[:2] == '__' or nam[-2:] == '__': continue
-    indent = 1; DumpAttribute(item, nam, indent)
+    indent = 1; DumpAttribute(item, nam, prefix, indent)
+
+def test_CheckAddingFieldToDataclass():
+    print(f'## @{BM.LINE()} being run ##')
+    listStrings = (None
+    , 'flash.utils'
+    , 'Dictionary'
+    , ''
+    , 'void'
+    , 'Object'
+    , 'int'
+    , 'flash.display'
+    , 'DisplayObject')
+
+    asnamespace_kind8_nameindex4 = b'\x08\x07'
+
+    mvr = MemoryViewReader(asnamespace_kind8_nameindex4)
+    assert mvr.read_u8() == 0x08
+    assert mvr.read_int() == 0x07
+
+    mvr = MemoryViewReader(asnamespace_kind8_nameindex4)
+    asns = ASNamespace(mvr);
+    assert asns.kind == NamespaceKind.NAMESPACE
+    assert asns.name_index == 7 # flash.display
+    print(f'## @{BM.LINE()} asns={asns}.')
+    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7)'
+
+    asns.justAssignName = 'justAssignedName' # does NOT do what's needed
+    print(f'## @{BM.LINE()} asns={asns}.')
+    assert f'{asns.justAssignName}' == 'justAssignedName' # kinda good but ..
+    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7)' # .. no good for me
+    # 'ASNamespace' object has no attribute 'repr' # assert f'{asns.repr()}' == 'AS...' # .. no good for me
+    # 'ASNamespace' object has no attribute 'str' # assert f'{asns.str()}' == 'AS...' # .. no good for me
+
+    setattr(asns, 'setAttrName', 'setAttredName')
+    print(f'## @{BM.LINE()} asns={asns}.')
+    assert f'{asns.setAttrName}' == 'setAttredName' # kinda good but ..
+    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7)' # .. no good for me
+
+    # OK, so try a derived class ...
+    asnsBis = ASNamespaceBis(asns, listStrings)
+    print(f'## @{BM.LINE()} asnsBis={asnsBis}.')
+    # note that the name of the 'name' field might vary e.g. maybe 'nameStr' or 'strName'
+    assert f'{asnsBis}'.startswith("ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7, ")
+    assert f'{asnsBis}'.endswith("='flash.display')")
 
 def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     abc_file_EvonyClient: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
     print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
+
+    # add name strings from name indices
+    abc_file_EvonyClient.constant_pool.propogateStrings()
+
     BuildColourNameLookup()
+    BuildSymbolsLookup()
 
     print(f'## @{BM.LINE()} grab various constant_pool value ...')
+    global g_cp; g_cp = abc_file_EvonyClient.constant_pool
     global g_cp_list_strings; g_cp_list_strings = abc_file_EvonyClient.constant_pool.strings
     print(f'## @{BM.LINE()} len(g_cp_list_strings)={len(g_cp_list_strings)}')
 
-    if gDebugLevel <= logging.INFO:
-      print(f'## @{BM.LINE()} about to DmpAtts c_p...')
-      DumpAttributes(type(getattr(abc_file_EvonyClient, 'constant_pool')).__name__, f'--==-- class name??', 99)
-      print(f'## @{BM.LINE()} about to DmpAtts a_f_EC...')
-      DumpAttributes(abc_file_EvonyClient, f'--==-- abc_file_EvonyClient', 0)
+    print(f'## @{BM.LINE()} about to DmpAtts c_p constant_pool ASConstantPool __name__ ...')
+    if gDebugLevel <= logging.DEBUG:
+      DumpAttributes(type(getattr(abc_file_EvonyClient, 'constant_pool')).__name__, f'--==-- class name??', '', 2)
     else:
-      print(f'## @{BM.LINE()} (skipping various DmpAtts)')
+      print(f'## @{BM.LINE()} (skipping that DmpAtts)')
+    print(f'## @{BM.LINE()} about to DmpAtts c_p constant_pool ASConstantPool ...')
+    if gDebugLevel <= logging.INFO:
+      DumpAttributes(type(getattr(abc_file_EvonyClient, 'constant_pool')), f'--==-- class name??', 'cp+_', 2)
+    else:
+      print(f'## @{BM.LINE()} (skipping that DmpAtts)')
+
+    print(f'## @{BM.LINE()} about to DmpAtts a_f_EC abc_file_EvonyClient...')
+    if gDebugLevel <= logging.INFO:
+      DumpAttributes(abc_file_EvonyClient, f'--==-- abc_file_EvonyClient', '', 2)
+    else:
+      print(f'## @{BM.LINE()} (skipping that DmpAtts)')
 
     print(f'--==--')
 
@@ -165,7 +273,6 @@ def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
 
 def read_method_body(method_body: ASMethodBody) -> List[Instruction]:
     return list(read_instructions(MemoryViewReader(method_body.code)))
-
 
 def read_instructions(reader: MemoryViewReader) -> Iterable[Instruction]:
     while not reader.is_eof():

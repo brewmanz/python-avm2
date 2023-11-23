@@ -78,6 +78,13 @@ class ASConstantPool:
         self.ns_sets = read_array_with_default(reader, ASNamespaceSet, None)
         self.multinames = read_array_with_default(reader, ASMultiname, None)
 
+    def propogateStrings(self):
+      print(f'@{BM.LINE()} propogateStrings running ... type(namespaces[0])={type(self.namespaces[0])}')
+      for ix in range(len(self.namespaces)):
+        item = self.namespaces[ix]
+        if item != None:
+          newItem = ASNamespaceBis(item, self.strings)
+          self.namespaces[ix] = newItem
 
 @dataclass
 class ASNamespace:
@@ -87,6 +94,16 @@ class ASNamespace:
     def __init__(self, reader: MemoryViewReader):
         self.kind = NamespaceKind(reader.read_u8())
         self.name_index = reader.read_int()
+
+@dataclass
+class ASNamespaceBis(ASNamespace):
+    strName: str
+
+    def __init__(self, rhs: ASNamespace, listStrings: List[str]):
+        self.kind = rhs.kind
+        self.name_index = rhs.name_index
+        if rhs.name_index > 0 and rhs.name_index < len(listStrings):
+          self.strName = listStrings[rhs.name_index]
 
 
 @dataclass
@@ -107,29 +124,32 @@ class ASMultiname:
     type_indices: Optional[List[ABCMultinameIndex]] = None
 
     def __init__(self, reader: MemoryViewReader):
+        DEBUG_self_name_index = 61
         self.kind = MultinameKind(reader.read_u8())
         # print(f'ASMultiname.__init__; self.kind={self.kind}')
-        if self.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A):
+        if self.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A): # QName
             self.namespace_index = reader.read_int()
             self.name_index = reader.read_int()
-            if self.name_index == 61:
+            if self.name_index == DEBUG_self_name_index:
               print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = Q_NAME[_A]; self.namespace_index={self.namespace_index}, self.name_index={self.name_index}')
-        elif self.kind in (MultinameKind.RTQ_NAME, MultinameKind.RTQ_NAME_A):
+        elif self.kind in (MultinameKind.RTQ_NAME, MultinameKind.RTQ_NAME_A): # RTQName
             self.name_index = reader.read_int()
-            if self.name_index == 61:
+            if self.name_index == DEBUG_self_name_index:
               print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = RTQ_NAME_A; self.name_index={self.name_index}')
-        elif self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA):
+        elif self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA): # RTQNameL
             # print(f'@{BM.LINE()} = RTQ_NAME_LA')
             pass
-        elif self.kind in (MultinameKind.MULTINAME, MultinameKind.MULTINAME_A):
+        elif self.kind in (MultinameKind.MULTINAME, MultinameKind.MULTINAME_A): # Multiname
             self.name_index = reader.read_int()
             self.namespace_set_index = reader.read_int()
-            if self.name_index == 61:
+            assert self.namespace_set_index != 0, 'namespace_set_index cannot be 0'
+            if self.name_index == DEBUG_self_name_index:
               print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = MULTINAME[_A]; self.name_index={self.name_index}, self.namespace_set_index={self.namespace_set_index}')
-        elif self.kind in (MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA):
+        elif self.kind in (MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA):# MultinameL
             self.namespace_set_index = reader.read_int()
+            assert self.namespace_set_index != 0, 'namespace_set_index cannot be 0'
             # print(f'@{BM.LINE()} = MULTINAME_L[A]; self.namespace_set_index={self.namespace_set_index}')
-        elif self.kind == MultinameKind.TYPE_NAME:
+        elif self.kind == MultinameKind.TYPE_NAME: # ??
             self.q_name_index = reader.read_int()
             self.type_indices = read_array(reader, MemoryViewReader.read_int)
             # print(f'@{BM.LINE()} = TYPE_NAME; self.q_name_index={self.q_name_index}, self.type_indices={type_indices}')
@@ -142,6 +162,8 @@ class ASMultiname:
       return f'<#[{ns_ix}]>{constant_pool.strings[ns.name_index]}##.##<#[{self.name_index}]>{constant_pool.strings[self.name_index]}'.strip('.')
 
     def qualified_name(self, constant_pool: ASConstantPool) -> str:
+      if False: pass
+      elif self.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A):
         assert self.kind == MultinameKind.Q_NAME, self.kind
         assert self.namespace_index
         assert self.name_index
@@ -169,7 +191,8 @@ class ASMultiname:
           print(f'@{BM.LINE()} .. about to crash on <assert namespace.name_index> ..')
         assert namespace.name_index
         return f'{constant_pool.strings[namespace.name_index]}.{constant_pool.strings[self.name_index]}'.strip('.')
-
+      else:
+        assert False, f'@{BM.LINE()} MultinameKind {self.kind} not implemented .. yet'
 
 @dataclass
 class ASMethod:

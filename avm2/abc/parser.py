@@ -13,7 +13,7 @@ def read_string(reader: MemoryViewReader) -> str:
 
 def read_array(reader: MemoryViewReader, read: Callable[[MemoryViewReader], T], size: Optional[int] = None) -> List[T]:
     """
-    Read variable-length array.
+    Read variable-length array. If no size given, read it as int first.
     """
     if size is None:
         size = reader.read_int()

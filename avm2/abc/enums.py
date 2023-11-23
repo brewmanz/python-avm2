@@ -22,7 +22,7 @@ class MultinameKind(IntEnum):
     MULTINAME_A = 0x0E
     MULTINAME_L = 0x1B
     MULTINAME_LA = 0x1C
-    TYPE_NAME = 0x1D
+    TYPE_NAME = 0x1D # not in the AVM2 overview docs I've seen - BEW 2023-11-23
 
 
 class MethodFlags(IntFlag):
