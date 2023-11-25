@@ -147,7 +147,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
 
           # do we want some comments?
           if ix == 0:
-            fTxt.write(f' # {datetime.now()} attrNam={attrNam} fn={fn}') # add timestamp, fn, etc
+            fTxt.write(f' # {datetime.now()} attrNam={attrNam} fn={fn} @{BM.LINE(False)}') # add timestamp, fn, etc
 
           if False: pass
           #elif val is ASMultiname: # seems to not trigger
@@ -157,7 +157,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
             fTxt.write(f' # {hex(val)}') # add hex. Colours = x RED GRN BLU
             if val in g_ColourNameLookupFromNumber:
               fTxt.write(f' # {g_ColourNameLookupFromNumber[val]}') # add colour name
-          elif attrNam == 'namespaces' and val != None:
+          elif False and attrNam == 'namespaces' and val != None: # obsolete with ASNamespaceBis
             ix = val.name_index
             fTxt.write(f' # n[ix]> {g_cp_list_strings[ix]}') # convert ns# to string value
 
