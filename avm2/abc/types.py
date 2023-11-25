@@ -79,12 +79,25 @@ class ASConstantPool:
         self.multinames = read_array_with_default(reader, ASMultiname, None)
 
     def propogateStrings(self):
-      print(f'@{BM.LINE()} propogateStrings running ... type(namespaces[0])={type(self.namespaces[0])}')
+      print(f'@{BM.LINE()} propogateStrings running ... ')
+      print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])}')
       for ix in range(len(self.namespaces)):
         item = self.namespaces[ix]
         if item != None:
-          newItem = ASNamespaceBis(item, self.strings)
+          newItem = ASNamespaceBis(item, self.strings, ix)
           self.namespaces[ix] = newItem
+      print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])}')
+      for ix in range(len(self.ns_sets)):
+        item = self.ns_sets[ix]
+        if item != None:
+          newItem = ASNamespaceSetBis(item, self.namespaces, ix)
+          self.ns_sets[ix] = newItem
+      print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])}')
+      for ix in range(len(self.multinames)):
+        item = self.multinames[ix]
+        if item != None:
+          newItem = ASMultinameBis(item, self.strings, self.namespaces, self.ns_sets, ix)
+          self.ns_sets[ix] = newItem
 
 @dataclass
 class ASNamespace:
@@ -94,18 +107,19 @@ class ASNamespace:
     def __init__(self, reader: MemoryViewReader):
         self.kind = NamespaceKind(reader.read_u8())
         self.name_index = reader.read_int()
-
 @dataclass
 class ASNamespaceBis(ASNamespace):
-    name: str
+    ixCP: int
+    name_name: str
 
-    def __init__(self, rhs: ASNamespace, listStrings: List[str]):
+    def __init__(self, rhs: ASNamespace, listStrings: List[str], ixCP: int):
         self.kind = rhs.kind
         self.name_index = rhs.name_index
+        self.ixCP = ixCP
         if rhs.name_index > 0 and rhs.name_index < len(listStrings):
-          self.name = listStrings[rhs.name_index]
+          self.name_name = listStrings[rhs.name_index]
         else:
-          self.name = None
+          self.name_name = None
 
 
 @dataclass
@@ -114,6 +128,24 @@ class ASNamespaceSet:
 
     def __init__(self, reader: MemoryViewReader):
         self.namespaces = read_array(reader, MemoryViewReader.read_int)
+@dataclass
+class ASNamespaceSetBis(ASNamespaceSet):
+    ixCP: int
+    namespaces_names: List[str]
+
+    def __init__(self, rhs: ASNamespaceSet, listNamespaces: List[ASNamespaceBis], ixCP: int):
+        self.namespaces = rhs.namespaces
+        self.ixCP = ixCP
+        names = list()
+        for ix in range(len(self.namespaces)):
+          ixNS = self.namespaces[ix]
+          ns = listNamespaces[ixNS]
+          nextName = ns.name if ns else None
+          print(f'@{BM.LINE()}  nextName={nextName} ix={ix} ixNS={ixNS} ns={ns} rhs={rhs}')
+          if True or nextName: # ALL # skip None
+            print(f'@{BM.LINE()}  appending nextName={nextName}')
+            names.append(nextName)
+        self.namespaces_names = names
 
 
 @dataclass
@@ -195,6 +227,17 @@ class ASMultiname:
         return f'{constant_pool.strings[namespace.name_index]}.{constant_pool.strings[self.name_index]}'.strip('.')
       else:
         assert False, f'@{BM.LINE()} MultinameKind {self.kind} not implemented .. yet'
+@dataclass
+class ASMultinameBis(ASMultiname):
+    namespace_name: str = None
+    name_name: str = None
+    namespace_set_names: List[str] = None
+    q_name_name:str = None
+    # ?? # type_indices: Optional[List[ABCMultinameIndex]] = None
+
+    def __init__(self, rhs: ASMultiname, listStrings: List[str], listNamespaces: List[ASNamespaceBis], listNSSets: List[ASNamespaceSetsBis], ixCP: int):
+      print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} FAILING')
+      assert False, 'unreachable code'
 
 @dataclass
 class ASMethod:

@@ -141,7 +141,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
         for ix in range(len(att)):
           val = att[ix]
           strVal = f'{val}'
-          lenLim = 220
+          lenLim = 1023 # 220
           if len(strVal) > lenLim: strVal = strVal[:lenLim-2] + '..'
           fTxt.write(strVal) # actual value, up to length lenLim
 
@@ -212,11 +212,12 @@ def test_CheckAddingFieldToDataclass():
     assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7)' # .. no good for me
 
     # OK, so try a derived class ...
-    asnsBis = ASNamespaceBis(asns, listStrings)
+    asnsBis = ASNamespaceBis(asns, listStrings, 123)
     print(f'## @{BM.LINE()} asnsBis={asnsBis}.')
     # note that the name of the 'name' field might vary e.g. maybe 'nameStr' or 'strName'
     assert f'{asnsBis}'.startswith("ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7, ")
     assert f'{asnsBis}'.endswith("='flash.display')")
+    assert f'{asnsBis}' == "ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7, ixCP=123, name_name='flash.display')"
 
 def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     abc_file_EvonyClient: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
