@@ -97,13 +97,15 @@ class ASNamespace:
 
 @dataclass
 class ASNamespaceBis(ASNamespace):
-    strName: str
+    name: str
 
     def __init__(self, rhs: ASNamespace, listStrings: List[str]):
         self.kind = rhs.kind
         self.name_index = rhs.name_index
         if rhs.name_index > 0 and rhs.name_index < len(listStrings):
-          self.strName = listStrings[rhs.name_index]
+          self.name = listStrings[rhs.name_index]
+        else:
+          self.name = None
 
 
 @dataclass

@@ -91,7 +91,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
       lenAtt = len(att)
       attStr = f'#{lenAtt}'
       if lenAtt > 0:
-        attStr += f'; final type={type(att[lenAtt-1])}'
+        attStr += f'; final type={type(att[-1])}'
 
     elif typNam == 'ASConstantPool':
       if typNam == clsNam:
@@ -111,7 +111,8 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
     elif typNam == 'str':
       attStr = f"=s '{att}'"
       if len(attStr) > 20: attStr = attStr[:18] + '..'
-    else: attStr = f'= @{BM.LINE()} {BM.TERM_GRY_ON_RED()}??25?? typNam=<{typNam}> attrNam=<{attrNam}> att=<{att}{BM.TERM_RESET()}>'
+    elif typNam == 'method': attStr = f'=m {attrNam}'
+    else: attStr = f'= @{BM.LINE()} {BM.TERM_GRY_ON_RED()}??25?? !!typNam=<{typNam}>!! attrNam=<{attrNam}> att=<{att}{BM.TERM_RESET()}>'
 
     if typNam == clsNam:
       print(f'@{BM.LINE()}{"  "*indent}{BM.TERM_GRY_ON_BLU()}[{attrNam}]:{typNam} {attStr}{BM.TERM_RESET()}')
@@ -128,7 +129,12 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
     # if True: return #########################################
 
     if typNam == 'list':
-      # print(f'@{BM.LINE()} $$att type(att)={type(att)} typNam={typNam} dir(att)={dir(att)}')
+      if gDebugLevel <= logging.INFO:
+        #print(f'@{BM.LINE()} $$att type(att)={type(att)} typNam={typNam} dir(att)={dir(att)}') # full
+        print(f'@{BM.LINE()} $$att type(att)={type(att)} typNam={typNam} dir(att)={list(a for a in dir(att) if not a.startswith("__"))}') # filtered
+        #print(f'@{BM.LINE()} $$att[-1] type(att{-1})={type(att[-1])} dir(att[-1])={dir(att[-1])}')  # full
+        print(f'@{BM.LINE()} $$att[-1] type(att{-1})={type(att[-1])} dir(att[-1])={list(a for a in dir(att[-1]) if not a.startswith("__"))}') # filtered
+
       print(f'@{BM.LINE()} {BM.TERM_WHT_ON_GRN()}$$attrPref/Nam=[{attrPrefix}/{attrNam}] att=[{f"{att}"[:120]}]{BM.TERM_RESET()}')
       fn = f'list_{attrPrefix}{attrNam}.$txt'
       with open(fn, "w") as fTxt:
