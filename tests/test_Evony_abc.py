@@ -158,7 +158,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
             if val in g_ColourNameLookupFromNumber:
               fTxt.write(f' # {g_ColourNameLookupFromNumber[val]}') # add colour name
           elif False and attrNam == 'namespaces' and val != None: # obsolete with ASNamespaceBis
-            ix = val.name_index
+            ix = val.nam_ix
             fTxt.write(f' # n[ix]> {g_cp_list_strings[ix]}') # convert ns# to string value
 
           fTxt.write('\n') # end line
@@ -195,29 +195,29 @@ def test_CheckAddingFieldToDataclass():
     mvr = MemoryViewReader(asnamespace_kind8_nameindex4)
     asns = ASNamespace(mvr);
     assert asns.kind == NamespaceKind.NAMESPACE
-    assert asns.name_index == 7 # flash.display
+    assert asns.nam_ix == 7 # flash.display
     print(f'## @{BM.LINE()} asns={asns}.')
-    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7)'
+    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7)'
 
     asns.justAssignName = 'justAssignedName' # does NOT do what's needed
     print(f'## @{BM.LINE()} asns={asns}.')
     assert f'{asns.justAssignName}' == 'justAssignedName' # kinda good but ..
-    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7)' # .. no good for me
+    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7)' # .. no good for me
     # 'ASNamespace' object has no attribute 'repr' # assert f'{asns.repr()}' == 'AS...' # .. no good for me
     # 'ASNamespace' object has no attribute 'str' # assert f'{asns.str()}' == 'AS...' # .. no good for me
 
     setattr(asns, 'setAttrName', 'setAttredName')
     print(f'## @{BM.LINE()} asns={asns}.')
     assert f'{asns.setAttrName}' == 'setAttredName' # kinda good but ..
-    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7)' # .. no good for me
+    assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7)' # .. no good for me
 
     # OK, so try a derived class ...
     asnsBis = ASNamespaceBis(asns, listStrings, 123)
     print(f'## @{BM.LINE()} asnsBis={asnsBis}.')
     # note that the name of the 'name' field might vary e.g. maybe 'nameStr' or 'strName'
-    assert f'{asnsBis}'.startswith("ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7, ")
+    assert f'{asnsBis}'.startswith("ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7, ")
     assert f'{asnsBis}'.endswith("='flash.display')")
-    assert f'{asnsBis}' == "ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, name_index=7, ixCP=123, name_name='flash.display')"
+    assert f'{asnsBis}' == "ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7, ixCP=123, nam_name='flash.display')"
 
 def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     abc_file_EvonyClient: ABCFile = abc_file_EvonyClient_N # TODO fix HACK

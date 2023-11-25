@@ -59,11 +59,11 @@ class VirtualMachine:
         """
         Link methods and methods bodies.
         """
-        return {method_body.method_index: index for index, method_body in enumerate(self.abc_file.method_bodies)}
+        return {method_body.method_ix: index for index, method_body in enumerate(self.abc_file.method_bodies)}
 
     def link_classes_to_scripts(self) -> Dict[ABCClassIndex, ABCScriptIndex]:
         return {
-            trait.data.class_index: script_index
+            trait.data.class_ix: script_index
             for script_index, script in enumerate(self.abc_file.scripts)
             for trait in script.traits
             if trait.kind == TraitKind.CLASS
@@ -75,8 +75,8 @@ class VirtualMachine:
         """
         # FIXME: this is doubtful.
         for index, instance in enumerate(self.abc_file.instances):
-            assert instance.name_index
-            yield self.multinames[instance.name_index].qualified_name(self.constant_pool), index
+            assert instance.nam_ix
+            yield self.multinames[instance.nam_ix].qualified_name(self.constant_pool), index
 
     def link_names_to_methods(self) -> Iterable[Tuple[str, ABCMethodIndex]]:
         """
@@ -84,11 +84,11 @@ class VirtualMachine:
         """
         # FIXME: this is doubtful.
         for instance, class_ in zip(self.abc_file.instances, self.abc_file.classes):
-            qualified_class_name = self.multinames[instance.name_index].qualified_name(self.constant_pool)
+            qualified_class_name = self.multinames[instance.nam_ix].qualified_name(self.constant_pool)
             for trait in class_.traits:
                 if trait.kind in (TraitKind.GETTER, TraitKind.SETTER, TraitKind.METHOD):
-                    qualified_trait_name = self.multinames[trait.name_index].qualified_name(self.constant_pool)
-                    yield f'{qualified_class_name}.{qualified_trait_name}', trait.data.method_index
+                    qualified_trait_name = self.multinames[trait.nam_ix].qualified_name(self.constant_pool)
+                    yield f'{qualified_class_name}.{qualified_trait_name}', trait.data.method_ix
 
     # Resolving.
     # ------------------------------------------------------------------------------------------------------------------
@@ -144,27 +144,27 @@ class VirtualMachine:
         """
         if script_index not in self.script_objects:
             # TODO: what is `this`?
-            self.call_method(self.abc_file.scripts[script_index].init_index, self.script_objects[script_index])
+            self.call_method(self.abc_file.scripts[script_index].init_ix, self.script_objects[script_index])
 
     # Classes.
     # ------------------------------------------------------------------------------------------------------------------
 
-    def init_class(self, class_index: ABCClassIndex):
-        self.init_script(self.class_to_script[class_index])
-        self.call_method(self.abc_file.classes[class_index].init_index, self.class_objects[class_index])
+    def init_class(self, class_ix: ABCClassIndex):
+        self.init_script(self.class_to_script[class_ix])
+        self.call_method(self.abc_file.classes[class_ix].init_ix, self.class_objects[class_ix])
         # TODO: the scope stack is saved by the created ClassClosure.
 
     def new_instance(self, index_or_name: Union[ABCClassIndex, str], *args) -> ASObject:
         if isinstance(index_or_name, int):
-            class_index = ABCClassIndex(index_or_name)
+            class_ix = ABCClassIndex(index_or_name)
         elif isinstance(index_or_name, str):
-            class_index = self.lookup_class(index_or_name)
+            class_ix = self.lookup_class(index_or_name)
         else:
             raise ValueError(index_or_name)
 
-        instance = ASObject(class_index=class_index)
+        instance = ASObject(class_ix=class_ix)
         # FIXME: call super constructor?
-        self.call_method(self.abc_file.instances[class_index].init_index, instance, *args)
+        self.call_method(self.abc_file.instances[class_ix].init_ix, instance, *args)
         return instance
 
     # Execution.
@@ -230,7 +230,7 @@ class VirtualMachine:
         """
         Create method execution environment: registers and stacks.
         """
-        method = self.abc_file.methods[method_body.method_index]
+        method = self.abc_file.methods[method_body.method_ix]
         # There are `method_body_info.local_count` registers.
         registers: List[Any] = [undefined] * method_body.local_count
         # Register 0 holds the "this" object. This value is never null.

@@ -8,7 +8,7 @@ from avm2.abc.types import ABCClassIndex
 
 @dataclass
 class ASObject:
-    class_index: Optional[ABCClassIndex] = None
+    class_ix: Optional[ABCClassIndex] = None
     properties: Dict[Tuple[str, str], ASObject] = field(default_factory=dict)
 
 

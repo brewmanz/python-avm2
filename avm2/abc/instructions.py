@@ -541,21 +541,21 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
         try:
 
             theStack      = environment.scope_stack
-            theName       = machine.strings[multiname.name_index]
-            theNamespaces = [machine.strings[machine.namespaces[multiname.namespace_index].name_index]]
+            theName       = machine.strings[multiname.nam_ix]
+            theNamespaces = [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
             if machine.callbackOnInstructionExecuting is not None:
               machine.callbackOnInstructionExecuting.MakeExtraObservation(f'tS#{len(theStack)}={BM.DumpVar(theStack)}')
               machine.callbackOnInstructionExecuting.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
               machine.callbackOnInstructionExecuting.MakeExtraObservation(f'tNa={BM.DumpVar(theNamespaces)}')
             object_, name, namespace = machine.resolve_multiname(
                 theStack, # environment.scope_stack,
-                theName, # machine.strings[multiname.name_index],
-                theNamespaces # [machine.strings[machine.namespaces[multiname.namespace_index].name_index]],
+                theName, # machine.strings[multiname.nam_ix],
+                theNamespaces # [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
             )
             # object_, _, _ = machine.resolve_multiname(
                 # environment.scope_stack,
-                # machine.strings[multiname.name_index],
-                # [machine.strings[machine.namespaces[multiname.namespace_index].name_index]],
+                # machine.strings[multiname.nam_ix],
+                # [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
             # )
         except KeyError:
             raise NotImplementedError('ReferenceError')
@@ -575,7 +575,7 @@ class GetGlobalScope(Instruction):
 
 @instruction(110)
 class GetGlobalSlot(Instruction):
-    slot_index: u30
+    slot_ix: u30
 
 
 @instruction(96)
@@ -600,16 +600,16 @@ class GetLex(Instruction): # … => …, obj
         assert multiname.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A)
         try:
             theStack      = environment.scope_stack
-            theName       = machine.strings[multiname.name_index]
-            theNamespaces = [machine.strings[machine.namespaces[multiname.namespace_index].name_index]]
+            theName       = machine.strings[multiname.nam_ix]
+            theNamespaces = [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
             if machine.callbackOnInstructionExecuting is not None:
               machine.callbackOnInstructionExecuting.MakeExtraObservation(f'tS#{len(theStack)}={BM.DumpVar(theStack)}')
               machine.callbackOnInstructionExecuting.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
               machine.callbackOnInstructionExecuting.MakeExtraObservation(f'tNa={BM.DumpVar(theNamespaces)}')
             object_, name, namespace = machine.resolve_multiname(
                 theStack, # environment.scope_stack,
-                theName, # machine.strings[multiname.name_index],
-                theNamespaces, # [machine.strings[machine.namespaces[multiname.namespace_index].name_index]],
+                theName, # machine.strings[multiname.nam_ix],
+                theNamespaces, # [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
             )
         except KeyError:
             raise NotImplementedError('ReferenceError')
@@ -696,7 +696,7 @@ class GetScopeObject(Instruction): # … => …, scope
 
 @instruction(108)
 class GetSlot(Instruction):
-    slot_index: u30
+    slot_ix: u30
 
 
 @instruction(4)
@@ -1250,7 +1250,7 @@ class SetLocal3(Instruction): # …, value => …
 
 @instruction(111)
 class SetGlobalSlot(Instruction):
-    slot_index: u30
+    slot_ix: u30
 
 
 @instruction(97)
@@ -1290,7 +1290,7 @@ class SetProperty(Instruction): # …, obj, [ns], [name], value => …
 
 @instruction(109)
 class SetSlot(Instruction):
-    slot_index: u30
+    slot_ix: u30
 
 
 @instruction(5)
