@@ -95,6 +95,7 @@ class VirtualMachine:
 
     def resolve_multiname(self, stack: List[ASObject], name: str, namespaces: Iterable[str]) -> Tuple[ASObject, str, str]:
         for object_ in reversed(stack):
+            if self.callbackOnInstructionExecuting is not None: self.callbackOnInstructionExecuting.MakeExtraObservation(f'ResMulNam.obj=<{BM.DumpVar(object_)}>')
             for namespace in namespaces:
                 try:
                     return self.resolve_qname(object_, namespace, name), name, namespace
@@ -106,6 +107,9 @@ class VirtualMachine:
         # Typically, the order of the search for resolving multinames is
         # the object’s declared traits, its dynamic properties, and finally the prototype chain.
         # TODO: declared traits.
+
+        if isinstance(object_, str): # if a string, return as-is
+          return object_
         return object_.properties[namespace, name]
         # TODO: prototype chain.
 

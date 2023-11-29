@@ -90,6 +90,15 @@ def test_E_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
 
 def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()}  public static function trim(param1:String) : String {{')
+  print(f'## @{BM.LINE()}    if(param1 == null) {{ return ""; }}')
+  print(f'## @{BM.LINE()}    var _loc2_:int = 0;')
+  print(f'## @{BM.LINE()}    while(isWhitespace(param1.charAt(_loc2_))) {{ _loc2_++; }}')
+  print(f'## @{BM.LINE()}    var _loc3_:int = param1.length - 1;')
+  print(f'## @{BM.LINE()}    while(isWhitespace(param1.charAt(_loc3_))) {{ _loc3_--; }}')
+  print(f'## @{BM.LINE()}    if(_loc3_ >= _loc2_) {{ return param1.slice(_loc2_,_loc3_ + 1); }}')
+  print(f'## @{BM.LINE()}    return ""; }}')
+
   # EvonyHuge.txt:147605 # public static function trim(param1:String) : String
   callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
   machine_EvonyClient_N.callbackOnInstructionExecuting = callback
