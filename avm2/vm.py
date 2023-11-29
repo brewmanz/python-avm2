@@ -48,7 +48,7 @@ class VirtualMachine:
         })  # FIXME: unsure, prototypes again?
 
         # callbacks
-        self.callbackOnInstructionExecuting: CallbackOnInstructionExecuting = None
+        self.cbOnInsExe: CallbackOnInstructionExecuting = None
 
         self.GDictFails = 0
 
@@ -95,7 +95,7 @@ class VirtualMachine:
 
     def resolve_multiname(self, stack: List[ASObject], name: str, namespaces: Iterable[str]) -> Tuple[ASObject, str, str]:
         for object_ in reversed(stack):
-            if self.callbackOnInstructionExecuting is not None: self.callbackOnInstructionExecuting.MakeExtraObservation(f'ResMulNam.obj=<{BM.DumpVar(object_)}>')
+            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'ResMulNam.obj=<{BM.DumpVar(object_)}>')
             for namespace in namespaces:
                 try:
                     return self.resolve_qname(object_, namespace, name), name, namespace

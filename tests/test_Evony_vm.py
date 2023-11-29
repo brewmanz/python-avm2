@@ -101,9 +101,9 @@ def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
 
   # EvonyHuge.txt:147605 # public static function trim(param1:String) : String
   callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
-  machine_EvonyClient_N.callbackOnInstructionExecuting = callback
+  machine_EvonyClient_N.cbOnInsExe = callback
   act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz")
-  machine_EvonyClient_N.callbackOnInstructionExecuting = None
+  machine_EvonyClient_N.cbOnInsExe = None
   print(f'## @{BM.LINE()} SU_T act=<{act}>')
   assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz") == "xyz"
   assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "  abc  ") == "abc"

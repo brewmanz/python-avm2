@@ -52,7 +52,7 @@ def test_T1400_call_get_elemental_penetration_heroes(machine_heroes: VirtualMach
     print(f'## @{BM.LINE()} being run ##')
     # scripts/battle/BattleCore.as:85 public static function getElementalPenetration(param1:Number, param2:Number) : int
     callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
-    machine_heroes.callbackOnInstructionExecuting = callback
+    machine_heroes.cbOnInsExe = callback
     assert machine_heroes.call_method('battle.BattleCore.getElementalPenetration', undefined, 2, 300000) == 1
     print(f'## @{BM.LINE()} mark ##')
     assert machine_heroes.call_method('battle.BattleCore.getElementalPenetration', undefined, 42, -100500) == 42
