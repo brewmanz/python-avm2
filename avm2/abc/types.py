@@ -154,38 +154,43 @@ class ASNamespaceSetBis(ASNamespaceSet):
 @dataclass
 class ASMultiname:
     kind: MultinameKind
-    ns_ix: Optional[ABCNamespaceIndex] = None
-    nam_ix: Optional[ABCStringIndex] = None
-    ns_set_ix: Optional[ABCNamespaceSetIndex] = None
-    q_nam_ix: Optional[ABCMultinameIndex] = None
+    ns_ix: Optional[ABCNamespaceIndex] = None           # index into cp namespaces
+    nam_ix: Optional[ABCStringIndex] = None             # index into cp strings
+    ns_set_ix: Optional[ABCNamespaceSetIndex] = None    # index into cp ns_sets
+    q_nam_ix: Optional[ABCMultinameIndex] = None        # index into cp multinames
     type_ixs: Optional[List[ABCMultinameIndex]] = None
+
+    def getNameFromStack(self) -> bool:
+      return self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA, MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA ):
+    def getNamespaceFromStack(self) -> bool:
+      return self.kind in (MultinameKind.RTQ_NAME, MultinameKind.RTQ_NAME_A, MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA):
 
     def __init__(self, reader: MemoryViewReader):
         DEBUG_self_nam_ix = 61
         self.kind = MultinameKind(reader.read_u8())
         # print(f'ASMultiname.__init__; self.kind={self.kind}')
-        if self.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A): # QName
+        if self.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A): # QName -> ns_ix & nam_ix
             self.ns_ix = reader.read_int()
             self.nam_ix = reader.read_int()
             if self.nam_ix == DEBUG_self_nam_ix:
               print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = Q_NAME[_A]; self.ns_ix={self.ns_ix}, self.nam_ix={self.nam_ix}')
-        elif self.kind in (MultinameKind.RTQ_NAME, MultinameKind.RTQ_NAME_A): # RTQName
+        elif self.kind in (MultinameKind.RTQ_NAME, MultinameKind.RTQ_NAME_A): # RTQName -> nam_ix here (and ns from stack at R/T)
             self.nam_ix = reader.read_int()
             if self.nam_ix == DEBUG_self_nam_ix:
               print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = RTQ_NAME_A; self.nam_ix={self.nam_ix}')
-        elif self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA): # RTQNameL
+        elif self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA): # RTQNameL -> (nam & ns from stack at R/T)
             # print(f'@{BM.LINE()} = RTQ_NAME_LA')
             pass
-        elif self.kind in (MultinameKind.MULTINAME, MultinameKind.MULTINAME_A): # Multiname
+        elif self.kind in (MultinameKind.MULTINAME, MultinameKind.MULTINAME_A): # Multiname -> nam_ix & ns_set_ix
             self.nam_ix = reader.read_int()
-            self.namespace_set_index = reader.read_int()
-            assert self.namespace_set_index != 0, 'namespace_set_index cannot be 0'
+            self.ns_set_ix = reader.read_int()
+            assert self.ns_set_ix != 0, 'ns_set_ix cannot be 0'
             if self.nam_ix == DEBUG_self_nam_ix:
-              print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = MULTINAME[_A]; self.nam_ix={self.nam_ix}, self.namespace_set_index={self.namespace_set_index}')
-        elif self.kind in (MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA):# MultinameL
-            self.namespace_set_index = reader.read_int()
-            assert self.namespace_set_index != 0, 'namespace_set_index cannot be 0'
-            # print(f'@{BM.LINE()} = MULTINAME_L[A]; self.namespace_set_index={self.namespace_set_index}')
+              print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} = MULTINAME[_A]; self.nam_ix={self.nam_ix}, self.ns_set_ix={self.ns_set_ix}')
+        elif self.kind in (MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA):# MultinameL -> ns_set_ix (nam from stack at R/T)
+            self.ns_set_ix = reader.read_int()
+            assert self.ns_set_ix != 0, 'ns_set_ix cannot be 0'
+            # print(f'@{BM.LINE()} = MULTINAME_L[A]; self.ns_set_ix={self.ns_set_ix}')
         elif self.kind == MultinameKind.TYPE_NAME: # ??
             self.q_nam_ix = reader.read_int()
             self.type_ixs = read_array(reader, MemoryViewReader.read_int)
@@ -247,10 +252,10 @@ class ASMultinameBis(ASMultiname):
       self.q_nam_ix = rhs.q_nam_ix
       self.type_ixs = rhs.type_ixs
       self.ixCP = ixCP
-      self.ns_name = None
-      self.nam_name = None
-      self.ns_set_names = None
-      self.q_nam_name = None
+      self.ns_name = None if self.ns_ix is None else listNamespaces[self.ns_ix].nam_name
+      self.nam_name = None if self.nam_ix is None else listStrings[self.nam_ix]
+      self.ns_set_names = None if self.ns_set_ix is None else f'!! ## TODO @{BM.LINE(False)} !!'
+      self.q_nam_name = None if self.q_nam_ix is None else f'!! ## TODO @{BM.LINE(False)} !!'
       pass
       #print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} FAILING')
       #assert False, 'unreachable code'

@@ -15,6 +15,8 @@ from avm2.abc.enums import MultinameKind
 
 import inspect
 
+strBACKWARDS_n = 'BACKWARDS\n'
+
 def read_instruction(reader: MemoryViewReader) -> Instruction:
     opcode: int = reader.read_u8()
     # noinspection PyCallingNonCallable
@@ -115,7 +117,7 @@ class Add(Instruction): # …, value1, value2 => …, value3
         value_2 = environment.operand_stack.pop()
         value_1 = environment.operand_stack.pop()
         result = value_1 + value_2
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
 
 @instruction(197)
@@ -130,7 +132,7 @@ class AddInteger(Instruction): # …, value1, value2 => …, value3
         value_2 = environment.operand_stack.pop()
         value_1 = environment.operand_stack.pop()
         result = int(value_1) + int(value_2)
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
 
 
@@ -177,24 +179,65 @@ class CallMethod(Instruction): # …, receiver, arg1, arg2, ..., argn => …, va
 
 @instruction(70)
 class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, value
+    """
+    arg_count is a u30 that is the number of arguments present on the stack.
+      The number of arguments specified by arg_count are popped off the stack and saved.
+
+    index is a u30 that must be an index into the multiname constant pool.
+      If the multiname at that index is a runtime multiname the name and/or namespace will also appear on the stack
+        so that the multiname can be constructed correctly at runtime.
+
+    obj is the object to resolve and call the property on.
+      The property specified by the multiname at index is resolved on the object obj.
+
+    The [[Call]] property is invoked on the value of the resolved property with the arguments obj, arg1, ..., argn.
+
+    The result of the call is pushed onto the stack.
+    """
     index: u30
     arg_count: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'stack=<{BM.DumpVar(environment.operand_stack)}>')
-      argN=[]
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1')
 
-      for ix in range(self.arg_count-3)[::-1]: # leave 3 entries for obj, ns, name
+      multiname = machine.multinames[self.index]
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+
+      argN=[]
+      actualArgCount = self.arg_count - 1
+      if getNameFromStack: actualArgCount -= 1
+      if getNamespaceFromStack: actualArgCount -= 1
+
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'self.arg_count={self.arg_count} actualArgCount={actualArgCount}')
+      for ix in range(actualArgCount)[::-1]: # leave entries for obj, [ns], [name]
         theArg = environment.operand_stack.pop()
-        print(f'arg[{ix}]={theArg}')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={theArg}')
         argN.insert(0, theArg)
 
-      theName = environment.operand_stack.pop()
-      theNS = environment.operand_stack.pop()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2')
+
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'nam/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+
+      theSStack = environment.scope_stack
+      theName  = environment.operand_stack.pop() if getNameFromStack else machine.strings[multiname.nam_ix]
+      theNS    = environment.operand_stack.pop() if getNamespaceFromStack else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
+
+      if machine.cbOnInsExe is not None:
+        machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
+        machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
+        machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNS)}')
+
       theObj = environment.operand_stack.pop()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={theObj}')
+
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3')
 
       result = f'!! ## TODO ## @{BM.LINE(False)} !!'
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
 @instruction(76)
@@ -202,12 +245,24 @@ class CallPropLex(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, 
     index: u30
     arg_count: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(79)
 class CallPropVoid(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     index: u30
     arg_count: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(68)
 class CallStatic(Instruction): # …, receiver, arg1, arg2, ..., argn => …, value
@@ -220,12 +275,24 @@ class CallSuper(Instruction):
     index: u30
     arg_count: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(78)
 class CallSuperVoid(Instruction):
     index: u30
     arg_count: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(120)
 class CheckFilter(Instruction):
@@ -258,7 +325,8 @@ class Construct(Instruction): # …, object, arg1, arg2, ..., argn => …, value
     arg_count: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW a#={self.arg_count}', file=sys.stderr)
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index} OS={environment.operand_stack}')
+      print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
       # TODO add proper code
       argN=[]
       for ix in range(self.arg_count)[::-1]:
@@ -269,7 +337,7 @@ class Construct(Instruction): # …, object, arg1, arg2, ..., argn => …, value
       theObj = environment.operand_stack.pop()
 
       result = f'!! ## TODO ## @{BM.LINE(False)} !!'
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
 
@@ -294,7 +362,8 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     arg_count: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}, a#={self.arg_count}', file=sys.stderr)
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index} OS={environment.operand_stack}')
+      print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
       # TODO add proper code
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'stack=<{BM.DumpVar(environment.operand_stack)}>')
       argN=[]
@@ -306,6 +375,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
       # TODO is it a runtime multiname?
       # cf FindPropStrict for some ideas
 
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
       isMultinameRuntimeName = False # Add code to determine Name
       isMultinameRuntimeNS = False # Add code to determine Namespace
 
@@ -318,9 +388,15 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
       theObj = environment.operand_stack.pop()
 
       result = f'!! ## TODO ## @{BM.LINE(False)} !!'
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(73)
 class ConstructSuper(Instruction): # …, object, arg1, arg2, ..., argn => …
@@ -331,7 +407,8 @@ class ConstructSuper(Instruction): # …, object, arg1, arg2, ..., argn => …
     arg_count: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}', file=sys.stderr)
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index} OS={environment.operand_stack}')
+      print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
       # TODO add proper code
       #print(f'a#={self.arg_count}')
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'stack=<{BM.DumpVar(environment.operand_stack)}>')
@@ -361,7 +438,7 @@ class ConvertToInteger(Instruction): # …, value => …, intvalue
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = int(environment.operand_stack.pop())
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         environment.operand_stack.append(value)
 
 
@@ -375,7 +452,7 @@ class ConvertToDouble(Instruction): # …, value => …, doublevalue
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = float(environment.operand_stack.pop())
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         environment.operand_stack.append(value)
 
 
@@ -441,7 +518,7 @@ class Decrement(Instruction):
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
       value = environment.operand_stack.pop()
       result = value - 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
 
@@ -450,7 +527,7 @@ class DecrementInteger(Instruction):
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
       value = environment.operand_stack.pop()
       result = int(value) - 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
 
@@ -458,6 +535,12 @@ class DecrementInteger(Instruction):
 class DeleteProperty(Instruction):
     index: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(163)
 class Divide(Instruction): # …, value1, value2 => …, value3
@@ -471,7 +554,7 @@ class Divide(Instruction): # …, value1, value2 => …, value3
         value_2 = environment.operand_stack.pop()
         value_1 = environment.operand_stack.pop()
         result = value_1 / value_2
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
 
 
@@ -483,7 +566,7 @@ class Dup(Instruction): # …, value => …, value, value
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         environment.operand_stack.extend([value, value])
 
 
@@ -532,6 +615,7 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
     """
     index: u30
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index} OS={environment.operand_stack}')
       print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
 
       # TODO add proper code
@@ -539,6 +623,7 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
       # TODO is it a runtime multiname?
       # cf FindPropStrict for some ideas
 
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
       isMultinameRuntimeName = False # Add code to determine Name
       isMultinameRuntimeNS = False # Add code to determine Namespace
 
@@ -550,8 +635,15 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
         theNS = environment.operand_stack.pop()
 
       result = f'!! ## TODO  cf FindPropStrict ## @{BM.LINE(False)} !!'
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
+
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 
 @instruction(93)
@@ -577,20 +669,27 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
     index: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index}', file=sys.stderr)
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index} OS={environment.operand_stack}')
+        print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
         #assert False, 'Crash Here'
         multiname = machine.multinames[self.index]
         # TODO: other kinds of multinames.
         assert multiname.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A), multiname
+
+        getNameFromStack = multiname.getNameFromStack()
+        getNamespaceFromStack = multiname.getNamespaceFromStack()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'nam/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+
         try:
 
             theStack      = environment.scope_stack
-            theName       = machine.strings[multiname.nam_ix]
-            theNamespaces = [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
+            theName       = environment.operand_stack.pop() if getNameFromStack else machine.strings[multiname.nam_ix]
+            theNamespaces = [environment.operand_stack.pop()] if getNamespaceFromStack else [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
+
             if machine.cbOnInsExe is not None:
               machine.cbOnInsExe.MakeExtraObservation(f'tS#{len(theStack)}={BM.DumpVar(theStack)}')
               machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
-              machine.cbOnInsExe.MakeExtraObservation(f'tNa={BM.DumpVar(theNamespaces)}')
+              machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
             object_, name, namespace = machine.resolve_multiname(
                 theStack, # environment.scope_stack,
                 theName, # machine.strings[multiname.nam_ix],
@@ -604,7 +703,7 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
         except KeyError:
             raise NotImplementedError('ReferenceError')
         else:
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push object_=<{BM.DumpVar(object_)}>')
+            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push object_=<{BM.DumpVar(object_)}>')
             environment.operand_stack.append(object_)
             assert len(environment.operand_stack) < 55, 'Crash Here'
 
@@ -612,6 +711,12 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
 class GetDescendants(Instruction):
     index: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(100)
 class GetGlobalScope(Instruction):
@@ -660,7 +765,7 @@ class GetLex(Instruction): # … => …, obj
           raise NotImplementedError('ReferenceError')
         else:
           result = object_.properties[namespace, name]
-          if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+          if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
           environment.operand_stack.append(result)
 
 
@@ -683,7 +788,7 @@ class GetLocal0(Instruction): # … => …, value
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.registers[0]
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         # if machine.cbOnInsExe is not None: DumpEnvironmentRegisters(machine, environment)
         environment.operand_stack.append(value)
 
@@ -692,7 +797,7 @@ class GetLocal0(Instruction): # … => …, value
 class GetLocal1(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.registers[1]
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         # if machine.cbOnInsExe is not None: DumpEnvironmentRegisters(machine, environment)
         environment.operand_stack.append(value)
 
@@ -701,7 +806,7 @@ class GetLocal1(Instruction): # … => …, value
 class GetLocal2(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.registers[2]
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         # if machine.cbOnInsExe is not None: DumpEnvironmentRegisters(machine, environment)
         environment.operand_stack.append(value)
 
@@ -710,7 +815,7 @@ class GetLocal2(Instruction): # … => …, value
 class GetLocal3(Instruction): # … => …, value
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.registers[3]
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         # if machine.cbOnInsExe is not None: DumpEnvironmentRegisters(machine, environment)
         environment.operand_stack.append(value)
 
@@ -719,6 +824,12 @@ class GetLocal3(Instruction): # … => …, value
 class GetProperty(Instruction):
     index: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(101)
 class GetScopeObject(Instruction): # … => …, scope
@@ -733,7 +844,7 @@ class GetScopeObject(Instruction): # … => …, scope
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.scope_stack[self.index]
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         environment.operand_stack.append(value)
 
 
@@ -746,6 +857,12 @@ class GetSlot(Instruction):
 class GetSuper(Instruction):
     index: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(176)
 class GreaterEquals(Instruction): # …, value1, value2 => …, result
@@ -759,7 +876,7 @@ class GreaterEquals(Instruction): # …, value1, value2 => …, result
         value_2 = environment.operand_stack.pop()
         value_1 = environment.operand_stack.pop()
         result = value_1 >= value_2
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
 
 
@@ -795,7 +912,7 @@ class IfFalse(Instruction): # …, value => …
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         if not environment.operand_stack.pop():
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset}>')
+            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
             raise ASJumpException(self.offset)
 
 
@@ -830,7 +947,7 @@ class IfLT(Instruction): # …, value1, value2 => …
         value_2 = environment.operand_stack.pop()
         value_1 = environment.operand_stack.pop()
         if value_1 < value_2:
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset}>')
+            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
             raise ASJumpException(self.offset)
 
 
@@ -854,7 +971,7 @@ class IfNGT(Instruction): # …, value1, value2 => …
         value_1 = environment.operand_stack.pop()
         # FIXME: NaN.
         if not value_1 > value_2:
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset}>')
+            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
             raise ASJumpException(self.offset)
 
 
@@ -883,7 +1000,7 @@ class IfNLT(Instruction): # …, value1, value2 => …
         value_1 = environment.operand_stack.pop()
         # FIXME: NaN.
         if not value_1 < value_2:
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset}>')
+            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
             raise ASJumpException(self.offset)
 
 
@@ -902,7 +1019,7 @@ class IfNE(Instruction):
         value_1 = environment.operand_stack.pop()
         # FIXME: NaN. maybe
         if not value_1 == value_2:
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset}>')
+            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
             raise ASJumpException(self.offset)
 
 
@@ -927,7 +1044,7 @@ class IfTrue(Instruction):
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         if environment.operand_stack.pop():
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset}>')
+            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
             raise ASJumpException(self.offset)
 
 
@@ -964,7 +1081,7 @@ class Increment(Instruction):
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
       value = environment.operand_stack.pop()
       result = value + 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
 
@@ -973,7 +1090,7 @@ class IncrementInteger(Instruction):
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
       value = environment.operand_stack.pop()
       result = int(value) + 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
 
@@ -981,6 +1098,12 @@ class IncrementInteger(Instruction):
 class InitProperty(Instruction):
     index: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(177)
 class InstanceOf(Instruction):
@@ -1001,7 +1124,7 @@ class IsTypeLate(Instruction):
 class Jump(Instruction):
     offset: s24
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset}>')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
       raise ASJumpException(self.offset)
 
 
@@ -1129,7 +1252,7 @@ class Pop(Instruction): # …, value => …
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'popped=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop discard<{BM.DumpVar(value)}>')
 
 
 @instruction(29)
@@ -1143,7 +1266,7 @@ class PushByte(Instruction): # … => …, value
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = self.byte_value
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         environment.operand_stack.append(value)
 
 
@@ -1158,7 +1281,7 @@ class PushDouble(Instruction): # … => …, value
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = machine.doubles[self.index]
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         environment.operand_stack.append(value)
 
 
@@ -1183,7 +1306,7 @@ class PushInteger(Instruction): # … => …, value
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = machine.integers[self.index]
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
         environment.operand_stack.append(value)
 
 
@@ -1293,7 +1416,7 @@ class SetLocal(Instruction):
 class SetLocal0(Instruction): # …, value => …
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'pop value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
         environment.registers[0] = value
 
 
@@ -1301,7 +1424,7 @@ class SetLocal0(Instruction): # …, value => …
 class SetLocal1(Instruction): # …, value => …
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'pop value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
         environment.registers[1] = value
 
 
@@ -1314,7 +1437,7 @@ class SetLocal2(Instruction): # …, value => …
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'pop value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
         environment.registers[2] = value
 
 
@@ -1322,7 +1445,7 @@ class SetLocal2(Instruction): # …, value => …
 class SetLocal3(Instruction): # …, value => …
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'pop value=<{BM.DumpVar(value)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
         environment.registers[3] = value
 
 
@@ -1348,11 +1471,13 @@ class SetProperty(Instruction): # …, obj, [ns], [name], value => …
     """
     index: u30
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index} OS={environment.operand_stack}')
       print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
 
       # TODO is it a runtime multiname?
       # cf FindPropStrict for some ideas
 
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
       isMultinameRuntimeName = False # Add code to determine Name
       isMultinameRuntimeNS = False # Add code to determine Namespace
 
@@ -1365,6 +1490,12 @@ class SetProperty(Instruction): # …, obj, [ns], [name], value => …
       theObj = environment.operand_stack.pop()
       # TODO set theObj property to value
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(109)
 class SetSlot(Instruction):
@@ -1375,6 +1506,12 @@ class SetSlot(Instruction):
 class SetSuper(Instruction):
     index: u30
 
+    def PlaceHolder():
+      multiname = None
+      getNameFromStack = multiname.getNameFromStack()
+      getNamespaceFromStack = multiname.getNamespaceFromStack()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+      assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(172)
 class StrictEquals(Instruction):
@@ -1398,7 +1535,7 @@ class SubtractInteger(Instruction): # …, value1, value2 => …, value3
         value_2 = environment.operand_stack.pop()
         value_1 = environment.operand_stack.pop()
         result = int(value_1) - int(value_2)
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'push result=<{BM.DumpVar(result)}>')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
 
 
