@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 import sys
 from typing import Any, Callable, ClassVar, Dict, Tuple, Type, TypeVar, NewType, Optional
 
@@ -16,6 +16,65 @@ from avm2.abc.enums import MultinameKind
 import inspect
 
 strBACKWARDS_n = 'BACKWARDS\n'
+
+@dataclass
+class bagForFindingInternalMethod:
+  """
+  >>> myObj = 'abcdef'
+  >>> myName = 'charAt'
+  >>> myArgs = list()
+  >>> myArgs.append(1)
+  >>> myArgs.append(2.0)
+  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+  >>> bag
+  bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundMethod=None, foundResultHint=[])
+  >>> bag.foundResultHint.append('summat strange')
+  >>> bag
+  bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundMethod=None, foundResultHint=['summat strange'])
+  """
+  instance: object # object whose method will be called
+  methodName: str # method name
+  arguments: list # arguments for method call
+  foundClass: object = None # helper class that's been found
+  foundMethod: object = None # helper class method that's been found; probably a classmethod
+  foundResultHint: list = field(default_factory=list) # some feedback from the search process
+
+class findInternalMethod:
+  @staticmethod
+  def findClassAndMethodFromVariousArtefacts(bag: bagForFindingInternalMethod):
+    """
+    >>> myObj = 'abcdef'
+    >>> myName = 'charAt'
+    >>> myArgs = list()
+    >>> myArgs.append(1)
+    >>> myArgs.append(2.0)
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '!')
+    """
+    pass
+
+class string_Methods:
+  @classmethod
+  def findMethodFromNameArguments():
+    """
+    >>> myObj = 'abcdef'
+    >>> myName = 'charAt'
+    >>> myArgs = list()
+    >>> myArgs.append(1)
+    >>> myArgs.append(2.0)
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    """
+    pass
+  @classmethod
+  def perform():
+    """
+    >>> myObj = 'abcdef'
+    >>> myName = 'charAt'
+    >>> myArgs = list()
+    >>> myArgs.append(1)
+    >>> myArgs.append(2.0)
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    """
+    pass
 
 def read_instruction(reader: MemoryViewReader) -> Instruction:
     opcode: int = reader.read_u8()
@@ -1567,3 +1626,14 @@ class TypeOf(Instruction):
 @instruction(167)
 class UnsignedRightShift(Instruction):
     pass
+
+if __name__ == '__main__':  # 2023-05-28 # when you run 'python thisModuleName.py' ...
+  import doctest, os, sys
+  # vvvv use BM.LINE() in other modules (after 'import BrewMaths as BM')
+  print(f'@{BM.LINE()} ### run embedded unit tests via \'python ' + os.path.basename(__file__) + '\'')
+  if False and True: # 'and' = not verbose; 'or' = verbose
+    res = doctest.testmod(verbose=True) # then the tests in block comments will run. nb or testmod(verbose=True)
+  else:
+    res = doctest.testmod() # then the tests in block comments will run. nb or testmod(verbose=True)
+  print(f'@{BM.LINE()} ### BTW res = <{res}>, res.failed=<{res.failed}>')
+  sys.exit(res.failed) # return number of failed tests

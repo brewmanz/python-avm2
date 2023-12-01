@@ -166,7 +166,7 @@ class VirtualMachine:
         else:
             raise ValueError(index_or_name)
 
-        instance = ASObject(class_ix=class_ix)
+        instance = ASObject(BM.LINE(False), class_ix=class_ix)
         # FIXME: call super constructor?
         self.call_method(self.abc_file.instances[class_ix].init_ix, instance, *args)
         return instance
