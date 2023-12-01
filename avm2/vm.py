@@ -16,7 +16,7 @@ from avm2.abc.types import (
 )
 from avm2.exceptions import ASJumpException, ASReturnException
 from avm2.io import MemoryViewReader
-from avm2.runtime import ASObject, undefined
+from avm2.runtime import ASObject, undefined, undefined2
 from avm2.swf.types import DoABCTag, Tag, TagType
 
 import BrewMaths as BM
@@ -42,9 +42,9 @@ class VirtualMachine:
         # Runtime.
         self.class_objects: DefaultDict[ABCClassIndex, ASObject] = defaultdict(ASObject)  # FIXME: unsure, prototypes?
         self.script_objects: DefaultDict[ABCScriptIndex, ASObject] = defaultdict(ASObject)  # FIXME: unsure, what is it?
-        self.global_object = ASObject(properties={
-            ('', 'Object'): ASObject(),
-            ('flash.utils', 'Dictionary'): ASObject(),
+        self.global_object = ASObject(BM.LINE(False), properties={
+            ('', 'Object'): ASObject(BM.LINE(False)),
+            ('flash.utils', 'Dictionary'): ASObject(BM.LINE(False)),
         })  # FIXME: unsure, prototypes again?
 
         # callbacks
@@ -237,6 +237,7 @@ class VirtualMachine:
         method = self.abc_file.methods[method_body.method_ix]
         # There are `method_body_info.local_count` registers.
         registers: List[Any] = [undefined] * method_body.local_count
+        registers[-1] = undefined2 # DEBUG aid in checking ASObject definitions
         # Register 0 holds the "this" object. This value is never null.
         registers[0] = this
         # Registers 1 through `method_info.param_count` holds parameter values coerced to the declared types

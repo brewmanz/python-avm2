@@ -93,7 +93,9 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(CallbackOnInst
 
   def MakeExtraObservation(self, extraObservation):
     if self.limitCalls >= 0 and self.callsSoFar < self.limitCalls:
-      print(f'\t{BM.LINE()}: \tExtra:{extraObservation}.')
+      callerF = inspect.currentframe() #getframeinfo(stack()[1][0])
+      callerLine = callerF.f_back.f_lineno
+      print(f'\t{BM.LINE()}: \tExtra@{callerLine}:{extraObservation}.')
 
   def __init__(self, limitCalls: int):
     self.limitCalls = limitCalls
@@ -198,7 +200,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
     arg_count: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1') # DEBUG
 
       multiname = machine.multinames[self.index]
       getNameFromStack = multiname.getNameFromStack()
@@ -206,17 +208,12 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
 
       argN=[]
-      actualArgCount = self.arg_count - 1
-      if getNameFromStack: actualArgCount -= 1
-      if getNamespaceFromStack: actualArgCount -= 1
-
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'self.arg_count={self.arg_count} actualArgCount={actualArgCount}')
-      for ix in range(actualArgCount)[::-1]: # leave entries for obj, [ns], [name]
+      for ix in range(self.arg_count)[::-1]:
         theArg = environment.operand_stack.pop()
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={theArg}')
         argN.insert(0, theArg)
 
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2') # DEBUG
 
       getNameFromStack = multiname.getNameFromStack()
       getNamespaceFromStack = multiname.getNamespaceFromStack()
@@ -234,11 +231,15 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       theObj = environment.operand_stack.pop()
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={theObj}')
 
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3') # DEBUG
+
+      # result =
 
       result = f'!! ## TODO ## @{BM.LINE(False)} !!'
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
+
+      assert False, f'!! ## TODO do the call & check ## @{BM.LINE(False)} !!'
 
 @instruction(76)
 class CallPropLex(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, value
@@ -669,9 +670,11 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
     index: u30
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index} OS={environment.operand_stack}')
-        print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
+        #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}. BTW i={self.index} OS={environment.operand_stack}')
+        #print(f'@{BM.LINE()} !!If you see this, you need to properly implement {type(self).__name__}.{inspect.currentframe().f_code.co_name}:{inspect.currentframe().f_code.co_firstlineno}. BTW i={self.index}', file=sys.stderr)
         #assert False, 'Crash Here'
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1') # DEBUG
+
         multiname = machine.multinames[self.index]
         # TODO: other kinds of multinames.
         assert multiname.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A), multiname
@@ -681,17 +684,16 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'nam/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
 
         try:
-
-            theStack      = environment.scope_stack
+            theSStack     = environment.scope_stack
             theName       = environment.operand_stack.pop() if getNameFromStack else machine.strings[multiname.nam_ix]
             theNamespaces = [environment.operand_stack.pop()] if getNamespaceFromStack else [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
 
             if machine.cbOnInsExe is not None:
-              machine.cbOnInsExe.MakeExtraObservation(f'tS#{len(theStack)}={BM.DumpVar(theStack)}')
+              #machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
               machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
               machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
             object_, name, namespace = machine.resolve_multiname(
-                theStack, # environment.scope_stack,
+                theSStack, # environment.scope_stack,
                 theName, # machine.strings[multiname.nam_ix],
                 theNamespaces # [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
             )
@@ -703,7 +705,7 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
         except KeyError:
             raise NotImplementedError('ReferenceError')
         else:
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push object_=<{BM.DumpVar(object_)}>')
+            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push object_=<{BM.DumpVar(object_)}> type={type(object_)}')
             environment.operand_stack.append(object_)
             assert len(environment.operand_stack) < 55, 'Crash Here'
 

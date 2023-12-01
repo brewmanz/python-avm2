@@ -161,9 +161,9 @@ class ASMultiname:
     type_ixs: Optional[List[ABCMultinameIndex]] = None
 
     def getNameFromStack(self) -> bool:
-      return self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA, MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA ):
+      return self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA, MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA )
     def getNamespaceFromStack(self) -> bool:
-      return self.kind in (MultinameKind.RTQ_NAME, MultinameKind.RTQ_NAME_A, MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA):
+      return self.kind in (MultinameKind.RTQ_NAME, MultinameKind.RTQ_NAME_A, MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA)
 
     def __init__(self, reader: MemoryViewReader):
         DEBUG_self_nam_ix = 61
