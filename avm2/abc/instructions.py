@@ -29,8 +29,14 @@ class bagForFindingInternalMethod:
   >>> bag
   bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundMethod=None, foundResultHint=[])
   >>> bag.foundResultHint.append('summat strange')
-  >>> bag
-  bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundMethod=None, foundResultHint=['summat strange'])
+  >>> bag.foundClass = string_Methods
+  >>> bag.foundMethod = string_Methods.char_at
+  >>> str(bag)[0:120]
+  "bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=<class '__main__.stri"
+  >>> str(bag)[100:181]
+  "class '__main__.string_Methods'>, foundMethod=<function string_Methods.char_at at"
+  >>> str(bag)[-38:]
+  ">, foundResultHint=['summat strange'])"
   """
   instance: object # object whose method will be called
   methodName: str # method name
@@ -44,7 +50,7 @@ class findInternalMethod:
   def findClassAndMethodFromVariousArtefacts(bag: bagForFindingInternalMethod):
     """
     >>> myObj = 'abcdef'
-    >>> myName = 'charAt'
+    >>> myName = 'char_at'
     >>> myArgs = list()
     >>> myArgs.append(1)
     >>> myArgs.append(2.0)
@@ -75,6 +81,18 @@ class string_Methods:
     >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
     """
     pass
+  @staticmethod
+  def char_at(index: int = 0):
+    """
+    >>> myObj = 'abcdef'
+    >>> myName = 'charAt'
+    >>> myArgs = list()
+    >>> myArgs.append(1)
+    >>> myArgs.append(2.0)
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    """
+    res = f'!! ## TODO: {inspect.stack()[0].function} ## !!'
+
 
 def read_instruction(reader: MemoryViewReader) -> Instruction:
     opcode: int = reader.read_u8()
