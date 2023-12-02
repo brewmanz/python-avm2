@@ -80,7 +80,33 @@ class findInternalMethod:
     for cls in [ string_Methods ]:
       cls.findMethodFromBag(bag)
       if bag.foundFunction: return
-    bag.foundResultHint.append(f'@{BM.LINE(False)} in {inspect.stack()[0].function}; no class found')
+    bag.foundResultHint.append(f'@{BM.LINE(False)} in {inspect.stack()[0].function}; no class {type(bag.instance)} + method <{bag.methodName}> found')
+  @staticmethod
+  def perform(bag: bagForFindingInternalMethod):
+    """
+    >>> myObj = 'abcdef'
+    >>> myName = 'charAt'
+    >>> myArgs = list()
+    >>> myArgs.append(3)
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> findInternalMethod.findClassAndMethodFromBag(bag)
+    >>> str(bag.foundClass)
+    "<class '__main__.string_Methods'>"
+    >>> str(bag.foundFunction)[:34]
+    '<function string_method_char_at at'
+    >>> findInternalMethod.perform(bag)
+    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> str(bag.foundClass)
+    "<class '__main__.string_Methods'>"
+    >>> str(bag.foundFunction)[:34]
+    '<function string_method_char_at at'
+    >>> str(bag.result)
+    'd'
+    """
+    if bag.foundFunction == None:
+      bag.foundResultHint.append(f'@{BM.LINE(False)} in {inspect.stack()[0].function}; empty foundFunction')
+      return
+    bag.result = bag.foundFunction(bag.instance, *bag.arguments)
 
 def string_method_char_at(item: str, index: int = 0):
   """
@@ -89,7 +115,7 @@ def string_method_char_at(item: str, index: int = 0):
   >>> myName = 'char_at'
   >>> myArgs = list()
   >>> myArgs.append(3)
-  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '?c', '?m')
+  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
   >>> res = string_method_char_at(bag.instance, *bag.arguments)
   >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
@@ -186,29 +212,13 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
         if k == bag.methodName:
           bag.foundClass = string_Methods
           bag.foundFunction = v
-          bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} matched <{bag.methodName}> with {v}')
+          #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} matched <{bag.methodName}> with {v}')
           return
-      bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} is a string but no match for <{bag.methodName}>')
+      #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} is a string but no match for <{bag.methodName}>')
     else:
-      bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a string')
-    pass
-  @classmethod
-  def perform(cls, bag: bagForFindingInternalMethod):
-    """
-    >>> myObj = 'abcdef'
-    >>> myName = 'charAt'
-    >>> myArgs = list()
-    >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
-    >>> string_Methods.perform(bag)
-    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> str(bag.foundClass)
-    "<class '__main__.string_Methods'>"
-    >>> str(bag.foundFunction)[:34]
-    '<function string_method_char_at at'
-    """
-    pass
-
+      #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a string')
+      pass
+    return
 
 def read_instruction(reader: MemoryViewReader) -> Instruction:
     opcode: int = reader.read_u8()
