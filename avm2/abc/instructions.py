@@ -436,9 +436,15 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
 
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3') # DEBUG
 
-      # result =
+      bag = bagForFindingInternalMethod(theObj, theName, argN)
+      findInternalMethod.findClassAndMethodFromBag(bag)
+      if bag.foundFunction:
+        findInternalMethod.perform(bag)
+        result = bag.result
+      else:
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'Internal Method failure, bag={bag}')
+        assert False, f'@{BM.LINE(False)} Internal Method failure, bag={bag}'
 
-      result = f'!! ## TODO ## @{BM.LINE(False)} !!'
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
