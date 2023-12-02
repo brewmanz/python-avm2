@@ -52,25 +52,39 @@ class findInternalMethod:
   @staticmethod
   def findClassAndMethodFromBag(bag: bagForFindingInternalMethod):
     """
-    >>> myObj = 'abcdef'
-    >>> myName = 'char_at'
+    >>> # fails to find
+    >>> myObj = 123.456
+    >>> myName = 'charAt'
     >>> myArgs = list()
     >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '!')
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
     >>> findInternalMethod.findClassAndMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> bag.foundClass
-    (check)
-    >>> bag.foundFunction
-    (check)
+    >>> str(bag.foundClass)
+    'None'
+    >>> str(bag.foundFunction)[:33]
+    'None'
+    >>> # should find
+    >>> myObj = 'abcdef'
+    >>> myName = 'charAt'
+    >>> myArgs = list()
+    >>> myArgs.append(3)
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> findInternalMethod.findClassAndMethodFromBag(bag)
+    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> str(bag.foundClass)
+    "<class '__main__.string_Methods'>"
+    >>> str(bag.foundFunction)[:34]
+    '<function string_method_char_at at'
     """
     for cls in [ string_Methods ]:
       cls.findMethodFromBag(bag)
       if bag.foundFunction: return
-    bag.foundResultHint.append(f'@{BM.LINE()} in {inspect.stack()[0].function}; no class found')
+    bag.foundResultHint.append(f'@{BM.LINE(False)} in {inspect.stack()[0].function}; no class found')
 
 def string_method_char_at(item: str, index: int = 0):
   """
+  Returns the character in the position specified by the index parameter.
   >>> myObj = 'abcdef'
   >>> myName = 'char_at'
   >>> myArgs = list()
@@ -83,8 +97,9 @@ def string_method_char_at(item: str, index: int = 0):
   """
   res = item[index] # f'!! ## TODO: {inspect.stack()[0].function} ## !!'
   return res
-def string_method_substr(item: str, startIndex: int = 0, len: int = 0x7fffffff): # Returns a substring consisting of the characters that start at the specified startIndex and with a length specified by len.
+def string_method_substr(item: str, startIndex: int = 0, len: int = 0x7fffffff):
   """
+  Returns a substring consisting of the characters that start at the specified startIndex and with a length specified by len.
   >>> myObj = 'abcdef'
   >>> myName = 'substring'
   >>> myArgs = list()
@@ -106,8 +121,9 @@ def string_method_substr(item: str, startIndex: int = 0, len: int = 0x7fffffff):
   """
   res = item[startIndex:startIndex+len] # f'!! ## TODO: {inspect.stack()[0].function} ## !!'
   return res
-def string_method_substring(item: str, startIndex: int = 0, endIndex: int = 0x7fffffff): # Returns a string consisting of the character specified by startIndex and all characters up to endIndex - 1.
+def string_method_substring(item: str, startIndex: int = 0, endIndex: int = 0x7fffffff):
   """
+  Returns a string consisting of the character specified by startIndex and all characters up to endIndex - 1
   >>> myObj = 'abcdef'
   >>> myName = 'substring'
   >>> myArgs = list()
@@ -131,15 +147,28 @@ def string_method_substring(item: str, startIndex: int = 0, endIndex: int = 0x7f
   return res
 class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/String.html
 
-  dictSwfNameToMethod = dict( \
+  dictSwfNameToMethod: ClassVar[dict[str, object]] = dict( \
     [ ('charAt', string_method_char_at ) \
+    , ('substr', string_method_substr) \
+    , ('substring', string_method_substring) \
     ])
-    # , ('substr', string_Methods.substr) \
-    # , ('substring', string_Methods.substring) \
 
   @classmethod
   def findMethodFromBag(cls, bag: bagForFindingInternalMethod):
     """
+    >>> # no find
+    >>> myObj = 123.45
+    >>> myName = 'charAt'
+    >>> myArgs = list()
+    >>> myArgs.append(3)
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> string_Methods.findMethodFromBag(bag)
+    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> str(bag.foundClass)
+    'None'
+    >>> str(bag.foundFunction)[:33]
+    'None'
+    >>> # should find
     >>> myObj = 'abcdef'
     >>> myName = 'charAt'
     >>> myArgs = list()
@@ -147,11 +176,21 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
     >>> string_Methods.findMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> bag.foundClass
-    (check string_Methods)
-    >>> bag.foundFunction
-    (check char_at)
+    >>> str(bag.foundClass)
+    "<class '__main__.string_Methods'>"
+    >>> str(bag.foundFunction)[:34]
+    '<function string_method_char_at at'
     """
+    if type(bag.instance) == str:
+      for k, v in cls.dictSwfNameToMethod.items():
+        if k == bag.methodName:
+          bag.foundClass = string_Methods
+          bag.foundFunction = v
+          bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} matched <{bag.methodName}> with {v}')
+          return
+      bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} is a string but no match for <{bag.methodName}>')
+    else:
+      bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a string')
     pass
   @classmethod
   def perform(cls, bag: bagForFindingInternalMethod):
@@ -163,10 +202,10 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
     >>> string_Methods.perform(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> bag.foundClass
-    (check)
-    >>> bag.foundFunction
-    (check)
+    >>> str(bag.foundClass)
+    "<class '__main__.string_Methods'>"
+    >>> str(bag.foundFunction)[:34]
+    '<function string_method_char_at at'
     """
     pass
 
