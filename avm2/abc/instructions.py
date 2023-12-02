@@ -27,16 +27,17 @@ class bagForFindingInternalMethod:
   >>> myArgs.append(2.0)
   >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
   >>> bag
-  bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundMethod=None, foundResultHint=[])
+  bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundMethod=None, foundResultHint=[], result=None)
   >>> bag.foundResultHint.append('summat strange')
   >>> bag.foundClass = string_Methods
   >>> bag.foundMethod = string_Methods.char_at
+  >>> bag.result = 'myResult'
   >>> str(bag)[0:120]
   "bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=<class '__main__.stri"
   >>> str(bag)[100:181]
   "class '__main__.string_Methods'>, foundMethod=<function string_Methods.char_at at"
-  >>> str(bag)[-38:]
-  ">, foundResultHint=['summat strange'])"
+  >>> str(bag)[-57:]
+  ">, foundResultHint=['summat strange'], result='myResult')"
   """
   instance: object # object whose method will be called
   methodName: str # method name
@@ -44,6 +45,7 @@ class bagForFindingInternalMethod:
   foundClass: object = None # helper class that's been found
   foundMethod: object = None # helper class method that's been found; probably a classmethod
   foundResultHint: list = field(default_factory=list) # some feedback from the search process
+  result: object = None # result after calling
 
 class findInternalMethod:
   @staticmethod
@@ -52,46 +54,65 @@ class findInternalMethod:
     >>> myObj = 'abcdef'
     >>> myName = 'char_at'
     >>> myArgs = list()
-    >>> myArgs.append(1)
-    >>> myArgs.append(2.0)
+    >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '!')
+    >>> findInternalMethod.findClassAndMethodFromVariousArtefacts(bag)
+    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> bag.foundClass
+    (check)
+    >>> bag.foundMethod
+    (check)
     """
     pass
 
 class string_Methods:
   @classmethod
-  def findMethodFromNameArguments():
+  def findMethodFromBag(cls, bag: bagForFindingInternalMethod):
     """
     >>> myObj = 'abcdef'
     >>> myName = 'charAt'
     >>> myArgs = list()
-    >>> myArgs.append(1)
-    >>> myArgs.append(2.0)
+    >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> string_Methods.findMethodFromBag(bag)
+    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> bag.foundClass
+    (check)
+    >>> bag.foundMethod
+    (check)
     """
     pass
   @classmethod
-  def perform():
+  def perform(bag: bagForFindingInternalMethod):
     """
     >>> myObj = 'abcdef'
     >>> myName = 'charAt'
     >>> myArgs = list()
-    >>> myArgs.append(1)
-    >>> myArgs.append(2.0)
+    >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> string_Methods.perform(bag)
+    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> bag.foundClass
+    (check)
+    >>> bag.foundMethod
+    (check)
     """
     pass
   @staticmethod
-  def char_at(index: int = 0):
+  def char_at(item: str, index: int = 0):
     """
     >>> myObj = 'abcdef'
-    >>> myName = 'charAt'
+    >>> myName = 'char_at'
     >>> myArgs = list()
-    >>> myArgs.append(1)
-    >>> myArgs.append(2.0)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> myArgs.append(3)
+    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '!')
+    >>> res = string_Methods.char_at(bag.instance, *bag.arguments)
+    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> res
+    'd'
     """
-    res = f'!! ## TODO: {inspect.stack()[0].function} ## !!'
+    res = item[index] # f'!! ## TODO: {inspect.stack()[0].function} ## !!'
+    return res
 
 
 def read_instruction(reader: MemoryViewReader) -> Instruction:
