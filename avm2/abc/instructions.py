@@ -27,15 +27,15 @@ class bagForFindingInternalMethod:
   >>> myArgs.append(2.0)
   >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
   >>> bag
-  bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundMethod=None, foundResultHint=[], result=None)
+  bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundFunction=None, foundResultHint=[], result=None)
   >>> bag.foundResultHint.append('summat strange')
   >>> bag.foundClass = string_Methods
-  >>> bag.foundMethod = string_Methods.char_at
+  >>> bag.foundFunction = string_method_char_at
   >>> bag.result = 'myResult'
   >>> str(bag)[0:120]
   "bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=<class '__main__.stri"
-  >>> str(bag)[100:181]
-  "class '__main__.string_Methods'>, foundMethod=<function string_Methods.char_at at"
+  >>> str(bag)[100:182]
+  "class '__main__.string_Methods'>, foundFunction=<function string_method_char_at at"
   >>> str(bag)[-57:]
   ">, foundResultHint=['summat strange'], result='myResult')"
   """
@@ -43,29 +43,100 @@ class bagForFindingInternalMethod:
   methodName: str # method name
   arguments: list # arguments for method call
   foundClass: object = None # helper class that's been found
-  foundMethod: object = None # helper class method that's been found; probably a classmethod
+  # couldn't find a way to add to dict! # foundMethod: object = None # helper class method that's been found; probably a classmethod
+  foundFunction: object = None # helper function to be used as class method
   foundResultHint: list = field(default_factory=list) # some feedback from the search process
   result: object = None # result after calling
 
 class findInternalMethod:
   @staticmethod
-  def findClassAndMethodFromVariousArtefacts(bag: bagForFindingInternalMethod):
+  def findClassAndMethodFromBag(bag: bagForFindingInternalMethod):
     """
     >>> myObj = 'abcdef'
     >>> myName = 'char_at'
     >>> myArgs = list()
     >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '!')
-    >>> findInternalMethod.findClassAndMethodFromVariousArtefacts(bag)
+    >>> findInternalMethod.findClassAndMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> bag.foundClass
     (check)
-    >>> bag.foundMethod
+    >>> bag.foundFunction
     (check)
     """
-    pass
+    for cls in [ string_Methods ]:
+      cls.findMethodFromBag(bag)
+      if bag.foundFunction: return
+    bag.foundResultHint.append(f'@{BM.LINE()} in {inspect.stack()[0].function}; no class found')
 
-class string_Methods:
+def string_method_char_at(item: str, index: int = 0):
+  """
+  >>> myObj = 'abcdef'
+  >>> myName = 'char_at'
+  >>> myArgs = list()
+  >>> myArgs.append(3)
+  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '?c', '?m')
+  >>> res = string_method_char_at(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  'd'
+  """
+  res = item[index] # f'!! ## TODO: {inspect.stack()[0].function} ## !!'
+  return res
+def string_method_substr(item: str, startIndex: int = 0, len: int = 0x7fffffff): # Returns a substring consisting of the characters that start at the specified startIndex and with a length specified by len.
+  """
+  >>> myObj = 'abcdef'
+  >>> myName = 'substring'
+  >>> myArgs = list()
+  >>> myArgs.append(1)
+  >>> myArgs.append(4)
+  >>> myObj[3:3]
+  ''
+  >>> myObj[3:4]
+  'd'
+  >>> myObj[1:4]
+  'bcd'
+  >>> myObj[myArgs[0]: myArgs[0]+myArgs[1]]
+  'bcde'
+  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '?c', '?m')
+  >>> res = string_method_substr(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  'bcde'
+  """
+  res = item[startIndex:startIndex+len] # f'!! ## TODO: {inspect.stack()[0].function} ## !!'
+  return res
+def string_method_substring(item: str, startIndex: int = 0, endIndex: int = 0x7fffffff): # Returns a string consisting of the character specified by startIndex and all characters up to endIndex - 1.
+  """
+  >>> myObj = 'abcdef'
+  >>> myName = 'substring'
+  >>> myArgs = list()
+  >>> myArgs.append(1)
+  >>> myArgs.append(4)
+  >>> myObj[3:3]
+  ''
+  >>> myObj[3:4]
+  'd'
+  >>> myObj[1:4]
+  'bcd'
+  >>> myObj[myArgs[0]: myArgs[1] ]
+  'bcd'
+  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '?c', '?m')
+  >>> res = string_method_substring(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  'bcd'
+  """
+  res = item[startIndex:endIndex] # f'!! ## TODO: {inspect.stack()[0].function} ## !!'
+  return res
+class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/String.html
+
+  dictSwfNameToMethod = dict( \
+    [ ('charAt', string_method_char_at ) \
+    ])
+    # , ('substr', string_Methods.substr) \
+    # , ('substring', string_Methods.substring) \
+
   @classmethod
   def findMethodFromBag(cls, bag: bagForFindingInternalMethod):
     """
@@ -77,13 +148,13 @@ class string_Methods:
     >>> string_Methods.findMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> bag.foundClass
-    (check)
-    >>> bag.foundMethod
-    (check)
+    (check string_Methods)
+    >>> bag.foundFunction
+    (check char_at)
     """
     pass
   @classmethod
-  def perform(bag: bagForFindingInternalMethod):
+  def perform(cls, bag: bagForFindingInternalMethod):
     """
     >>> myObj = 'abcdef'
     >>> myName = 'charAt'
@@ -94,25 +165,10 @@ class string_Methods:
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> bag.foundClass
     (check)
-    >>> bag.foundMethod
+    >>> bag.foundFunction
     (check)
     """
     pass
-  @staticmethod
-  def char_at(item: str, index: int = 0):
-    """
-    >>> myObj = 'abcdef'
-    >>> myName = 'char_at'
-    >>> myArgs = list()
-    >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '!')
-    >>> res = string_Methods.char_at(bag.instance, *bag.arguments)
-    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> res
-    'd'
-    """
-    res = item[index] # f'!! ## TODO: {inspect.stack()[0].function} ## !!'
-    return res
 
 
 def read_instruction(reader: MemoryViewReader) -> Instruction:
