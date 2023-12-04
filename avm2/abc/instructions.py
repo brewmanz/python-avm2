@@ -1529,7 +1529,7 @@ class PopScope(Instruction):
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     value = environment.scope_stack.pop()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-ss.pop discard<{BM.DumpVar(value)}>')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ss-.pop discard<{BM.DumpVar(value)}>')
 
 
 @instruction(36)
@@ -1598,7 +1598,9 @@ class PushNull(Instruction): # … => …, null
     Push the `null` value onto the stack. Maybe use 'None' ?
     """
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        environment.operand_stack.append(None)
+        value = None
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
+        environment.operand_stack.append(value)
 
 
 @instruction(48)
@@ -1610,7 +1612,7 @@ class PushScope(Instruction): # …, value => …
     value = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
     assert value is not None and value is not undefined
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+ss.push value=<{BM.DumpVar(value)}>')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ss+.push value=<{BM.DumpVar(value)}>')
     environment.scope_stack.append(value)
 
 @instruction(37)
@@ -1636,7 +1638,9 @@ class PushTrue(Instruction): # … => …, true
     Push the `true` value onto the stack.
     """
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        environment.operand_stack.append(True)
+        value = True
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
+        environment.operand_stack.append(value)
 
 
 @instruction(46)

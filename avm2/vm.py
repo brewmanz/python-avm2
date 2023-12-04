@@ -16,7 +16,7 @@ from avm2.abc.types import (
 )
 from avm2.exceptions import ASJumpException, ASReturnException
 from avm2.io import MemoryViewReader
-from avm2.runtime import ASObject, undefined, undefined2
+from avm2.runtime import ASObject, ASUndefined, undefined
 from avm2.swf.types import DoABCTag, Tag, TagType
 
 import BrewMaths as BM
@@ -236,8 +236,10 @@ class VirtualMachine:
         """
         method = self.abc_file.methods[method_body.method_ix]
         # There are `method_body_info.local_count` registers.
-        registers: List[Any] = [undefined] * method_body.local_count
-        registers[-1] = undefined2 # DEBUG aid in checking ASObject definitions
+        # registers: List[Any] = [undefined] * method_body.local_count
+        registers: List[Any] = list() # [-1] = undefined2 # DEBUG aid in checking ASObject definitions
+        for _ in range(method_body.local_count):
+          registers.append(ASUndefined(BM.LINE(False)))
         # Register 0 holds the "this" object. This value is never null.
         registers[0] = this
         # Registers 1 through `method_info.param_count` holds parameter values coerced to the declared types
