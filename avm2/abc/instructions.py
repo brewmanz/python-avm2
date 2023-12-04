@@ -320,7 +320,9 @@ def instruction(opcode: int) -> Callable[[], Type[T]]:
 class Add(Instruction): # …, value1, value2 => …, value3
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         result = value_1 + value_2
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
@@ -335,7 +337,9 @@ class AddInteger(Instruction): # …, value1, value2 => …, value3
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         result = int(value_1) + int(value_2)
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
@@ -724,21 +728,31 @@ class DecLocalInteger(Instruction):
 
 
 @instruction(147)
-class Decrement(Instruction):
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      value = environment.operand_stack.pop()
-      result = value - 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
-      environment.operand_stack.append(result)
+class Decrement(Instruction): # …, value => …, decrementedvalue
+  """
+  Pop value off of the stack.
+  Convert value to a Number using the ToNumber algorithm (ECMA-262 section 9.3) and then subtract 1 from the Number value.
+  Push the result onto the stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    result = value - 1
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop, +os.push result=<{BM.DumpVar(result)}>')
+    environment.operand_stack.append(result)
 
 
 @instruction(193)
-class DecrementInteger(Instruction):
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      value = environment.operand_stack.pop()
-      result = int(value) - 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
-      environment.operand_stack.append(result)
+class DecrementInteger(Instruction): # …, value => …, decrementedvalue
+  """
+  Pop value off of the stack.
+  Convert value to an int using the ToInt32 algorithm (ECMA-262 section 9.5) and then subtract 1 from the int value.
+  Push the result onto the stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    result = int(value) - 1
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop, +os.push result=<{BM.DumpVar(result)}>')
+    environment.operand_stack.append(result)
 
 
 @instruction(106)
@@ -762,7 +776,9 @@ class Divide(Instruction): # …, value1, value2 => …, value3
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         result = value_1 / value_2
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
@@ -903,8 +919,8 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
               machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
             object_, name, namespace = machine.resolve_multiname(
                 theSStack, # environment.scope_stack,
-                theName, # machine.strings[multiname.nam_ix],
-                theNamespaces # [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
+                theName, # stack or machine.strings[multiname.nam_ix],
+                theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
             )
             # object_, _, _ = machine.resolve_multiname(
                 # environment.scope_stack,
@@ -1085,7 +1101,9 @@ class GreaterEquals(Instruction): # …, value1, value2 => …, result
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         result = value_1 >= value_2
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
@@ -1122,9 +1140,11 @@ class IfFalse(Instruction): # …, value => …
     offset: s24
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        if not environment.operand_stack.pop():
-            if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
-            raise ASJumpException(self.offset)
+      value = environment.operand_stack.pop()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
+      if not value:
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
+        raise ASJumpException(self.offset)
 
 
 @instruction(24)
@@ -1156,7 +1176,9 @@ class IfLT(Instruction): # …, value1, value2 => …
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         if value_1 < value_2:
             if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
             raise ASJumpException(self.offset)
@@ -1179,7 +1201,9 @@ class IfNGT(Instruction): # …, value1, value2 => …
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         # FIXME: NaN.
         if not value_1 > value_2:
             if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
@@ -1208,7 +1232,9 @@ class IfNLT(Instruction): # …, value1, value2 => …
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         # FIXME: NaN.
         if not value_1 < value_2:
             if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
@@ -1227,7 +1253,9 @@ class IfNE(Instruction):
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         # FIXME: NaN. maybe
         if not value_1 == value_2:
             if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
@@ -1254,55 +1282,84 @@ class IfTrue(Instruction):
     offset: s24
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        if environment.operand_stack.pop():
+        value = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
+        if value:
             if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'jump {self.offset} {strBACKWARDS_n if self.offset < 0 else ""}')
             raise ASJumpException(self.offset)
 
 
 @instruction(180)
-class In(Instruction):
-    pass
+class In(Instruction): # …, name, obj => …, result
+  """
+  Determine whether an object has a named property.
+  name is converted to a String, and is looked up in obj.
+  If no property is found, then the prototype chain is searched by calling [[HasProperty]] on the prototype of obj.
+  If the property is found result is true . Otherwise result is false .
+  Push result onto the stack.
+  """
+  pass
 
 
 @instruction(146)
-class IncLocal(Instruction):
-    index: u30
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      lenEnvReg = len(environment.registers)
-      assert self.index < lenEnvReg, f'index {self.index} not < lenEnvReg {lenEnvReg}'
-      value = environment.registers[self.index]
-      result = value + 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'result=<{BM.DumpVar(result)}>')
-      environment.registers[self.index] = result
+class IncLocal(Instruction): # … => …
+  """
+  index is a u30 that must be an index of a local register.
+  The value of the local register at index is converted to a Number using the ToNumber algorithm (ECMA-262 section 9.3) and then 1 is added to the Number value.
+  The local register at index is then set to the result.
+  """
+  index: u30
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    lenEnvReg = len(environment.registers)
+    assert self.index < lenEnvReg, f'index {self.index} not < lenEnvReg {lenEnvReg}'
+    value = environment.registers[self.index]
+    result = value + 1
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'result=<{BM.DumpVar(result)}>')
+    environment.registers[self.index] = result
 
 @instruction(194)
-class IncLocalInteger(Instruction):
-    index: u30
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      lenEnvReg = len(environment.registers)
-      assert self.index < lenEnvReg, f'index {self.index} not < lenEnvReg {lenEnvReg}'
-      value = environment.registers[self.index]
-      result = int(value) + 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'result=<{BM.DumpVar(result)}>')
-      environment.registers[self.index] = result
+class IncLocalInteger(Instruction): # … => …
+  """
+  index is a u30 that must be an index of a local register.
+  The value of the local register at index is converted to an int using the ToInt32 algorithm (ECMA-262 section 9.5) and then 1 is added to the int value.
+  The local register at index is then set to the result.
+  """
+  index: u30
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    lenEnvReg = len(environment.registers)
+    assert self.index < lenEnvReg, f'index {self.index} not < lenEnvReg {lenEnvReg}'
+    value = environment.registers[self.index]
+    result = int(value) + 1
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'result=<{BM.DumpVar(result)}>')
+    environment.registers[self.index] = result
 
 
 @instruction(145)
-class Increment(Instruction):
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      value = environment.operand_stack.pop()
-      result = value + 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
-      environment.operand_stack.append(result)
+class Increment(Instruction): # …, value => …, incrementedvalue
+  """
+  Pop value off of the stack.
+  Convert value to a Number using the ToNumber algorithm (ECMA-262 section 9.3) and then add 1 to the Number value.
+  Push the result onto the stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    result = value + 1
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop, +os.push result=<{BM.DumpVar(result)}>')
+    environment.operand_stack.append(result)
 
 
 @instruction(192)
-class IncrementInteger(Instruction):
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-      value = environment.operand_stack.pop()
-      result = int(value) + 1
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
-      environment.operand_stack.append(result)
+class IncrementInteger(Instruction): # …, value => …, incrementedvalue
+  """
+  Pop value off of the stack.
+  Convert value to an int using the ToInt32 algorithm (ECMA-262 section 9.5) and then add 1 to the int value.
+  Push the result onto the stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    result = int(value) + 1
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop, +os.push result=<{BM.DumpVar(result)}>')
+    environment.operand_stack.append(result)
 
 
 @instruction(104)
@@ -1460,7 +1517,6 @@ class Pop(Instruction): # …, value => …
     """
     Pops the top value from the stack and discards it.
     """
-
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value = environment.operand_stack.pop()
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop discard<{BM.DumpVar(value)}>')
@@ -1468,7 +1524,12 @@ class Pop(Instruction): # …, value => …
 
 @instruction(29)
 class PopScope(Instruction):
-    pass
+  """
+  Pop a scope off of the scope stack
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.scope_stack.pop()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-ss.pop discard<{BM.DumpVar(value)}>')
 
 
 @instruction(36)
@@ -1527,12 +1588,12 @@ class PushNamespace(Instruction):
 
 
 @instruction(40)
-class PushNaN(Instruction):
+class PushNaN(Instruction): # … => …, NaN
     pass
 
 
 @instruction(32)
-class PushNull(Instruction):
+class PushNull(Instruction): # … => …, null
     """
     Push the `null` value onto the stack. Maybe use 'None' ?
     """
@@ -1542,21 +1603,31 @@ class PushNull(Instruction):
 
 @instruction(48)
 class PushScope(Instruction): # …, value => …
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'value=<{BM.DumpVar(value)}>')
-        assert value is not None and value is not undefined
-        environment.scope_stack.append(value)
-
+  """
+  Pop value off of the stack. Push value onto the scope stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
+    assert value is not None and value is not undefined
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+ss.push value=<{BM.DumpVar(value)}>')
+    environment.scope_stack.append(value)
 
 @instruction(37)
-class PushShort(Instruction):
-    value: u30
+class PushShort(Instruction): # … => …, value
+  """
+  value is a u30. The value is pushed onto the stack.
+  """
+  value: u30
 
 
 @instruction(44)
-class PushString(Instruction):
-    index: u30
+class PushString(Instruction): # … => …, value
+  """
+  index is a u30 that must be an index into the string constant pool.
+  The string value at index in the string constant pool is pushed onto the stack.
+  """
+  index: u30
 
 
 @instruction(38)
@@ -1564,7 +1635,6 @@ class PushTrue(Instruction): # … => …, true
     """
     Push the `true` value onto the stack.
     """
-
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         environment.operand_stack.append(True)
 
@@ -1608,7 +1678,6 @@ class ReturnVoid(Instruction): # … => …
     Return from the currently executing method. This returns the value `undefined`. If the
     method has a return type, then undefined is coerced to that type and then returned.
     """
-
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         raise ASReturnException(undefined)
 
@@ -1625,39 +1694,50 @@ class SetLocal(Instruction):
 
 @instruction(212)
 class SetLocal0(Instruction): # …, value => …
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
-        environment.registers[0] = value
+  """
+  <n> = 0 is an index of a local register.
+  The register at that index is set to value, and value is popped off the stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
+    environment.registers[0] = value
 
 
 @instruction(213)
 class SetLocal1(Instruction): # …, value => …
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
-        environment.registers[1] = value
+  """
+  <n> = 1 is an index of a local register.
+  The register at that index is set to value, and value is popped off the stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
+    environment.registers[1] = value
 
 
 @instruction(214)
 class SetLocal2(Instruction): # …, value => …
-    """
-    `<n>` is an index of a local register. The register at that index is set to value, and value is
-    popped off the stack.
-    """
-
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
-        environment.registers[2] = value
+  """
+  `<n>` = 2 is an index of a local register.
+  The register at that index is set to value, and value is popped off the stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
+    environment.registers[2] = value
 
 
 @instruction(215)
 class SetLocal3(Instruction): # …, value => …
-    def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        value = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
-        environment.registers[3] = value
+  """
+  <n> = 3 is an index of a local register.
+  The register at that index is set to value, and value is popped off the stack.
+  """
+def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
+    environment.registers[3] = value
 
 
 @instruction(111)
@@ -1744,7 +1824,9 @@ class SubtractInteger(Instruction): # …, value1, value2 => …, value3
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
         value_2 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
         value_1 = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_1=<{BM.DumpVar(value_1)}>')
         result = int(value_1) - int(value_2)
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
         environment.operand_stack.append(result)
