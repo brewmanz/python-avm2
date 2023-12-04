@@ -102,7 +102,10 @@ def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   # EvonyHuge.txt:147605 # public static function trim(param1:String) : String
   callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
   machine_EvonyClient_N.cbOnInsExe = callback
-  act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz", None)
+  # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz", None) # eould return empty string, but asserts as charAt fails to be found
+  # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz") # that undefined throws an assertion PushScope
+  # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', None, "xyz") # PushScope asserts
+  act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', '', "xyz")
   machine_EvonyClient_N.cbOnInsExe = None
   print(f'## @{BM.LINE()} SU_T act=<{act}>')
   assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz") == "xyz"

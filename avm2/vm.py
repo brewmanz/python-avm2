@@ -193,7 +193,9 @@ class VirtualMachine:
 
         # TODO: init script on demand.
         method_body = self.abc_file.method_bodies[self.method_to_body[index]]
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, *args)
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'environment={BM.DumpVar(environment)}')
         return self.execute_code(method_body.code, environment)
 
     def call_method(self, index_or_name: Union[ABCMethodIndex, str], this: Any, *args) -> Any:

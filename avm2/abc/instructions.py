@@ -21,25 +21,29 @@ strBACKWARDS_n = 'BACKWARDS\n'
 class bagForFindingInternalMethod:
   """
   >>> myObj = 'abcdef'
-  >>> myName = 'charAt'
+  >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+  >>> myMethod = 'charAt'
   >>> myArgs = list()
   >>> myArgs.append(1)
   >>> myArgs.append(2.0)
-  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
   >>> bag
-  bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundFunction=None, foundResultHint=[], result=None)
+  bagForFindingInternalMethod(instance='abcdef', namespaceName='http://adobe.com/AS3/2006/builtin', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundFunction=None, foundResultHint=[], result=None)
   >>> bag.foundResultHint.append('summat strange')
   >>> bag.foundClass = string_Methods
   >>> bag.foundFunction = string_method_char_at
   >>> bag.result = 'myResult'
   >>> str(bag)[0:120]
-  "bagForFindingInternalMethod(instance='abcdef', methodName='charAt', arguments=[1, 2.0], foundClass=<class '__main__.stri"
-  >>> str(bag)[100:182]
-  "class '__main__.string_Methods'>, foundFunction=<function string_method_char_at at"
+  "bagForFindingInternalMethod(instance='abcdef', namespaceName='http://adobe.com/AS3/2006/builtin', methodName='charAt', a"
+  >>> str(bag)[100:220]
+  "thodName='charAt', arguments=[1, 2.0], foundClass=<class '__main__.string_Methods'>, foundFunction=<function string_meth"
+  >>> str(bag)[200:233]
+  'function string_method_char_at at'
   >>> str(bag)[-57:]
   ">, foundResultHint=['summat strange'], result='myResult')"
   """
   instance: object # object whose method will be called
+  namespaceName: str # namespace name # string internal methods = 'http://adobe.com/AS3/2006/builtin'
   methodName: str # method name
   arguments: list # arguments for method call
   foundClass: object = None # helper class that's been found
@@ -54,10 +58,11 @@ class findInternalMethod:
     """
     >>> # fails to find
     >>> myObj = 123.456
-    >>> myName = 'charAt'
+    >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+    >>> myMethod = 'charAt'
     >>> myArgs = list()
     >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
     >>> findInternalMethod.findClassAndMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
@@ -66,10 +71,11 @@ class findInternalMethod:
     'None'
     >>> # should find
     >>> myObj = 'abcdef'
-    >>> myName = 'charAt'
+    >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+    >>> myMethod = 'charAt'
     >>> myArgs = list()
     >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
     >>> findInternalMethod.findClassAndMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
@@ -85,10 +91,11 @@ class findInternalMethod:
   def perform(bag: bagForFindingInternalMethod):
     """
     >>> myObj = 'abcdef'
-    >>> myName = 'charAt'
+    >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+    >>> myMethod = 'charAt'
     >>> myArgs = list()
     >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
     >>> findInternalMethod.findClassAndMethodFromBag(bag)
     >>> str(bag.foundClass)
     "<class '__main__.string_Methods'>"
@@ -112,10 +119,11 @@ def string_method_char_at(item: str, index: int = 0):
   """
   Returns the character in the position specified by the index parameter.
   >>> myObj = 'abcdef'
-  >>> myName = 'char_at'
+  >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+  >>> myMethod = 'charAt'
   >>> myArgs = list()
   >>> myArgs.append(3)
-  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
   >>> res = string_method_char_at(bag.instance, *bag.arguments)
   >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
@@ -127,7 +135,8 @@ def string_method_substr(item: str, startIndex: int = 0, len: int = 0x7fffffff):
   """
   Returns a substring consisting of the characters that start at the specified startIndex and with a length specified by len.
   >>> myObj = 'abcdef'
-  >>> myName = 'substring'
+  >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+  >>> myMethod = 'substr'
   >>> myArgs = list()
   >>> myArgs.append(1)
   >>> myArgs.append(4)
@@ -139,7 +148,7 @@ def string_method_substr(item: str, startIndex: int = 0, len: int = 0x7fffffff):
   'bcd'
   >>> myObj[myArgs[0]: myArgs[0]+myArgs[1]]
   'bcde'
-  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '?c', '?m')
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, '?c', '?m')
   >>> res = string_method_substr(bag.instance, *bag.arguments)
   >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
@@ -151,7 +160,8 @@ def string_method_substring(item: str, startIndex: int = 0, endIndex: int = 0x7f
   """
   Returns a string consisting of the character specified by startIndex and all characters up to endIndex - 1
   >>> myObj = 'abcdef'
-  >>> myName = 'substring'
+  >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+  >>> myMethod = 'substring'
   >>> myArgs = list()
   >>> myArgs.append(1)
   >>> myArgs.append(4)
@@ -163,7 +173,7 @@ def string_method_substring(item: str, startIndex: int = 0, endIndex: int = 0x7f
   'bcd'
   >>> myObj[myArgs[0]: myArgs[1] ]
   'bcd'
-  >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs, '?c', '?m')
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, '?c', '?m')
   >>> res = string_method_substring(bag.instance, *bag.arguments)
   >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
@@ -184,10 +194,24 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     """
     >>> # no find
     >>> myObj = 123.45
-    >>> myName = 'charAt'
+    >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+    >>> myMethod = 'charAt'
     >>> myArgs = list()
     >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
+    >>> string_Methods.findMethodFromBag(bag)
+    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> str(bag.foundClass)
+    'None'
+    >>> str(bag.foundFunction)[:33]
+    'None'
+    >>> # should not find
+    >>> myObj = 'abcdef'
+    >>> myNamespace = ''
+    >>> myMethod = 'charAt'
+    >>> myArgs = list()
+    >>> myArgs.append(3)
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
     >>> string_Methods.findMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
@@ -196,10 +220,11 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     'None'
     >>> # should find
     >>> myObj = 'abcdef'
-    >>> myName = 'charAt'
+    >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+    >>> myMethod = 'charAt'
     >>> myArgs = list()
     >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myName, myArgs)
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
     >>> string_Methods.findMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
@@ -207,16 +232,20 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     >>> str(bag.foundFunction)[:34]
     '<function string_method_char_at at'
     """
-    if type(bag.instance) == str:
-      for k, v in cls.dictSwfNameToMethod.items():
-        if k == bag.methodName:
-          bag.foundClass = string_Methods
-          bag.foundFunction = v
-          #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} matched <{bag.methodName}> with {v}')
-          return
-      #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} is a string but no match for <{bag.methodName}>')
+    if bag.namespaceName == 'http://adobe.com/AS3/2006/builtin':
+      if isinstance(bag.instance, str):
+        for k, v in cls.dictSwfNameToMethod.items():
+          if k == bag.methodName:
+            bag.foundClass = string_Methods
+            bag.foundFunction = v
+            #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} matched <{bag.methodName}> with {v}')
+            return
+        #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} is a string but no match for <{bag.methodName}>')
+      else:
+        #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a string')
+        pass
     else:
-      #bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a string')
+      #bag.foundResultHint.append(f'@{BM.LINE(False)} {bag.namespaceName} not expected namespace')
       pass
     return
 
@@ -417,7 +446,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       argN=[]
       for ix in range(self.arg_count)[::-1]:
         theArg = environment.operand_stack.pop()
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={theArg}')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
         argN.insert(0, theArg)
 
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2') # DEBUG
@@ -436,11 +465,11 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
         machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNS)}')
 
       theObj = environment.operand_stack.pop()
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={theObj}')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={BM.DumpVar(theObj)}')
 
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3') # DEBUG
 
-      bag = bagForFindingInternalMethod(theObj, theName, argN)
+      bag = bagForFindingInternalMethod(theObj, theNS, theName, argN)
       findInternalMethod.findClassAndMethodFromBag(bag)
       if bag.foundFunction:
         findInternalMethod.perform(bag)
@@ -452,7 +481,6 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
-      assert False, f'!! ## TODO do the call & check ## @{BM.LINE(False)} !!'
 
 @instruction(76)
 class CallPropLex(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, value
@@ -545,7 +573,7 @@ class Construct(Instruction): # …, object, arg1, arg2, ..., argn => …, value
       argN=[]
       for ix in range(self.arg_count)[::-1]:
         theArg = environment.operand_stack.pop()
-        print(f'arg[{ix}]={theArg}')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
         argN.insert(0, theArg)
 
       theObj = environment.operand_stack.pop()
@@ -583,7 +611,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
       argN=[]
       for ix in range(self.arg_count)[::-1]:
         theArg = environment.operand_stack.pop()
-        print(f'arg[{ix}]={theArg}')
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
         argN.insert(0, theArg)
 
       # TODO is it a runtime multiname?
@@ -600,6 +628,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
         theNS = environment.operand_stack.pop()
 
       theObj = environment.operand_stack.pop()
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.pop theObj=<{BM.DumpVar(theObj)}>')
 
       result = f'!! ## TODO ## @{BM.LINE(False)} !!'
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
@@ -629,6 +658,7 @@ class ConstructSuper(Instruction): # …, object, arg1, arg2, ..., argn => …
       argN=[]
       for ix in range(self.arg_count)[::-1]:
         theArg = environment.operand_stack.pop()
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
         print(f'arg[{ix}]={theArg}')
         argN.insert(0, theArg)
 
@@ -651,8 +681,9 @@ class ConvertToInteger(Instruction): # …, value => …, intvalue
     """
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        value = int(environment.operand_stack.pop())
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
+        valueRaw = int(environment.operand_stack.pop())
+        value = int(valueRaw)
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
         environment.operand_stack.append(value)
 
 
@@ -665,8 +696,9 @@ class ConvertToDouble(Instruction): # …, value => …, doublevalue
     """
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        value = float(environment.operand_stack.pop())
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
+        valueRaw = float(environment.operand_stack.pop())
+        value = float(valueRaw)
+        if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
         environment.operand_stack.append(value)
 
 
@@ -1630,6 +1662,10 @@ class PushString(Instruction): # … => …, value
   The string value at index in the string constant pool is pushed onto the stack.
   """
   index: u30
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = machine.strings[self.index]
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
+    environment.operand_stack.append(value)
 
 
 @instruction(38)
