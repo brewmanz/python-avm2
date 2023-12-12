@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import BrewMaths as BM
+import BrewMaths as BM # export PYTHONPATH="${PYTHONPATH}:/home/bryan/git/BDL/CodeFrags/PythonBits/"
 
 from dataclasses import dataclass
 from functools import partial
@@ -35,16 +35,16 @@ ABCScriptIndex = NewType('ABCScriptIndex', int)
 
 
 @dataclass
-class ABCFile:
-    minor_version: int
-    major_version: int
-    constant_pool: ASConstantPool
-    methods: List[ASMethod]
-    metadata: List[ASMetadata]
-    instances: List[ASInstance]
-    classes: List[ASClass]
-    scripts: List[ASScript]
-    method_bodies: List[ASMethodBody]
+class ABCFile: # abcfile
+    minor_version: int # u16 minor_version
+    major_version: int # u16 major_version
+    constant_pool: ASConstantPool # cpool_info constant_pool
+    methods: List[ASMethod] # u30 method_count + method_info method[method_count]
+    metadata: List[ASMetadata] # u30 metadata_count + metadata_info metadata[metadata_count]
+    instances: List[ASInstance] # u30 class_count + instance_info instance[class_count]
+    classes: List[ASClass] # class_info class[class_count]
+    scripts: List[ASScript] # u30 script_count + script_info script[script_count]
+    method_bodies: List[ASMethodBody] # u30 method_body_count + method_body_info method_body[method_body_count]
 
     def __init__(self, reader: MemoryViewReader):
         self.minor_version = reader.read_u16()
@@ -60,14 +60,14 @@ class ABCFile:
 
 
 @dataclass
-class ASConstantPool:
-    integers: List[int]
-    unsigned_integers: List[int]
-    doubles: List[float]
-    strings: List[str]
-    namespaces: List[ASNamespace]
-    ns_sets: List[ASNamespaceSet]
-    multinames: List[ASMultiname]
+class ASConstantPool: # cpool_info
+    integers: List[int] # u30 int_count + s32 integer[int_count]
+    unsigned_integers: List[int] # u30 uint_count + u32 uinteger[uint_count]
+    doubles: List[float] # u30 double_count + d64 double[double_count]
+    strings: List[str] # u30 string_count + string_info string[string_count]
+    namespaces: List[ASNamespace] # u30 namespace_count + namespace_info namespace[namespace_count]
+    ns_sets: List[ASNamespaceSet] # u30 ns_set_count + ns_set_info ns_set[ns_set_count]
+    multinames: List[ASMultiname] # u30 multiname_count + multiname_info multiname[multiname_count]
 
     def __init__(self, reader: MemoryViewReader):
         self.integers = read_array_with_default(reader, partial(MemoryViewReader.read_int, unsigned=False), 0)
@@ -103,9 +103,9 @@ class ASConstantPool:
       print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])}')
 
 @dataclass
-class ASNamespace:
-    kind: NamespaceKind
-    nam_ix: ABCStringIndex
+class ASNamespace: # namespace_info
+    kind: NamespaceKind # u8 kind
+    nam_ix: ABCStringIndex # u30 name
 
     def __init__(self, reader: MemoryViewReader):
         self.kind = NamespaceKind(reader.read_u8())
@@ -126,8 +126,8 @@ class ASNamespaceBis(ASNamespace):
 
 
 @dataclass
-class ASNamespaceSet:
-    namespaces: List[ABCNamespaceIndex]
+class ASNamespaceSet: # ns_set_info
+    namespaces: List[ABC/NamespaceIndex] # u30 count + u30 ns[count]
 
     def __init__(self, reader: MemoryViewReader):
         self.namespaces = read_array(reader, MemoryViewReader.read_int)
@@ -152,13 +152,13 @@ class ASNamespaceSetBis(ASNamespaceSet):
 
 
 @dataclass
-class ASMultiname:
-    kind: MultinameKind
+class ASMultiname: # multiname_info
+    kind: MultinameKind # u8 kind
     ns_ix: Optional[ABCNamespaceIndex] = None           # index into cp namespaces
     nam_ix: Optional[ABCStringIndex] = None             # index into cp strings
     ns_set_ix: Optional[ABCNamespaceSetIndex] = None    # index into cp ns_sets
     q_nam_ix: Optional[ABCMultinameIndex] = None        # index into cp multinames
-    type_ixs: Optional[List[ABCMultinameIndex]] = None
+    type_ixs: Optional[List[ABCMultinameIndex]] = None # u8 data[]
 
     def getNameFromStack(self) -> bool:
       return self.kind in (MultinameKind.RTQ_NAME_L, MultinameKind.RTQ_NAME_LA, MultinameKind.MULTINAME_L, MultinameKind.MULTINAME_LA )
@@ -261,14 +261,14 @@ class ASMultinameBis(ASMultiname):
       #assert False, 'unreachable code'
 
 @dataclass
-class ASMethod:
-    param_count: int
-    return_typ_ix: ABCMultinameIndex
-    param_typ_ixs: List[ABCMultinameIndex]
-    nam_ix: ABCStringIndex
-    flags: MethodFlags
-    options: Optional[List[ASOptionDetail]] = None
-    param_nam_ixs: Optional[List[ABCStringIndex]] = None
+class ASMethod: # method_info
+    param_count: int # u30 param_count
+    return_typ_ix: ABCMultinameIndex # u30 return_type
+    param_typ_ixs: List[ABCMultinameIndex] # u30 param_type[param_count]
+    nam_ix: ABCStringIndex # u30 name
+    flags: MethodFlags # u8 flags
+    options: Optional[List[ASOptionDetail]] = None # option_info options
+    param_nam_ixs: Optional[List[ABCStringIndex]] = None # param_info param_names
 
     def __init__(self, reader: MemoryViewReader):
         self.param_count = reader.read_int()
@@ -280,12 +280,31 @@ class ASMethod:
             self.options = read_array(reader, ASOptionDetail)
         if MethodFlags.HAS_PARAM_NAMES in self.flags:
             self.param_nam_ixs = read_array(reader, MemoryViewReader.read_int, self.param_count)
+@dataclass
+class ASMethodBis:
+    return_typ_name: str = None
+    param_typ_names: List[str] = None
+    nam_name: str = None
+    param_nam_names: List[str] = None
 
+    def __init__(self, rhs: ASMethod, constant_pool: ASConstantPool):
+        self.param_count = rhs.param_count
+        self.return_typ_ix = rhs.return_typ_ix
+        self.param_typ_ixs = rhs.param_typ_ixs
+        self.nam_ix = rhs.nam_ix
+        self.flags = rhs.flags
+        self.options = rhs.options
+        self.param_nam_ixs = rhs.param_nam_ixs
+
+        self.return_typ_name = constant_pool,multinames[self.return_typ_ix].qualified_name(constant_pool)
+        self.param_typ_names = list()
+        for ix in self.param_typ_ixs:
+          self.param_typ_names.append(constant_pool,multinames[self.param_typ_ixs[ix]].qualified_name(constant_pool))
 
 @dataclass
-class ASOptionDetail:
-    value: int
-    kind: ConstantKind
+class ASOptionDetail: # option_detail
+    value: int # u30 val
+    kind: ConstantKind # u8 kind
 
     def __init__(self, reader: MemoryViewReader):
         self.value = reader.read_int()
@@ -293,9 +312,9 @@ class ASOptionDetail:
 
 
 @dataclass
-class ASMetadata:
-    nam_ix: ABCStringIndex
-    items: List[ASItem]
+class ASMetadata: # metadata_info
+    nam_ix: ABCStringIndex # u30 name
+    items: List[ASItem] # u30 item_count + item_info items[item_count]
 
     def __init__(self, reader: MemoryViewReader):
         self.nam_ix = reader.read_int()
@@ -303,9 +322,9 @@ class ASMetadata:
 
 
 @dataclass
-class ASItem:
-    key_ix: ABCStringIndex
-    value_ix: ABCStringIndex
+class ASItem: # item_info
+    key_ix: ABCStringIndex # u30 key
+    value_ix: ABCStringIndex # u30 value
 
     def __init__(self, reader: MemoryViewReader):
         self.key_ix = reader.read_int()
@@ -313,14 +332,14 @@ class ASItem:
 
 
 @dataclass
-class ASInstance:
-    nam_ix: ABCMultinameIndex
-    super_nam_ix: ABCMultinameIndex
-    flags: ClassFlags
-    interface_indices: List[ABCMultinameIndex]
-    init_ix: ABCMethodIndex
-    traits: List[ASTrait]
-    protected_namespace_index: Optional[ABCNamespaceIndex] = None
+class ASInstance: # instance_info
+    nam_ix: ABCMultinameIndex # u30 name
+    super_nam_ix: ABCMultinameIndex # u30 super_name
+    flags: ClassFlags # u8 flags
+    interface_indices: List[ABCMultinameIndex] # u30 intrf_count + u30 interface[intrf_count]
+    init_ix: ABCMethodIndex # u30 iinit
+    traits: List[ASTrait] # u30 trait_count + traits_info trait[trait_count]
+    protected_namespace_index: Optional[ABCNamespaceIndex] = None # u30 protectedNs
 
     def __init__(self, reader: MemoryViewReader):
         self.nam_ix = reader.read_int()
@@ -334,12 +353,12 @@ class ASInstance:
 
 
 @dataclass
-class ASTrait:
-    nam_ix: ABCMultinameIndex
-    kind: TraitKind
+class ASTrait: # traits_info
+    nam_ix: ABCMultinameIndex # u30 name
+    kind: TraitKind # u8 kind
     attributes: TraitAttributes
-    data: Union[ASTraitSlot, ASTraitClass, ASTraitFunction, ASTraitMethod]
-    metadata: Optional[List[ABCMetadataIndex]] = None
+    data: Union[ASTraitSlot, ASTraitClass, ASTraitFunction, ASTraitMethod]  # u8 data[]
+    metadata: Optional[List[ABCMetadataIndex]] = None # u30 metadata_count + u30 metadata[metadata_count]
 
     def __init__(self, reader: MemoryViewReader):
         self.nam_ix = reader.read_int()
@@ -361,11 +380,11 @@ class ASTrait:
 
 
 @dataclass
-class ASTraitSlot:
-    slot_id: int
-    type_name_index: ABCMultinameIndex
-    vindex: int
-    vkind: Optional[ConstantKind] = None
+class ASTraitSlot: # trait_slot
+    slot_id: int # u30 slot_id
+    type_name_index: ABCMultinameIndex # u30 type_name
+    vindex: int # u30 vindex
+    vkind: Optional[ConstantKind] = None # u8 vkind
 
     def __init__(self, reader: MemoryViewReader):
         self.slot_id = reader.read_int()
@@ -376,9 +395,9 @@ class ASTraitSlot:
 
 
 @dataclass
-class ASTraitClass:
-    slot_id: int
-    class_ix: ABCClassIndex
+class ASTraitClass: # trait_class
+    slot_id: int # u30 slot_id
+    class_ix: ABCClassIndex # u30 classi
 
     def __init__(self, reader: MemoryViewReader):
         self.slot_id = reader.read_int()
@@ -386,9 +405,9 @@ class ASTraitClass:
 
 
 @dataclass
-class ASTraitFunction:
-    slot_id: int
-    function_ix: ABCMethodIndex
+class ASTraitFunction: # trait_function
+    slot_id: int # u30 slot_id
+    function_ix: ABCMethodIndex # u30 function
 
     def __init__(self, reader: MemoryViewReader):
         self.slot_id = reader.read_int()
@@ -396,9 +415,9 @@ class ASTraitFunction:
 
 
 @dataclass
-class ASTraitMethod:
-    disposition_id: int
-    method_ix: ABCMethodIndex
+class ASTraitMethod: # trait_method
+    disposition_id: int # u30 disp_id
+    method_ix: ABCMethodIndex # u30 method
 
     def __init__(self, reader: MemoryViewReader):
         self.disposition_id = reader.read_int()
@@ -406,9 +425,9 @@ class ASTraitMethod:
 
 
 @dataclass
-class ASClass:
-    init_ix: ABCMethodIndex
-    traits: List[ASTrait]
+class ASClass: # class_info
+    init_ix: ABCMethodIndex # u30 cinit
+    traits: List[ASTrait] # u30 trait_count + traits_info traits[trait_count]
 
     def __init__(self, reader: MemoryViewReader):
         self.init_ix = reader.read_int()
@@ -416,9 +435,9 @@ class ASClass:
 
 
 @dataclass
-class ASScript:
-    init_ix: ABCMethodIndex
-    traits: List[ASTrait]
+class ASScript: # script_info
+    init_ix: ABCMethodIndex # u30 init
+    traits: List[ASTrait] # u30 trait_count + traits_info trait[trait_count]
 
     def __init__(self, reader: MemoryViewReader):
         self.init_ix = reader.read_int()
@@ -426,15 +445,15 @@ class ASScript:
 
 
 @dataclass
-class ASMethodBody:
-    method_ix: ABCMethodIndex
-    max_stack: int
-    local_count: int
-    init_scope_depth: int
-    max_scope_depth: int
-    code: memoryview
-    exceptions: List[ASException]
-    traits: List[ASTrait]
+class ASMethodBody: # method_body_info
+    method_ix: ABCMethodIndex # u30 method
+    max_stack: int # u30 max_stack
+    local_count: int # u30 local_count
+    init_scope_depth: int # u30 init_scope_depth
+    max_scope_depth: int # u30 max_scope_depth
+    code: memoryview # u30 code_length + u8 code[code_length]
+    exceptions: List[ASException] # u30 exception_count + exception_info exception[exception_count]
+    traits: List[ASTrait] # u30 trait_count + traits_info trait[trait_count]
 
     def __init__(self, reader: MemoryViewReader):
         self.method_ix = reader.read_int()
@@ -448,12 +467,12 @@ class ASMethodBody:
 
 
 @dataclass
-class ASException:
-    from_: int
-    to: int
-    target: int
-    exc_typ_ix: ABCStringIndex
-    var_nam_ix: ABCStringIndex
+class ASException: # exception_info
+    from_: int # u30 from
+    to: int # u30 to
+    target: int # u30 target
+    exc_typ_ix: ABCStringIndex # u30 exc_type
+    var_nam_ix: ABCStringIndex # u30 var_name
 
     def __init__(self, reader: MemoryViewReader):
         self.from_ = reader.read_int()

@@ -89,8 +89,11 @@ def test_E_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
   assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trim') == 950 # Mainflash/mx/utils/StringUtil.as:18
 
 def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ##')
-  print(f'## @{BM.LINE()}  public static function trim(param1:String) : String {{')
+  print(f'## @{BM.LINE()} being run ## ../mx/utils/StringUtil.as')
+  print(f'## @{BM.LINE()} package mx.utils{{ .. import mx.core.mx_internal .. use namespace mx_internal ')
+  print(f'## @{BM.LINE()}  public class StringUtil {{')
+  print(f'## @{BM.LINE()}   ...')
+  print(f'## @{BM.LINE()}   public static function trim(param1:String) : String {{')
   print(f'## @{BM.LINE()}    if(param1 == null) {{ return ""; }}')
   print(f'## @{BM.LINE()}    var _loc2_:int = 0;')
   print(f'## @{BM.LINE()}    while(isWhitespace(param1.charAt(_loc2_))) {{ _loc2_++; }}')

@@ -95,7 +95,7 @@ class VirtualMachine:
 
     def resolve_multiname(self, stack: List[ASObject], name: str, namespaces: Iterable[str]) -> Tuple[ASObject, str, str]:
         for object_ in reversed(stack):
-            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'ResMulNam.obj=<{BM.DumpVar(object_)}>')
+            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.obj=<{BM.DumpVar(object_)}>')
             for namespace in namespaces:
                 try:
                     return self.resolve_qname(object_, namespace, name), name, namespace
@@ -116,7 +116,7 @@ class VirtualMachine:
     def lookup_class(self, qualified_name: str) -> ABCClassIndex:
       try:
         return self.name_to_class[qualified_name]
-      except KeyError:
+      except KeyEr:
         self.GDictFails += 1
         if self.GDictFails < 5:
           print(F'!! @{BM.LINE()} n2c KeyError [{qualified_name}]')
@@ -190,12 +190,13 @@ class VirtualMachine:
             index = self.lookup_method(index_or_name)
         else:
             raise ValueError(index_or_name)
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} > index {BM.DumpVar(index)}')
 
         # TODO: init script on demand.
         method_body = self.abc_file.method_bodies[self.method_to_body[index]]
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'method_body={BM.DumpVar(method_body)}')
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, *args)
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'environment={BM.DumpVar(environment)}')
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
         return self.execute_code(method_body.code, environment)
 
     def call_method(self, index_or_name: Union[ABCMethodIndex, str], this: Any, *args) -> Any:
@@ -208,10 +209,13 @@ class VirtualMachine:
             index = self.lookup_method(index_or_name)
         else:
             raise ValueError(index_or_name)
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} > index {BM.DumpVar(index)}')
 
         # TODO: init script on demand.
         method_body = self.abc_file.method_bodies[self.method_to_body[index]]
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, this, *args)
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
         return self.execute_code(method_body.code, environment)
 
     def execute_code(self, code: memoryview, environment: MethodEnvironment) -> Any:
@@ -243,7 +247,7 @@ class VirtualMachine:
         for _ in range(method_body.local_count):
           registers.append(ASUndefined(BM.LINE(False)))
         # Register 0 holds the "this" object. This value is never null.
-        registers[0] = this
+        registers[0] = this # Register 0 holds the “this” object. This value is never null .
         # Registers 1 through `method_info.param_count` holds parameter values coerced to the declared types
         # of the parameters.
         assert len(args) <= method.param_count
