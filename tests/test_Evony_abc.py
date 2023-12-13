@@ -136,6 +136,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
         print(f'@{BM.LINE()} $$att[-1] type(att{-1})={type(att[-1])} dir(att[-1])={list(a for a in dir(att[-1]) if not a.startswith("__"))}') # filtered
 
       print(f'@{BM.LINE()} {BM.TERM_WHT_ON_GRN()}$$attrPref/Nam=[{attrPrefix}/{attrNam}] att=[{f"{att}"[:120]}]{BM.TERM_RESET()}')
+      dictTrait = dict()
       fn = f'list_{attrPrefix}{attrNam}.$txt'
       with open(fn, "w") as fTxt:
         for ix in range(len(att)):
@@ -162,8 +163,37 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
             fTxt.write(f' # n[ix]> {g_cp_list_strings[ix]}') # convert ns# to string value
 
           fTxt.write('\n') # end line
+
+          # do we have Traits? If so, create an extra dictionary for them
+          if False: pass
+          elif attrNam == 'classes':
+            for ixT in range(len(val.traits)):
+              keyT = f'{attrNam}#{ix:03}#{ixT:02}'
+              #valT = f'{val.traits[ixT]}'
+              dictTrait[keyT] = val.traits[ixT] # valT
+
           if ix > 4 and ix < (len(att) - 5): continue
           print(f'{" "*(indent+2)}[{ix}]«{strVal}»')
+
+      # WAIT! Do we have any Traits to write out
+      if len(dictTrait):
+        fn = f'list_{attrPrefix}{attrNam}_traits.$txt'
+        with open(fn, "w") as fTxt:
+          print(f'@{BM.LINE()} {BM.TERM_WHT_ON_GRN()}$$attrPref/Nam=[{attrPrefix}/{attrNam}] Traits{BM.TERM_RESET()}')
+          ix = 0
+          for key in sorted(dictTrait):
+            val = dictTrait[key]
+            strVal = f'[{key}]={val.nam_name}' # = f'[{key}]={val}'
+            lenLim = 1023 # 220
+            if len(strVal) > lenLim: strVal = strVal[:lenLim-2] + '..'
+            fTxt.write(strVal) # actual value, up to length lenLimT
+
+            # do we want some comments?
+            if ix == 0:
+              fTxt.write(f' # {datetime.now()} attrNam={attrNam} fn={fn} @{BM.LINE(False)}') # add timestamp, fn, etc
+
+            fTxt.write('\n') # end line
+            ix += 1
 
 def DumpAttributes(item: object, title: str, prefix: str, detail: int) -> str:
   print(f'## @{BM.LINE()} $$31$$ title:{title}, prefix:{prefix}, dir={dir(item)}')
@@ -225,7 +255,8 @@ def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
 
     # add name strings from name indices
-    abc_file_EvonyClient.constant_pool.propogateStrings()
+    #abc_file_EvonyClient.constant_pool._propogateStrings()
+    abc_file_EvonyClient.propogateStrings()
 
     BuildColourNameLookup()
     BuildSymbolsLookup()

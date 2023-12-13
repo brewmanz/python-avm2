@@ -58,6 +58,40 @@ class ABCFile: # abcfile
         self.scripts = read_array(reader, ASScript)
         self.method_bodies = read_array(reader, ASMethodBody)
 
+    def propogateStrings(self):
+      print(f'@{BM.LINE()} abc propogateStrings running ... ')
+      self.constant_pool._propogateStrings()
+
+      print(f'@{BM.LINE()}  type(classes[-1].traits[-1])={type(self.classes[-1].traits[-1])}')
+      for ix in range(len(self.classes)):
+        item = self.classes[ix]
+        if item != None:
+          newItem = ASClassBis(item, self.constant_pool, ix)
+          self.classes[ix] = newItem
+          item = self.classes[ix]
+          for ixT in range(len(item.traits)):
+            itemT = item.traits[ixT]
+            newItemT = ASTraitBis(itemT, self.constant_pool)
+            item.traits[ixT] = newItemT
+      print(f'@{BM.LINE()}  type(classes[-1].traits[-1])={type(self.classes[-1].traits[-1])}')
+
+      print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
+      for ix in range(len(self.instances)):
+        item = self.instances[ix]
+        if item != None:
+          newItem = ASInstanceBis(item, self.constant_pool, ix)
+          self.instances[ix] = newItem
+          # propagate instance names into class objects
+          self.classes[ix].nam_name = newItem.nam_name
+      print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
+
+      print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])}')
+      for ix in range(len(self.methods)):
+        item = self.methods[ix]
+        if item != None:
+          newItem = ASMethodBis(item, self.constant_pool, ix)
+          self.methods[ix] = newItem
+      print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])}')
 
 @dataclass
 class ASConstantPool: # cpool_info
@@ -78,8 +112,9 @@ class ASConstantPool: # cpool_info
         self.ns_sets = read_array_with_default(reader, ASNamespaceSet, None)
         self.multinames = read_array_with_default(reader, ASMultiname, None)
 
-    def propogateStrings(self):
-      print(f'@{BM.LINE()} propogateStrings running ... ')
+    def _propogateStrings(self):
+      print(f'@{BM.LINE()} cp propogateStrings running ... ')
+
       print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])}')
       for ix in range(len(self.namespaces)):
         item = self.namespaces[ix]
@@ -87,6 +122,7 @@ class ASConstantPool: # cpool_info
           newItem = ASNamespaceBis(item, self.strings, ix)
           self.namespaces[ix] = newItem
       print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])}')
+
       print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])}')
       for ix in range(len(self.ns_sets)):
         item = self.ns_sets[ix]
@@ -94,6 +130,7 @@ class ASConstantPool: # cpool_info
           newItem = ASNamespaceSetBis(item, self.namespaces, ix)
           self.ns_sets[ix] = newItem
       print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])}')
+
       print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])}')
       for ix in range(len(self.multinames)):
         item = self.multinames[ix]
@@ -281,13 +318,15 @@ class ASMethod: # method_info
         if MethodFlags.HAS_PARAM_NAMES in self.flags:
             self.param_nam_ixs = read_array(reader, MemoryViewReader.read_int, self.param_count)
 @dataclass
-class ASMethodBis:
+class ASMethodBis(ASMethod):
+    ixABC: int = None
+    isClassInit: bool = None
     return_typ_name: str = None
     param_typ_names: List[str] = None
     nam_name: str = None
     param_nam_names: List[str] = None
 
-    def __init__(self, rhs: ASMethod, constant_pool: ASConstantPool):
+    def __init__(self, rhs: ASMethod, constant_pool: ASConstantPool, ixABC: int):
         self.param_count = rhs.param_count
         self.return_typ_ix = rhs.return_typ_ix
         self.param_typ_ixs = rhs.param_typ_ixs
@@ -296,10 +335,35 @@ class ASMethodBis:
         self.options = rhs.options
         self.param_nam_ixs = rhs.param_nam_ixs
 
-        self.return_typ_name = constant_pool,multinames[self.return_typ_ix].qualified_name(constant_pool)
+        self.ixABC = ixABC
+        self.isClassInit = None
+
+        key = self.return_typ_ix
+        self.return_typ_name = constant_pool.multinames[key].qualified_name(constant_pool) if key else None
+
         self.param_typ_names = list()
-        for ix in self.param_typ_ixs:
-          self.param_typ_names.append(constant_pool,multinames[self.param_typ_ixs[ix]].qualified_name(constant_pool))
+        if self.param_typ_ixs:
+          for ix in range(len(self.param_typ_ixs)):
+            key = self.param_typ_ixs[ix]
+            param_typ_name = constant_pool.multinames[key].qualified_name(constant_pool) if key else None
+            self.param_typ_names.append(param_typ_name)
+
+        key = self.nam_ix
+        if key is None:
+          nam_name = None
+        else:
+          nam_name = '(None)' if key == 0 else constant_pool.strings[key]
+        self.nam_name = nam_name
+
+        self.param_nam_names = None
+        if self.flags:
+          if MethodFlags.HAS_PARAM_NAMES in self.flags:
+            self.param_nam_names = list()
+            for ix in range(len(self.param_nam_ixs)):
+              key = self.param_nam_ixs[ix]
+              param_nam_name = constant_pool.strings[key] if key else None
+              self.param_nam_names.append(param_nam_name)
+
 
 @dataclass
 class ASOptionDetail: # option_detail
@@ -350,6 +414,25 @@ class ASInstance: # instance_info
         self.interface_indices = read_array(reader, MemoryViewReader.read_int)
         self.init_ix = reader.read_int()
         self.traits = read_array(reader, ASTrait)
+@dataclass
+class ASInstanceBis(ASInstance):
+    ixABC: int = None
+    nam_name: str = None
+    super_name: str = None
+
+    def __init__(self, rhs: ASInstance, constant_pool: ASConstantPool, ixABC: int):
+        self.nam_ix = rhs.nam_ix
+        self.super_nam_ix = rhs.super_nam_ix
+        self.flags = rhs.flags
+        self.interface_indices = rhs.interface_indices
+        self.init_ix = rhs.init_ix
+        self.traits = rhs.traits
+        self.protected_namespace_index = rhs.protected_namespace_index
+
+        self.ixABC = ixABC
+        self.nam_name = constant_pool.multinames[self.nam_ix].qualified_name(constant_pool)
+        if self.super_nam_ix > 0:
+          self.super_name = constant_pool.multinames[self.super_nam_ix].qualified_name(constant_pool)
 
 
 @dataclass
@@ -377,6 +460,18 @@ class ASTrait: # traits_info
             assert False, 'unreachable code'
         if TraitAttributes.METADATA in self.attributes:
             self.metadata = read_array(reader, MemoryViewReader.read_int)
+@dataclass
+class ASTraitBis(ASTrait):
+    nam_name: str = None
+
+    def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool):
+        self.nam_ix = rhs.nam_ix
+        self.kind = rhs.kind
+        self.attributes = rhs.attributes
+        self.data = rhs.data
+        self.metadata = rhs.metadata
+
+        self.nam_name = constant_pool.multinames[self.nam_ix].qualified_name(constant_pool)
 
 
 @dataclass
@@ -426,13 +521,23 @@ class ASTraitMethod: # trait_method
 
 @dataclass
 class ASClass: # class_info
+    nam_name: str # not available at creation time
     init_ix: ABCMethodIndex # u30 cinit
     traits: List[ASTrait] # u30 trait_count + traits_info traits[trait_count]
 
     def __init__(self, reader: MemoryViewReader):
+        self.nam_name = None # will be gleaned from instances later
         self.init_ix = reader.read_int()
         self.traits = read_array(reader, ASTrait)
+@dataclass
+class ASClassBis(ASClass):
+    ixABC: int = None
+    def __init__(self, rhs: ASClass, constant_pool: ASConstantPool, ixABC: int):
+        self.nam_name = rhs.nam_name
+        self.init_ix = rhs.init_ix
+        self.traits = rhs.traits
 
+        self.ixABC = ixABC
 
 @dataclass
 class ASScript: # script_info
