@@ -60,8 +60,10 @@ class ABCFile: # abcfile
 
         # now call propagateStrings() to update classes with names of things
 
+    #print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+
     def propagateStrings(self, callerInfo: str):
-      print(f'@{BM.LINE()} abc propagateStrings running (called from {callerInfo}) ... ')
+      print(f'@{BM.LINE()} {BM.TERM_YLW()}{BM.FUNC_NAME()}{BM.TERM_RESET()} running (called from {callerInfo}) ... ')
       self.constant_pool._propagateStrings(callerInfo)
 
 
@@ -112,6 +114,7 @@ class ASConstantPool: # cpool_info
     namespaces: List[ASNamespace] # u30 namespace_count + namespace_info namespace[namespace_count]
     ns_sets: List[ASNamespaceSet] # u30 ns_set_count + ns_set_info ns_set[ns_set_count]
     multinames: List[ASMultiname] # u30 multiname_count + multiname_info multiname[multiname_count]
+    cbNotifications = None
 
     def __init__(self, reader: MemoryViewReader):
         self.integers = read_array_with_default(reader, partial(MemoryViewReader.read_int, unsigned=False), 0)
@@ -121,6 +124,7 @@ class ASConstantPool: # cpool_info
         self.namespaces = read_array_with_default(reader, ASNamespace, None)
         self.ns_sets = read_array_with_default(reader, ASNamespaceSet, None)
         self.multinames = read_array_with_default(reader, ASMultiname, None)
+        self.cbNotifications = None
 
     def _propagateStrings(self, callerInfo: str):
       print(f'@{BM.LINE()} cp _propagateStrings running (called from {callerInfo}) ... ')
@@ -260,6 +264,8 @@ class ASMultiname: # multiname_info
         if namespace.nam_ix == 0 and namespace.kind == NamespaceKind.PRIVATE_NS:
           return '' # return empty value
         if not namespace.nam_ix: # this will become an assert failure; grab some debug info
+          if constant_pool.cbNotifications:
+            constant_pool.cbNotifications(f'@{BM.LINE()} {BM.FUNC_NAME()} namespace.nam_ix has no value for {self}')
           # vvvv DEBUG INFO
           print(f'@{BM.LINE()} (from ../avm2/abc/type.py, having NOT found namespace.nam_ix ...)')
           print(f'@{BM.LINE()} type(namespace.nam_ix)={type(namespace.nam_ix)}, namespace.nam_ix={namespace.nam_ix}')
@@ -278,15 +284,24 @@ class ASMultiname: # multiname_info
             qn = ASMultiname.DEBUG_Q_N(self, constant_pool, self.ns_ix)
             print(f'{col}@{BM.LINE()} type(ns)={type(ns)}, ns={ns}{Style.RESET_ALL}, qn={qn}')
           print(f'@{BM.LINE()} type(namespace)={type(namespace)}, namespace={namespace}')
-          print(f'@{BM.LINE()} .. about to crash on <assert namespace.nam_ix> ..')
+          print(f'@{BM.LINE()} .. {BM.TERM_WHT_ON_RED()}{BM.FUNC_NAME()} about to crash on <assert namespace.nam_ix> ..{BM.TERM_RESET()}')
           # ^^^ DEBUG INFO
         assert namespace.nam_ix
         return f'{constant_pool.strings[namespace.nam_ix]}.{constant_pool.strings[self.nam_ix]}'.strip('.')
+      elif self.kind == MultinameKind.TYPE_NAME:
+        qn = f'!! RESOLVE self.q_nam_ix={self.q_nam_ix} !!'
+        msg = f'@{BM.LINE()} {BM.TERM_WHT_ON_RED()}{BM.FUNC_NAME()} EXPERIMENTAL MultinameKind TYPE_NAME; q_nam_ix={self.q_nam_ix} qn={qn}{BM.TERM_RESET()}'
+        print(msg)
+        if constant_pool.cbNotifications:
+          constant_pool.cbNotifications(msg)
+        return qn
       else:
+        if constant_pool.cbNotifications:
+          constant_pool.cbNotifications(f'@{BM.LINE()} {BM.FUNC_NAME()} UNEXPECTED MultinameKind {self.kind}(x{self.kind:02x}) not implemented)')
         # vvvv DEBUG INFO
-        print(f'@{BM.LINE()} (from ../avm2/abc/type.py, having UNEXPECTED MultinameKind {self.kind}(x{self.kind:02x}) not implemented)')
+        print(f'@{BM.LINE()} {BM.TERM_WHT_ON_RED()}{BM.FUNC_NAME()} (from ../avm2/abc/type.py, having UNEXPECTED MultinameKind {self.kind}(x{self.kind:02x}) not implemented){BM.TERM_RESET()}')
         print(f'@{BM.LINE()} self={self}')
-        print(f'@{BM.LINE()} .. about to crash on assert False ..')
+        print(f'@{BM.LINE()} .. {BM.TERM_WHT_ON_RED()}{BM.FUNC_NAME()} about to crash on assert False ..{BM.TERM_RESET()}')
         # ^^^ DEBUG INFO
         assert False, f'@{BM.LINE()} MultinameKind {self.kind} not implemented .. yet. TYPE_NAME={MultinameKind.TYPE_NAME}' # 29 =
 @dataclass

@@ -215,7 +215,8 @@ class VirtualMachine:
         if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, *args)
         if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
-        return self.execute_code(method_body.code, environment)
+        res =self.execute_code(method_body.code, environment)
+        return res
 
     def call_method(self, index_or_name: Union[ABCMethodIndex, str], this: Any, *args) -> Any:
         """
@@ -325,11 +326,15 @@ def execute_tag(tag: Tag) -> VirtualMachine:
     Parse and execute DO_ABC tag.
     """
     assert tag.type_ == TagType.DO_ABC
-    return execute_do_abc_tag(DoABCTag(tag.raw))
+    doAbcTag = DoABCTag(tag.raw)
+    res = execute_do_abc_tag(doAbcTag)
+    return res
 
 
 def execute_do_abc_tag(do_abc_tag: DoABCTag) -> VirtualMachine:
     """
     Create a virtual machine and execute the tag.
     """
-    return VirtualMachine(ABCFile(MemoryViewReader(do_abc_tag.abc_file)))
+    abcFile = ABCFile(MemoryViewReader(do_abc_tag.abc_file))
+    vm = VirtualMachine(abcFile)
+    return vm

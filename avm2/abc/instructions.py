@@ -278,7 +278,10 @@ class Instruction:
           del environment.lastNInstr[0]
 
         # any callback?
-        if machine.cbOnInsExe is not None: machine.cbOnInsExe.ObserveInstructionExecuting(theInstance, machine, environment, offsetOfInstruction)
+        if environment.instrExeCnt == 1:
+          print(f'\t{BM.LINE()}: {BM.TERM_CYN()}machine.cbOnInsExe is ={None if machine.cbOnInsExe == None else machine.cbOnInsExe.GetName()}{BM.TERM_RESET()}')
+        if machine.cbOnInsExe is not None:
+          machine.cbOnInsExe.ObserveInstructionExecuting(theInstance, machine, environment, offsetOfInstruction)
 
     opcode: int
 
@@ -299,10 +302,12 @@ class CallbackOnInstructionExecuting:
   """
   Derive your callback listener from here
   """
+  def GetName(self) -> str:
+    return type(self).__name__
   def ObserveInstructionExecuting(self, theInstruction: Instruction, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment, offsetOfInstruction: int):
-    raise NotImplementedError(F'Someone forgot to derive their listener from here ({self})')
+    raise NotImplementedError(F'Someone forgot to override {BM.FUNC_NAME()}, or derive their listener from here ({self})')
   def MakeExtraObservation(self, extraObservation):
-    pass
+    raise NotImplementedError(F'Someone forgot to override {BM.FUNC_NAME()} ({self})')
 
 T = TypeVar('T', bound=Instruction)
 opcode_to_instruction: Dict[int, Type[T]] = {}
