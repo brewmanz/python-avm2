@@ -25,6 +25,9 @@ class VirtualMachine:
     def __init__(self, abc_file: ABCFile):
         self.abc_file = abc_file
 
+        # extend classes (via ASxxxBis classes) and add strings
+        self.abc_file.propagateStrings(BM.LINE(False))
+
         # Quick access.
         self.constant_pool = abc_file.constant_pool
         self.strings = self.constant_pool.strings
@@ -39,13 +42,20 @@ class VirtualMachine:
         self.name_to_class = dict(self.link_names_to_classes())
         self.name_to_method = dict(self.link_names_to_methods())
 
+        # backfill class names and
+        print(f'@{BM.LINE()} !! TODO backfill ns + name to classes & methods')
+
         # Runtime.
         self.class_objects: DefaultDict[ABCClassIndex, ASObject] = defaultdict(ASObject)  # FIXME: unsure, prototypes?
         self.script_objects: DefaultDict[ABCScriptIndex, ASObject] = defaultdict(ASObject)  # FIXME: unsure, what is it?
         self.global_object = ASObject(BM.LINE(False), properties={
+            # key seems to be tuple of (namespace, name)
             ('', 'Object'): ASObject(BM.LINE(False)),
             ('flash.utils', 'Dictionary'): ASObject(BM.LINE(False)),
         })  # FIXME: unsure, prototypes again?
+
+        # HACK 2023-12-13 not sure how to set object properties; maybe create a dictionary? Let's see.
+        # or not # self.nsObject XXX: DefaultDict[ABCClassIndex, ASObject] = defaultdict(ASObject)  # FIXME: unsure, prototypes?
 
         # callbacks
         self.cbOnInsExe: CallbackOnInstructionExecuting = None
@@ -83,34 +93,40 @@ class VirtualMachine:
         Link method names and method indices.
         """
         # FIXME: this is doubtful.
+        print(F'!! @{BM.LINE()} link_names_to_methods')
         for instance, class_ in zip(self.abc_file.instances, self.abc_file.classes):
             qualified_class_name = self.multinames[instance.nam_ix].qualified_name(self.constant_pool)
             for trait in class_.traits:
                 if trait.kind in (TraitKind.GETTER, TraitKind.SETTER, TraitKind.METHOD):
                     qualified_trait_name = self.multinames[trait.nam_ix].qualified_name(self.constant_pool)
-                    yield f'{qualified_class_name}.{qualified_trait_name}', trait.data.method_ix
+                    qual_class_trait = f'{qualified_class_name}.{qualified_trait_name}'
+                    # too soon # self.abc_file.methods[trait.data.method_ix].nam_name = qual_class_trait  # back-paint method name
+                    yield qual_class_trait, trait.data.method_ix
 
     # Resolving.
     # ------------------------------------------------------------------------------------------------------------------
-
-    def resolve_multiname(self, stack: List[ASObject], name: str, namespaces: Iterable[str]) -> Tuple[ASObject, str, str]:
-        for object_ in reversed(stack):
-            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.obj=<{BM.DumpVar(object_)}>')
+    def resolve_multiname(self, scopeStack: List[ASObject], name: str, namespaces: Iterable[str]) -> Tuple[ASObject, str, str, Any]:
+        '''
+        Returns resolved object, its name, and its namespace. Also its scopeStack entry
+        If the scopeStack entry is a string, then the string IS the resolved object
+        '''
+        for scopeObject_ in reversed(scopeStack):
+            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.sobj=<{BM.DumpVar(scopeObject_)}>')
             for namespace in namespaces:
                 try:
-                    return self.resolve_qname(object_, namespace, name), name, namespace
+                    return self.resolve_qname(scopeObject_, namespace, name), name, namespace, scopeObject_
                 except KeyError:
                     pass
         raise KeyError(name, namespaces)
 
-    def resolve_qname(self, object_: ASObject, namespace: str, name: str) -> Any:
+    def resolve_qname(self, scopeObject_: ASObject, namespace: str, name: str) -> Any:
         # Typically, the order of the search for resolving multinames is
         # the object’s declared traits, its dynamic properties, and finally the prototype chain.
         # TODO: declared traits.
 
-        if isinstance(object_, str): # if a string, return as-is
-          return object_
-        return object_.properties[namespace, name]
+        if isinstance(scopeObject_, str): # if a string, return as-is
+          return scopeObject_
+        return scopeObject_.properties[namespace, name]
         # TODO: prototype chain.
 
     def lookup_class(self, qualified_name: str) -> ABCClassIndex:
@@ -184,13 +200,15 @@ class VirtualMachine:
         """
         Call the specified static method and get a return value.
         """
+        print(f'## @{BM.LINE()} ## call_static ## ...')
         if isinstance(index_or_name, int):
             index = ABCMethodIndex(index_or_name)
         elif isinstance(index_or_name, str):
             index = self.lookup_method(index_or_name)
         else:
             raise ValueError(index_or_name)
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} > index {BM.DumpVar(index)}')
+        methodInfo = self.abc_file.methods[index]
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} > index {BM.DumpVar(index)} mi.n={methodInfo.nam_name}:{methodInfo}')
 
         # TODO: init script on demand.
         method_body = self.abc_file.method_bodies[self.method_to_body[index]]
@@ -203,6 +221,7 @@ class VirtualMachine:
         """
         Call the specified method and get a return value.
         """
+        print(f'## @{BM.LINE()} ## call_method ## ...')
         if isinstance(index_or_name, int):
             index = ABCMethodIndex(index_or_name)
         elif isinstance(index_or_name, str):

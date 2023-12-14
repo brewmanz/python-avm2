@@ -12,7 +12,7 @@ DEBUG = True or False # toggle and/or
 
 
 def test_abc_file_heroes(abc_file_heroes: ABCFile):
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     print(f'--==--')
 
     dro = dir(abc_file_heroes)

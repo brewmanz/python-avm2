@@ -137,7 +137,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
 
       print(f'@{BM.LINE()} {BM.TERM_WHT_ON_GRN()}$$attrPref/Nam=[{attrPrefix}/{attrNam}] att=[{f"{att}"[:120]}]{BM.TERM_RESET()}')
       dictTrait = dict()
-      fn = f'list_{attrPrefix}{attrNam}.$txt'
+      fn = f'list_Ev_{attrPrefix}{attrNam}.$txt'
       with open(fn, "w") as fTxt:
         for ix in range(len(att)):
           val = att[ix]
@@ -168,7 +168,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
           if False: pass
           elif attrNam == 'classes':
             for ixT in range(len(val.traits)):
-              keyT = f'{attrNam}#{ix:03}#{ixT:02}'
+              keyT = f'{attrNam}#{ix:03}#{ixT:02}#{val.nam_name}'
               #valT = f'{val.traits[ixT]}'
               dictTrait[keyT] = val.traits[ixT] # valT
 
@@ -177,7 +177,7 @@ def DumpAttribute(item: object, attrNam: str, attrPrefix: str, indent: int) -> s
 
       # WAIT! Do we have any Traits to write out
       if len(dictTrait):
-        fn = f'list_{attrPrefix}{attrNam}_traits.$txt'
+        fn = f'list_Ev_{attrPrefix}{attrNam}_traits.$txt'
         with open(fn, "w") as fTxt:
           print(f'@{BM.LINE()} {BM.TERM_WHT_ON_GRN()}$$attrPref/Nam=[{attrPrefix}/{attrNam}] Traits{BM.TERM_RESET()}')
           ix = 0
@@ -205,7 +205,7 @@ def DumpAttributes(item: object, title: str, prefix: str, detail: int) -> str:
     indent = 1; DumpAttribute(item, nam, prefix, indent)
 
 def test_CheckAddingFieldToDataclass():
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     listStrings = (None
     , 'flash.utils'
     , 'Dictionary'
@@ -251,12 +251,11 @@ def test_CheckAddingFieldToDataclass():
 
 def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     abc_file_EvonyClient: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
 
     # add name strings from name indices
-    #abc_file_EvonyClient.constant_pool._propogateStrings()
-    abc_file_EvonyClient.propogateStrings()
+    abc_file_EvonyClient.propagateStrings(BM.LINE(False))
 
     BuildColourNameLookup()
     BuildSymbolsLookup()

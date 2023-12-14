@@ -45,3 +45,10 @@ Extra:-os.pop obj=ASUndefined(class_ix=None, properties={}).
 
 undefined = ASUndefined(BM.LINE(False)) #
 undefined2 = ASUndefined(BM.LINE(False)) #
+
+@dataclass
+class ASPrimitive(ASObject):
+    value: Any = None
+    def __init__(self, traceHint: str, value: Any):
+      super().__init__(traceHint, class_ix=None, properties=None)
+      self.value = value

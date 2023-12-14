@@ -16,16 +16,16 @@ import BrewMaths as BM
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
 
 def test_E_T4000_EvC_HospitalWin_bits(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   assert 1 == 2
 
 def test_E_T3000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   assert 1 == 2
 
 @pytest.mark.skip(reason="cannot find class com.evony.factory.ImageManager") # import pytest
 def test_E_T2000_EvC_ImageManager_initAllianceLevelMap(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
 
   ixClass = machine_EvonyClient_N.lookup_class('com.evony.factory.ImageManager')
   assert ixClass == -1
@@ -41,7 +41,7 @@ def test_E_T2000_EvC_ImageManager_initAllianceLevelMap(machine_EvonyClient_N: Vi
   assert 'check' == f'output @{BM.LINE()}'
 
 def test_E_T0000_EvC_SomeHints(raw_do_abc_tag_EvonyClient_N: Tag):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   print(f'# ## Parameters for machine_EvonyClient_N.call_method')
   print(f'# some info in: ActionScript Virtual Machine 2 Overview (108pp)')
   print(f'# 3.3.3 Method Entry: talks about three local data areas are allocated for it, as outlined in Chapter 2.')
@@ -49,16 +49,16 @@ def test_E_T0000_EvC_SomeHints(raw_do_abc_tag_EvonyClient_N: Tag):
   print(f'# ')
 
 def test_E_T1000_EvC_execute_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient_N: Tag):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   print(f'## @{BM.LINE()} type(raw_do_abc_tag_EvonyClient_N)={type(raw_do_abc_tag_EvonyClient_N)}')
   execute_tag(raw_do_abc_tag_EvonyClient_N)
 
 def test_E_T1100_execute_do_abc_tag_EvonyClient_N(do_abc_tag_EvonyClient_N: DoABCTag):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   execute_do_abc_tag(do_abc_tag_EvonyClient_N)
 
 def test_E_T1200_lookup_class_EvonyClient_N(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   ix = 0
   for item in machine_EvonyClient_N.name_to_class:
     if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2c={item} > {machine_EvonyClient_N.lookup_class(item)}')
@@ -76,7 +76,7 @@ def test_E_T1200_lookup_class_EvonyClient_N(machine_EvonyClient_N: VirtualMachin
   # assert machine_heroes.lookup_class('game.battle.controller.BattleEnemyReward') == 2308
 
 def test_E_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   ix = 0
   for item in machine_EvonyClient_N.name_to_method:
     if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2m={item} > {machine_EvonyClient_N.lookup_method(item)}')
@@ -89,7 +89,8 @@ def test_E_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
   assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trim') == 950 # Mainflash/mx/utils/StringUtil.as:18
 
 def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ## ../mx/utils/StringUtil.as')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+  print(f'## @{BM.LINE()} ## ../mx/utils/StringUtil.as')
   print(f'## @{BM.LINE()} package mx.utils{{ .. import mx.core.mx_internal .. use namespace mx_internal ')
   print(f'## @{BM.LINE()}  public class StringUtil {{')
   print(f'## @{BM.LINE()}   ...')
@@ -105,6 +106,16 @@ def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   # EvonyHuge.txt:147605 # public static function trim(param1:String) : String
   callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
   machine_EvonyClient_N.cbOnInsExe = callback
+
+  #machine_EvonyClient_N.abc_file.propagateStrings(BM.LINE(False)) # get class names etc propagated
+
+  # do class init
+  ixClass = 67
+  assert machine_EvonyClient_N.abc_file.classes[ixClass].nam_name == 'mx.utils.StringUtil' # right class
+  assert machine_EvonyClient_N.abc_file.classes[ixClass].init_ix == 949 # right class init method
+  act = machine_EvonyClient_N.call_static(machine_EvonyClient_N.abc_file.classes[ixClass].init_ix, '')
+  print(f'## @{BM.LINE()} SU_T init=<{act}>')
+
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz", None) # eould return empty string, but asserts as charAt fails to be found
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz") # that undefined throws an assertion PushScope
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', None, "xyz") # PushScope asserts
@@ -116,7 +127,7 @@ def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
 
 @pytest.mark.skip(reason="change to fit Evony") # import pytest
 def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   # scripts/battle/BattleCore.as:57 public static function hitrateIntensity(param1:int, param2:int, param3:int = 4) : Number
   assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, -100, 0) == 1
   assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 100, 0) == 1
@@ -125,5 +136,5 @@ def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
 
 @pytest.mark.skip(reason="change to fit Evony") # import pytest
 def test_E_T1600_new_battle_enemy_reward(machine_EvonyClient_N: VirtualMachine):
-  print(f'## @{BM.LINE()} being run ##')
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   machine_EvonyClient_N.new_instance('game.battle.controller.BattleEnemyReward')

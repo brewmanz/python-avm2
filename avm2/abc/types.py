@@ -58,11 +58,17 @@ class ABCFile: # abcfile
         self.scripts = read_array(reader, ASScript)
         self.method_bodies = read_array(reader, ASMethodBody)
 
-    def propogateStrings(self):
-      print(f'@{BM.LINE()} abc propogateStrings running ... ')
-      self.constant_pool._propogateStrings()
+        # now call propagateStrings() to update classes with names of things
 
-      print(f'@{BM.LINE()}  type(classes[-1].traits[-1])={type(self.classes[-1].traits[-1])}')
+    def propagateStrings(self, callerInfo: str):
+      print(f'@{BM.LINE()} abc propagateStrings running (called from {callerInfo}) ... ')
+      self.constant_pool._propagateStrings(callerInfo)
+
+
+      print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])}')
+      firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
+      if firstClassWithTraits_orNull:
+        print(f'@{BM.LINE()}  type(firstClassWithTraits_orNull.traits[-1])={type(firstClassWithTraits_orNull.traits[-1])}')
       for ix in range(len(self.classes)):
         item = self.classes[ix]
         if item != None:
@@ -73,7 +79,10 @@ class ABCFile: # abcfile
             itemT = item.traits[ixT]
             newItemT = ASTraitBis(itemT, self.constant_pool)
             item.traits[ixT] = newItemT
-      print(f'@{BM.LINE()}  type(classes[-1].traits[-1])={type(self.classes[-1].traits[-1])}')
+      print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])}')
+      firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
+      if firstClassWithTraits_orNull:
+        print(f'@{BM.LINE()}  type(firstClassWithTraits_orNull.traits[-1])={type(firstClassWithTraits_orNull.traits[-1])}')
 
       print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
       for ix in range(len(self.instances)):
@@ -83,6 +92,7 @@ class ABCFile: # abcfile
           self.instances[ix] = newItem
           # propagate instance names into class objects
           self.classes[ix].nam_name = newItem.nam_name
+          self.classes[ix].super_name = newItem.super_name
       print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
 
       print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])}')
@@ -112,8 +122,8 @@ class ASConstantPool: # cpool_info
         self.ns_sets = read_array_with_default(reader, ASNamespaceSet, None)
         self.multinames = read_array_with_default(reader, ASMultiname, None)
 
-    def _propogateStrings(self):
-      print(f'@{BM.LINE()} cp propogateStrings running ... ')
+    def _propagateStrings(self, callerInfo: str):
+      print(f'@{BM.LINE()} cp _propagateStrings running (called from {callerInfo}) ... ')
 
       print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])}')
       for ix in range(len(self.namespaces)):
@@ -250,6 +260,7 @@ class ASMultiname: # multiname_info
         if namespace.nam_ix == 0 and namespace.kind == NamespaceKind.PRIVATE_NS:
           return '' # return empty value
         if not namespace.nam_ix: # this will become an assert failure; grab some debug info
+          # vvvv DEBUG INFO
           print(f'@{BM.LINE()} (from ../avm2/abc/type.py, having NOT found namespace.nam_ix ...)')
           print(f'@{BM.LINE()} type(namespace.nam_ix)={type(namespace.nam_ix)}, namespace.nam_ix={namespace.nam_ix}')
           print(f'@{BM.LINE()} type(namespace.kind)={type(namespace.kind)}, namespace.kind={namespace.kind}')
@@ -268,10 +279,16 @@ class ASMultiname: # multiname_info
             print(f'{col}@{BM.LINE()} type(ns)={type(ns)}, ns={ns}{Style.RESET_ALL}, qn={qn}')
           print(f'@{BM.LINE()} type(namespace)={type(namespace)}, namespace={namespace}')
           print(f'@{BM.LINE()} .. about to crash on <assert namespace.nam_ix> ..')
+          # ^^^ DEBUG INFO
         assert namespace.nam_ix
         return f'{constant_pool.strings[namespace.nam_ix]}.{constant_pool.strings[self.nam_ix]}'.strip('.')
       else:
-        assert False, f'@{BM.LINE()} MultinameKind {self.kind} not implemented .. yet'
+        # vvvv DEBUG INFO
+        print(f'@{BM.LINE()} (from ../avm2/abc/type.py, having UNEXPECTED MultinameKind {self.kind}(x{self.kind:02x}) not implemented)')
+        print(f'@{BM.LINE()} self={self}')
+        print(f'@{BM.LINE()} .. about to crash on assert False ..')
+        # ^^^ DEBUG INFO
+        assert False, f'@{BM.LINE()} MultinameKind {self.kind} not implemented .. yet. TYPE_NAME={MultinameKind.TYPE_NAME}' # 29 =
 @dataclass
 class ASMultinameBis(ASMultiname):
     ixCP: int = None
@@ -352,7 +369,7 @@ class ASMethodBis(ASMethod):
         if key is None:
           nam_name = None
         else:
-          nam_name = '(None)' if key == 0 else constant_pool.strings[key]
+          nam_name = '' if key == 0 else constant_pool.strings[key]
         self.nam_name = nam_name
 
         self.param_nam_names = None
@@ -522,11 +539,13 @@ class ASTraitMethod: # trait_method
 @dataclass
 class ASClass: # class_info
     nam_name: str # not available at creation time
+    super_name: str # not available at creation time
     init_ix: ABCMethodIndex # u30 cinit
     traits: List[ASTrait] # u30 trait_count + traits_info traits[trait_count]
 
     def __init__(self, reader: MemoryViewReader):
         self.nam_name = None # will be gleaned from instances later
+        self.super_name = None # will be gleaned from instances later
         self.init_ix = reader.read_int()
         self.traits = read_array(reader, ASTrait)
 @dataclass
@@ -534,6 +553,7 @@ class ASClassBis(ASClass):
     ixABC: int = None
     def __init__(self, rhs: ASClass, constant_pool: ASConstantPool, ixABC: int):
         self.nam_name = rhs.nam_name
+        self.super_name = rhs.super_name
         self.init_ix = rhs.init_ix
         self.traits = rhs.traits
 

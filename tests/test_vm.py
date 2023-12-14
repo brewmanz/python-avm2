@@ -15,18 +15,18 @@ import BrewMaths as BM
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
 
 def test_T1000_execute_tag_heroes(raw_do_abc_tag_heroes: Tag):
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     print(f'## type(raw_do_abc_tag_heroes)={type(raw_do_abc_tag_heroes)}')
     execute_tag(raw_do_abc_tag_heroes)
 
 def test_T1100_execute_do_abc_tag_heroes(do_abc_tag_heroes: DoABCTag):
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     execute_do_abc_tag(do_abc_tag_heroes)
 
 def test_T1200_lookup_class_heroes(machine_heroes: VirtualMachine):
     ##!! MGH.PrintTestBeingRun(0)
     print(f'## os.getcwd()={os.getcwd()}')
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     ix = 0
     for item in machine_heroes.name_to_class:
       if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2c={item} > {machine_heroes.lookup_class(item)}')
@@ -38,7 +38,7 @@ def test_T1200_lookup_class_heroes(machine_heroes: VirtualMachine):
     assert machine_heroes.lookup_class('game.data.storage.loot.LootBoxDropItemDescription') == 2048 # scripts/game/data/storage/loot/LootBoxDropItemDescription.as
 
 def test_T1300_lookup_method_heroes(machine_heroes: VirtualMachine):
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     ix = 0
     for item in machine_heroes.name_to_method:
       if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2m={item} > {machine_heroes.lookup_method(item)}')
@@ -49,7 +49,7 @@ def test_T1300_lookup_method_heroes(machine_heroes: VirtualMachine):
     assert machine_heroes.lookup_method('game.mediator.gui.popup.hero.UnitUtils.createDescription') == 12801 # scripts/game/mediator/gui/popup/hero/UnitUtils.as:24
 
 def test_T1400_call_get_elemental_penetration_heroes(machine_heroes: VirtualMachine):
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     # scripts/battle/BattleCore.as:85 public static function getElementalPenetration(param1:Number, param2:Number) : int
     callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
     machine_heroes.cbOnInsExe = callback
@@ -58,7 +58,7 @@ def test_T1400_call_get_elemental_penetration_heroes(machine_heroes: VirtualMach
     assert machine_heroes.call_method('battle.BattleCore.getElementalPenetration', undefined, 42, -100500) == 42
 
 def test_T1500_call_hitrate_intensity_heroes(machine_heroes: VirtualMachine):
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     # scripts/battle/BattleCore.as:57 public static function hitrateIntensity(param1:int, param2:int, param3:int = 4) : Number
     assert machine_heroes.call_method('battle.BattleCore.hitrateIntensity', undefined, -100, 0) == 1
     assert machine_heroes.call_method('battle.BattleCore.hitrateIntensity', undefined, 100, 0) == 1
@@ -66,5 +66,5 @@ def test_T1500_call_hitrate_intensity_heroes(machine_heroes: VirtualMachine):
     assert machine_heroes.call_method('battle.BattleCore.hitrateIntensity', undefined, 4, 8) == 0.5
 
 def test_T1600_new_battle_enemy_reward_heroes(machine_heroes: VirtualMachine):
-    print(f'## @{BM.LINE()} being run ##')
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     machine_heroes.new_instance('game.battle.controller.BattleEnemyReward')
