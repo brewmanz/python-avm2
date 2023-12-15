@@ -14,7 +14,7 @@ import logging
 
 gDebugLevel = logging.INFO # DEBUG, INFO, WARNING, ERROR, CRITICAL # import logging
 
-def test_CheckAddingFieldToDataclass():
+def test_TEA2100_CheckAddingFieldToDataclass():
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     listStrings = (None
     , 'flash.utils'
@@ -59,63 +59,66 @@ def test_CheckAddingFieldToDataclass():
     #assert f'{asnsBis}'.endswith("='flash.display')")
     assert f'{asnsBis}' == "ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7, ixCP=123, nam_name='flash.display')"
 
-def test_abc_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
-    abc_file_EvonyClient: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
+def test_TEA2000_file_Dump_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
+    abc_file: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
 
     # add name strings from name indices
-    abc_file_EvonyClient.propagateStrings(BM.LINE(False))
+    abc_file.propagateStrings(BM.LINE(False))
 
     HA.BuildColourNameLookup()
     HA.BuildSymbolsLookup()
 
     print(f'## @{BM.LINE()} grab various constant_pool value ...')
-    global g_cp; g_cp = abc_file_EvonyClient.constant_pool
-    global g_cp_list_strings; g_cp_list_strings = abc_file_EvonyClient.constant_pool.strings
+    global g_cp; g_cp = abc_file.constant_pool
+    global g_cp_list_strings; g_cp_list_strings = abc_file.constant_pool.strings
     print(f'## @{BM.LINE()} len(g_cp_list_strings)={len(g_cp_list_strings)}')
 
     print(f'## @{BM.LINE()} about to DmpAtts c_p constant_pool ASConstantPool __name__ ...')
     if gDebugLevel <= logging.DEBUG:
-      HA.DumpAttributes('Ev', type(getattr(abc_file_EvonyClient, 'constant_pool')).__name__, f'--==-- class name??', '', 2)
+      HA.DumpAttributes('Ev', type(getattr(abc_file, 'constant_pool')).__name__, f'--==-- class name??', '', 2)
     else:
       print(f'## @{BM.LINE()} (skipping that DmpAtts)')
     print(f'## @{BM.LINE()} about to DmpAtts c_p constant_pool ASConstantPool ...')
     if gDebugLevel <= logging.INFO:
-      HA.DumpAttributes('Ev', type(getattr(abc_file_EvonyClient, 'constant_pool')), f'--==-- class name??', 'cp+_', 2)
+      HA.DumpAttributes('Ev', type(getattr(abc_file, 'constant_pool')), f'--==-- class name??', 'cp+_', 2)
     else:
       print(f'## @{BM.LINE()} (skipping that DmpAtts)')
 
-    print(f'## @{BM.LINE()} about to DmpAtts a_f_EC abc_file_EvonyClient...')
+    print(f'## @{BM.LINE()} about to DmpAtts a_f_EC abc_file...')
     if gDebugLevel <= logging.INFO:
-      HA.DumpAttributes('Ev', abc_file_EvonyClient, f'--==-- abc_file_EvonyClient', '', 2)
+      HA.DumpAttributes('Ev', abc_file, f'--==-- abc_file', '', 2)
     else:
       print(f'## @{BM.LINE()} (skipping that DmpAtts)')
 
     print(f'--==--')
 
-    assert abc_file_EvonyClient.major_version == 46
-    assert abc_file_EvonyClient.minor_version == 16
+def test_TEA1000_file_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
+    abc_file: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
 
-    #assert len(abc_file_EvonyClient.constant_pool) == 7 # TypeError: object of type 'ASConstantPool' has no len() #
-    assert len(abc_file_EvonyClient.constant_pool.integers) == 44 # 463
-    assert len(abc_file_EvonyClient.constant_pool.unsigned_integers) == 1 # 27
-    assert len(abc_file_EvonyClient.constant_pool.doubles) == 17 # 376
-    assert len(abc_file_EvonyClient.constant_pool.strings) == 2234 # 38136
-    assert len(abc_file_EvonyClient.constant_pool.namespaces) == 240 # 9048
-    assert len(abc_file_EvonyClient.constant_pool.ns_sets) == 49 # 1406
-    assert len(abc_file_EvonyClient.constant_pool.multinames) == 1696 # 38608
+    assert abc_file.major_version == 46
+    assert abc_file.minor_version == 16
 
-    assert len(abc_file_EvonyClient.methods) == 1214 # 35243
-    assert len(abc_file_EvonyClient.metadata) == 1 # 196
-    assert len(abc_file_EvonyClient.instances) == 97 # 3739
-    assert len(abc_file_EvonyClient.classes) == 97 # 3739
-    assert len(abc_file_EvonyClient.scripts) == 87 # 3720
-    assert len(abc_file_EvonyClient.method_bodies) == 859 # 34687
+    #assert len(abc_file.constant_pool) == 7 # TypeError: object of type 'ASConstantPool' has no len() #
+    assert len(abc_file.constant_pool.integers) == 44 # 463
+    assert len(abc_file.constant_pool.unsigned_integers) == 1 # 27
+    assert len(abc_file.constant_pool.doubles) == 17 # 376
+    assert len(abc_file.constant_pool.strings) == 2234 # 38136
+    assert len(abc_file.constant_pool.namespaces) == 240 # 9048
+    assert len(abc_file.constant_pool.ns_sets) == 49 # 1406
+    assert len(abc_file.constant_pool.multinames) == 1696 # 38608
 
-    assert len(read_method_body(abc_file_EvonyClient.method_bodies[0])) == 1 # 103
-    assert len(read_method_body(abc_file_EvonyClient.method_bodies[1])) == 7 # 69
-    assert len(read_method_body(abc_file_EvonyClient.method_bodies[2])) == 1 # 69
+    assert len(abc_file.methods) == 1214 # 35243
+    assert len(abc_file.metadata) == 1 # 196
+    assert len(abc_file.instances) == 97 # 3739
+    assert len(abc_file.classes) == 97 # 3739
+    assert len(abc_file.scripts) == 87 # 3720
+    assert len(abc_file.method_bodies) == 859 # 34687
+
+    assert len(read_method_body(abc_file.method_bodies[0])) == 1 # 103
+    assert len(read_method_body(abc_file.method_bodies[1])) == 7 # 69
+    assert len(read_method_body(abc_file.method_bodies[2])) == 1 # 69
 
 
 def read_method_body(method_body: ASMethodBody) -> List[Instruction]:

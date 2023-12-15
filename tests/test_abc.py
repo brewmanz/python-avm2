@@ -1,17 +1,56 @@
 from typing import Iterable, List
 
 import BrewMaths as BM
+import tests.helper_abc as HA
 
 from avm2.abc.instructions import Instruction, read_instruction
 from avm2.abc.types import ABCFile, ASMethodBody
+from avm2.abc.enums import NamespaceKind
 from avm2.io import MemoryViewReader
+from datetime import datetime
 
 import inspect
+import logging
 
 DEBUG = True or False # toggle and/or
+gDebugLevel = logging.INFO # DEBUG, INFO, WARNING, ERROR, CRITICAL # import logging
 
+def test_THA2000_file_Dump_Heroes(abc_file_heroes: ABCFile):
+    abc_file: ABCFile = abc_file_heroes # TODO fix HACK
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+    print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
 
-def test_abc_file_heroes(abc_file_heroes: ABCFile):
+    # add name strings from name indices
+    abc_file.propagateStrings(BM.LINE(False))
+
+    HA.BuildColourNameLookup()
+    HA.BuildSymbolsLookup()
+
+    print(f'## @{BM.LINE()} grab various constant_pool value ...')
+    global g_cp; g_cp = abc_file.constant_pool
+    global g_cp_list_strings; g_cp_list_strings = abc_file.constant_pool.strings
+    print(f'## @{BM.LINE()} len(g_cp_list_strings)={len(g_cp_list_strings)}')
+
+    print(f'## @{BM.LINE()} about to DmpAtts c_p constant_pool ASConstantPool __name__ ...')
+    if gDebugLevel <= logging.DEBUG:
+      HA.DumpAttributes('He', type(getattr(abc_file, 'constant_pool')).__name__, f'--==-- class name??', '', 2)
+    else:
+      print(f'## @{BM.LINE()} (skipping that DmpAtts)')
+    print(f'## @{BM.LINE()} about to DmpAtts c_p constant_pool ASConstantPool ...')
+    if gDebugLevel <= logging.INFO:
+      HA.DumpAttributes('He', type(getattr(abc_file, 'constant_pool')), f'--==-- class name??', 'cp+_', 2)
+    else:
+      print(f'## @{BM.LINE()} (skipping that DmpAtts)')
+
+    print(f'## @{BM.LINE()} about to DmpAtts a_f_EC abc_file...')
+    if gDebugLevel <= logging.INFO:
+      HA.DumpAttributes('He', abc_file, f'--==-- abc_file', '', 2)
+    else:
+      print(f'## @{BM.LINE()} (skipping that DmpAtts)')
+
+    print(f'--==--')
+
+def test_THA1000_abc_file_heroes(abc_file_heroes: ABCFile):
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     print(f'--==--')
 
