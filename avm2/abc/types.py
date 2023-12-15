@@ -133,7 +133,7 @@ class ASConstantPool: # cpool_info
       for ix in range(len(self.namespaces)):
         item = self.namespaces[ix]
         if item != None:
-          newItem = ASNamespaceBis(item, self.strings, ix)
+          newItem = ASNamespaceBis(item, self, ix)
           self.namespaces[ix] = newItem
       print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])}')
 
@@ -141,7 +141,7 @@ class ASConstantPool: # cpool_info
       for ix in range(len(self.ns_sets)):
         item = self.ns_sets[ix]
         if item != None:
-          newItem = ASNamespaceSetBis(item, self.namespaces, ix)
+          newItem = ASNamespaceSetBis(item, self, ix)
           self.ns_sets[ix] = newItem
       print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])}')
 
@@ -149,7 +149,7 @@ class ASConstantPool: # cpool_info
       for ix in range(len(self.multinames)):
         item = self.multinames[ix]
         if item != None:
-          newItem = ASMultinameBis(item, self.strings, self.namespaces, self.ns_sets, ix)
+          newItem = ASMultinameBis(item, self, ix)
           self.multinames[ix] = newItem
       print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])}')
 
@@ -166,12 +166,12 @@ class ASNamespaceBis(ASNamespace):
     ixCP: int
     nam_name: str
 
-    def __init__(self, rhs: ASNamespace, listStrings: List[str], ixCP: int):
+    def __init__(self, rhs: ASNamespace, constant_pool: ASConstantPool, ixCP: int):
         self.kind = rhs.kind
         self.nam_ix = rhs.nam_ix
         self.ixCP = ixCP
-        if rhs.nam_ix > 0 and rhs.nam_ix < len(listStrings):
-          self.nam_name = listStrings[rhs.nam_ix]
+        if rhs.nam_ix > 0 and rhs.nam_ix < len(constant_pool.strings):
+          self.nam_name = constant_pool.strings[rhs.nam_ix]
         else:
           self.nam_name = None
 
@@ -187,13 +187,13 @@ class ASNamespaceSetBis(ASNamespaceSet):
     ixCP: int
     ns_names: List[str]
 
-    def __init__(self, rhs: ASNamespaceSet, listNamespaces: List[ASNamespaceBis], ixCP: int):
+    def __init__(self, rhs: ASNamespaceSet, constant_pool: ASConstantPool, ixCP: int):
         self.namespaces = rhs.namespaces
         self.ixCP = ixCP
         names = list()
         for ix in range(len(self.namespaces)):
           ixNS = self.namespaces[ix]
-          ns = listNamespaces[ixNS]
+          ns = constant_pool.namespaces[ixNS]
           nextName = ns.nam_name if ns else None
           # print(f'@{BM.LINE()}  nextName={nextName} ix={ix} ixNS={ixNS} ns={ns} rhs={rhs}')
           if True or nextName: # ALL # skip None
@@ -289,12 +289,14 @@ class ASMultiname: # multiname_info
         assert namespace.nam_ix
         return f'{constant_pool.strings[namespace.nam_ix]}.{constant_pool.strings[self.nam_ix]}'.strip('.')
       elif self.kind == MultinameKind.TYPE_NAME:
-        qn = f'!! RESOLVE self.q_nam_ix={self.q_nam_ix} !!'
+        refMultiName = constant_pool.multinames[self.q_nam_ix]
+        qn = f'!! RESOLVE q_nam_ix={self.q_nam_ix}=>{refMultiName.nam_name} type_ixs={self.type_ixs} !!'
         msg = f'@{BM.LINE()} {BM.TERM_WHT_ON_RED()}{BM.FUNC_NAME()} EXPERIMENTAL MultinameKind TYPE_NAME; q_nam_ix={self.q_nam_ix} qn={qn}{BM.TERM_RESET()}'
-        print(msg)
+        #print(msg)
         if constant_pool.cbNotifications:
           constant_pool.cbNotifications(msg)
-        return qn
+        return f'{self.ns_name}.{self.nam_name}'.strip('.')
+        #return qn
       else:
         if constant_pool.cbNotifications:
           constant_pool.cbNotifications(f'@{BM.LINE()} {BM.FUNC_NAME()} UNEXPECTED MultinameKind {self.kind}(x{self.kind:02x}) not implemented)')
@@ -313,7 +315,8 @@ class ASMultinameBis(ASMultiname):
     q_nam_name:str = None
     # ?? # type_ixs: Optional[List[ABCMultinameIndex]] = None
 
-    def __init__(self, rhs: ASMultiname, listStrings: List[str], listNamespaces: List[ASNamespaceBis], listNSSets: List[ASNamespaceSetsBis], ixCP: int):
+    #def __init__(self, rhs: ASMultiname, listStrings: List[str], listNamespaces: List[ASNamespaceBis], listNSSets: List[ASNamespaceSetsBis], ixCP: int):
+    def __init__(self, rhs: ASMultiname, constant_pool: ASConstantPool, ixCP: int):
       self.kind = rhs.kind
       self.ns_ix = rhs.ns_ix
       self.nam_ix = rhs.nam_ix
@@ -321,13 +324,23 @@ class ASMultinameBis(ASMultiname):
       self.q_nam_ix = rhs.q_nam_ix
       self.type_ixs = rhs.type_ixs
       self.ixCP = ixCP
-      self.ns_name = None if self.ns_ix is None else listNamespaces[self.ns_ix].nam_name
-      self.nam_name = None if self.nam_ix is None else listStrings[self.nam_ix]
-      self.ns_set_names = None if self.ns_set_ix is None else f'!! ## TODO @{BM.LINE(False)} !!'
-      self.q_nam_name = None if self.q_nam_ix is None else f'!! ## TODO @{BM.LINE(False)} !!'
-      pass
-      #print(f'@{BM.LINE()} ASMultiname.__init__; self.kind={self.kind} FAILING')
-      #assert False, 'unreachable code'
+      self.ns_name = None if self.ns_ix is None else constant_pool.namespaces[self.ns_ix].nam_name #listNamespaces[self.ns_ix].nam_name
+      self.nam_name = None if self.nam_ix is None else constant_pool.strings[self.nam_ix] #listStrings[self.nam_ix]
+      self.ns_set_names = None if self.ns_set_ix is None else f'!! ## TODO @{BM.LINE(False)} {constant_pool.ns_sets[self.ns_set_ix].ns_names}'
+
+      # TYPE_NAME handling
+      if self.q_nam_ix:
+        qMultiName = constant_pool.multinames[self.q_nam_ix]
+        q_nam_name = qMultiName.nam_name
+        q_ns_name = qMultiName.ns_name
+        self.q_nam_name = None if self.q_nam_ix is None else f'!! ## TODO @{BM.LINE(False)} ns={q_ns_name} nam={q_nam_name} t_ixs={self.type_ixs}'
+        if self.nam_name == None:
+          self.nam_name = q_nam_name
+        if self.ns_name == None:
+          self.ns_name = q_ns_name
+      else:
+        self.q_nam_name = None
+
 
 @dataclass
 class ASMethod: # method_info
