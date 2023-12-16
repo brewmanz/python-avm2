@@ -28,6 +28,7 @@ def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):
   # empty # for item in machine_EvonyClient_N.class_objects:
   print(f'@{BM.LINE()} class count = {len(machine_EvonyClient_N.abc_file.classes)}')
   assert len(machine_EvonyClient_N.abc_file.classes) == len(machine_EvonyClient_N.abc_file.instances), 'Sanity check'
+  print(f'@{BM.LINE()} l(abc.mb)={len(machine_EvonyClient_N.abc_file.method_bodies)}')
   print(f'@{BM.LINE()} item \nC={machine_EvonyClient_N.abc_file.classes[0]} \nI={machine_EvonyClient_N.abc_file.instances[0]}')
   n = 0
   for ix in range(len(machine_EvonyClient_N.abc_file.classes)):
@@ -48,6 +49,7 @@ def test_TEV2110_InitAllClasses(machine_EvonyClient_N: VirtualMachine):
   # empty # for item in machine_EvonyClient_N.class_objects:
   print(f'@{BM.LINE()} class count = {len(machine_EvonyClient_N.abc_file.classes)}')
   assert len(machine_EvonyClient_N.abc_file.classes) == len(machine_EvonyClient_N.abc_file.instances), 'Sanity check'
+  print(f'@{BM.LINE()} l(abc.mb)={len(machine_EvonyClient_N.abc_file.method_bodies)}')
   print(f'@{BM.LINE()} item \nC={machine_EvonyClient_N.abc_file.classes[0]} \nI={machine_EvonyClient_N.abc_file.instances[0]}')
   n = 0
   for ix in range(len(machine_EvonyClient_N.abc_file.classes)):
@@ -80,6 +82,23 @@ def test_TEV2000_EvC_ImageManager_initAllianceLevelMap(machine_EvonyClient_N: Vi
   print(f'@{BM.LINE()} item={item}')
 
   assert 'check' == f'output @{BM.LINE()}'
+
+def test_TEV0100_EvC_SomeSizeInfo(machine_EvonyClient_N: VirtualMachine):
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+  print(f'@{BM.LINE()} l(abc.mb)={len(machine_EvonyClient_N.abc_file.method_bodies)} l(m2b)={len(machine_EvonyClient_N.method_to_body)}')
+  #print(f'@{BM.LINE()} m2b={machine_EvonyClient_N.method_to_body}')
+  m2bk_sorted = sorted(machine_EvonyClient_N.method_to_body.keys())
+  nPerLine = 15
+  nM2B = len(machine_EvonyClient_N.method_to_body)
+  for ix1 in range(0, nM2B, nPerLine):
+    print(f'[{ix1}]: ', end='')
+    for ix2 in range(ix1, min(ix1 + nPerLine, nM2B), 1):
+      key = m2bk_sorted[ix2]
+      #print(f'\t[{key}]={machine_EvonyClient_N.method_to_body[key]},  ', end='')
+      print(f'[{key}]={machine_EvonyClient_N.method_to_body[key]},  ', end='')
+    print(f'')
+
+  assert 1==2, 'TODO'
 
 def test_TEV0000_EvC_SomeHints(raw_do_abc_tag_EvonyClient_N: Tag):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')

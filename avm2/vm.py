@@ -208,10 +208,11 @@ class VirtualMachine:
         else:
             raise ValueError(index_or_name)
         methodInfo = self.abc_file.methods[index]
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} > index {BM.DumpVar(index)} mi.n={methodInfo.nam_name}:{methodInfo}')
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} -> index {BM.DumpVar(index)} mi.n={methodInfo.nam_name}:{"(add methodInfo)"} #M2B={len(self.method_to_body)} #a.MB={len(self.abc_file.method_bodies)}')
 
         # TODO: init script on demand.
-        method_body = self.abc_file.method_bodies[self.method_to_body[index]]
+        ixMB = self.method_to_body[index]
+        method_body = self.abc_file.method_bodies[ixMB]
         if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, *args)
         if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
