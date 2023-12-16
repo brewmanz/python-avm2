@@ -15,16 +15,57 @@ import BrewMaths as BM
 
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
 
-def test_E_T4000_EvC_HospitalWin_bits(machine_EvonyClient_N: VirtualMachine):
+def test_TEV4000_EvC_HospitalWin_bits(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   assert 1 == 2
 
-def test_E_T3000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMachine):
+def test_TEV3000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   assert 1 == 2
+
+def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+  # empty # for item in machine_EvonyClient_N.class_objects:
+  print(f'@{BM.LINE()} class count = {len(machine_EvonyClient_N.abc_file.classes)}')
+  assert len(machine_EvonyClient_N.abc_file.classes) == len(machine_EvonyClient_N.abc_file.instances), 'Sanity check'
+  print(f'@{BM.LINE()} item \nC={machine_EvonyClient_N.abc_file.classes[0]} \nI={machine_EvonyClient_N.abc_file.instances[0]}')
+  n = 0
+  for ix in range(len(machine_EvonyClient_N.abc_file.classes)):
+    itemC = machine_EvonyClient_N.abc_file.classes[ix]
+    itemI = machine_EvonyClient_N.abc_file.instances[ix]
+    #print(f'@{BM.LINE()} item \nC={itemC} \nI={itemI}')
+    print(f'{ix}, ', end='')
+    if itemI.init_ix:
+      n += 1
+      print(f'\n@{BM.LINE()} #{n} instances[{ix}]={itemI.nam_name} init_ix={itemI.init_ix}')
+      callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
+      machine_EvonyClient_N.cbOnInsExe = callback
+      act = machine_EvonyClient_N.call_static(itemI.init_ix, '')
+      print(f'## @{BM.LINE()} init res=<{act}>')
+
+def test_TEV2110_InitAllClasses(machine_EvonyClient_N: VirtualMachine):
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+  # empty # for item in machine_EvonyClient_N.class_objects:
+  print(f'@{BM.LINE()} class count = {len(machine_EvonyClient_N.abc_file.classes)}')
+  assert len(machine_EvonyClient_N.abc_file.classes) == len(machine_EvonyClient_N.abc_file.instances), 'Sanity check'
+  print(f'@{BM.LINE()} item \nC={machine_EvonyClient_N.abc_file.classes[0]} \nI={machine_EvonyClient_N.abc_file.instances[0]}')
+  n = 0
+  for ix in range(len(machine_EvonyClient_N.abc_file.classes)):
+    itemC = machine_EvonyClient_N.abc_file.classes[ix]
+    itemI = machine_EvonyClient_N.abc_file.instances[ix]
+    #print(f'@{BM.LINE()} item \nC={itemC} \nI={itemI}')
+    print(f'{ix}, ', end='')
+    if itemC.init_ix:
+      n += 1
+      print(f'\n@{BM.LINE()} #{n} classes[{ix}]={itemC.nam_name} init_ix={itemC.init_ix}')
+      callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
+      machine_EvonyClient_N.cbOnInsExe = callback
+      act = machine_EvonyClient_N.call_static(itemC.init_ix, '')
+      print(f'## @{BM.LINE()} init res=<{act}>')
+
 
 @pytest.mark.skip(reason="cannot find class com.evony.factory.ImageManager") # import pytest
-def test_E_T2000_EvC_ImageManager_initAllianceLevelMap(machine_EvonyClient_N: VirtualMachine):
+def test_TEV2000_EvC_ImageManager_initAllianceLevelMap(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
 
   ixClass = machine_EvonyClient_N.lookup_class('com.evony.factory.ImageManager')
@@ -40,7 +81,7 @@ def test_E_T2000_EvC_ImageManager_initAllianceLevelMap(machine_EvonyClient_N: Vi
 
   assert 'check' == f'output @{BM.LINE()}'
 
-def test_E_T0000_EvC_SomeHints(raw_do_abc_tag_EvonyClient_N: Tag):
+def test_TEV0000_EvC_SomeHints(raw_do_abc_tag_EvonyClient_N: Tag):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   print(f'# ## Parameters for machine_EvonyClient_N.call_method')
   print(f'# some info in: ActionScript Virtual Machine 2 Overview (108pp)')
@@ -48,16 +89,16 @@ def test_E_T0000_EvC_SomeHints(raw_do_abc_tag_EvonyClient_N: Tag):
   print(f'# >> 2.5.8 for calling class (static) methods, use callstatic')
   print(f'# ')
 
-def test_E_T1000_EvC_execute_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient_N: Tag):
+def test_TEV1000_EvC_execute_tag_EvonyClient_N(raw_do_abc_tag_EvonyClient_N: Tag):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   print(f'## @{BM.LINE()} type(raw_do_abc_tag_EvonyClient_N)={type(raw_do_abc_tag_EvonyClient_N)}')
   execute_tag(raw_do_abc_tag_EvonyClient_N)
 
-def test_E_T1100_execute_do_abc_tag_EvonyClient_N(do_abc_tag_EvonyClient_N: DoABCTag):
+def test_TEV1100_execute_do_abc_tag_EvonyClient_N(do_abc_tag_EvonyClient_N: DoABCTag):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   execute_do_abc_tag(do_abc_tag_EvonyClient_N)
 
-def test_E_T1200_lookup_class_EvonyClient_N(machine_EvonyClient_N: VirtualMachine):
+def test_TEV1200_lookup_class_EvonyClient_N(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   ix = 0
   for item in machine_EvonyClient_N.name_to_class:
@@ -75,7 +116,7 @@ def test_E_T1200_lookup_class_EvonyClient_N(machine_EvonyClient_N: VirtualMachin
   # assert machine_heroes.lookup_class('game.battle.controller.BattleController') == 989
   # assert machine_heroes.lookup_class('game.battle.controller.BattleEnemyReward') == 2308
 
-def test_E_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
+def test_TEV1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   ix = 0
   for item in machine_EvonyClient_N.name_to_method:
@@ -88,7 +129,7 @@ def test_E_T1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
   # not found # assert machine_EvonyClient_N.lookup_method('com.evony.Context.getTimeDiff') == 9999
   assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trim') == 950 # Mainflash/mx/utils/StringUtil.as:18
 
-def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
+def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   print(f'## @{BM.LINE()} ## ../mx/utils/StringUtil.as')
   print(f'## @{BM.LINE()} package mx.utils{{ .. import mx.core.mx_internal .. use namespace mx_internal ')
@@ -126,7 +167,7 @@ def test_E_T1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "  abc  ") == "abc"
 
 @pytest.mark.skip(reason="change to fit Evony") # import pytest
-def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
+def test_TEV1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   # scripts/battle/BattleCore.as:57 public static function hitrateIntensity(param1:int, param2:int, param3:int = 4) : Number
   assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, -100, 0) == 1
@@ -135,6 +176,6 @@ def test_E_T1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
   assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 4, 8) == 0.5
 
 @pytest.mark.skip(reason="change to fit Evony") # import pytest
-def test_E_T1600_new_battle_enemy_reward(machine_EvonyClient_N: VirtualMachine):
+def test_TEV1600_new_battle_enemy_reward(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   machine_EvonyClient_N.new_instance('game.battle.controller.BattleEnemyReward')

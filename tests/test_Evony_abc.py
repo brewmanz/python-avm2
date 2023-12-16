@@ -14,6 +14,9 @@ import logging
 
 gDebugLevel = logging.INFO # DEBUG, INFO, WARNING, ERROR, CRITICAL # import logging
 
+class Object(object):
+  pass
+
 def test_TEA2100_CheckAddingFieldToDataclass():
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
     listStrings = (None
@@ -52,7 +55,11 @@ def test_TEA2100_CheckAddingFieldToDataclass():
     assert f'{asns}' == 'ASNamespace(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7)' # .. no good for me
 
     # OK, so try a derived class ...
-    asnsBis = ASNamespaceBis(asns, listStrings, 123)
+    pseudoConstPool = Object()
+    pseudoConstPool.strings = listStrings
+    print(f'## @{BM.LINE()} pseudoConstPool={pseudoConstPool}.')
+    #asnsBis = ASNamespaceBis(asns, listStrings, 123)
+    asnsBis = ASNamespaceBis(asns, pseudoConstPool, 123)
     print(f'## @{BM.LINE()} asnsBis={asnsBis}.')
     # note that the name of the 'name' field might vary e.g. maybe 'nameStr' or 'strName'
     #assert f'{asnsBis}'.startswith("ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7, ")
