@@ -1624,6 +1624,11 @@ class PopScope(Instruction):
 
 @instruction(36)
 class PushByte(Instruction): # … => …, value
+    """
+    Push a byte value.
+    byte_value is an unsigned byte.
+    The byte_value is promoted to an int, and the result is pushed onto the stack.
+    """
     byte_value: u8
 
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
@@ -1660,8 +1665,8 @@ class PushFalse(Instruction): # … => …, false
 @instruction(45)
 class PushInteger(Instruction): # … => …, value
     """
-    `index` is a `u30` that must be an index into the `integer` constant pool. The int value at `index` in
-    the integer constant pool is pushed onto the stack.
+    `index` is a `u30` that must be an index into the `integer` constant pool.
+    The int value at `index` in the integer constant pool is pushed onto the stack.
     """
 
     index: u30
@@ -1712,6 +1717,10 @@ class PushShort(Instruction): # … => …, value
   """
   value: u30
 
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = self.value
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
+    environment.operand_stack.append(value)
 
 @instruction(44)
 class PushString(Instruction): # … => …, value
