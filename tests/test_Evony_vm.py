@@ -27,6 +27,15 @@ def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   # empty # for item in machine_EvonyClient_N.class_objects:
   print(f'@{BM.LINE()} class count = {len(machine_EvonyClient_N.abc_file.classes)}')
+
+  #bagClassNonZeroInitIx = [item.init_ix for item in filter(lambda x: x.init_ix > 0, machine_EvonyClient_N.abc_file.classes)]
+  #maxClassNonZeroInitIx = max(bagClassNonZeroInitIx)
+  #minClassNonZeroInitIx = min(bagClassNonZeroInitIx)
+  #print(f'@{BM.LINE()} ClassNonZeroInitIx range = {minClassNonZeroInitIx} to {maxClassNonZeroInitIx}')
+  bagClassInitIx = [item.init_ix for item in machine_EvonyClient_N.abc_file.classes]
+  classInitIxStats = BM.NullNanZeroMinMax(bagClassInitIx)
+  print(f'@{BM.LINE()} Class InitIx stats = {classInitIxStats}')
+
   assert len(machine_EvonyClient_N.abc_file.classes) == len(machine_EvonyClient_N.abc_file.instances), 'Sanity check'
   print(f'@{BM.LINE()} l(abc.mb)={len(machine_EvonyClient_N.abc_file.method_bodies)}')
   print(f'@{BM.LINE()} item \nC={machine_EvonyClient_N.abc_file.classes[0]} \nI={machine_EvonyClient_N.abc_file.instances[0]}')
@@ -41,10 +50,10 @@ def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):
       print(f'\n@{BM.LINE()} #{n} instances[{ix}]={itemI.nam_name} init_ix={itemI.init_ix}')
       callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
       machine_EvonyClient_N.cbOnInsExe = callback
-      act = machine_EvonyClient_N.call_static(itemI.init_ix, '')
+      act = machine_EvonyClient_N.call_ClassClassInit(itemI.init_ix, '')
       print(f'## @{BM.LINE()} init res=<{act}>')
 
-def test_TEV2110_InitAllClasses(machine_EvonyClient_N: VirtualMachine):
+def test_TEV2110_InitAllClassClasses(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   # empty # for item in machine_EvonyClient_N.class_objects:
   print(f'@{BM.LINE()} class count = {len(machine_EvonyClient_N.abc_file.classes)}')
@@ -62,7 +71,7 @@ def test_TEV2110_InitAllClasses(machine_EvonyClient_N: VirtualMachine):
       print(f'\n@{BM.LINE()} #{n} classes[{ix}]={itemC.nam_name} init_ix={itemC.init_ix}')
       callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
       machine_EvonyClient_N.cbOnInsExe = callback
-      act = machine_EvonyClient_N.call_static(itemC.init_ix, '')
+      act = machine_EvonyClient_N.call_ClassInstanceInit(itemC.init_ix, '')
       print(f'## @{BM.LINE()} init res=<{act}>')
 
 

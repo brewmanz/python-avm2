@@ -67,7 +67,9 @@ class ABCFile: # abcfile
       self.constant_pool._propagateStrings(callerInfo)
 
 
-      print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])}')
+      bagNumbers = [item.init_ix for item in self.classes]
+      numberStats = BM.NullNanZeroMinMax(bagNumbers)
+      print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])} stats cinit(init_ix)={numberStats}')
       firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
       if firstClassWithTraits_orNull:
         print(f'@{BM.LINE()}  type(firstClassWithTraits_orNull.traits[-1])={type(firstClassWithTraits_orNull.traits[-1])}')
@@ -81,12 +83,14 @@ class ABCFile: # abcfile
             itemT = item.traits[ixT]
             newItemT = ASTraitBis(itemT, self.constant_pool)
             item.traits[ixT] = newItemT
-      print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])}')
+      print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])} #={len(self.classes)}')
       firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
       if firstClassWithTraits_orNull:
         print(f'@{BM.LINE()}  type(firstClassWithTraits_orNull.traits[-1])={type(firstClassWithTraits_orNull.traits[-1])}')
 
-      print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
+      bagNumbers = [item.init_ix for item in self.instances]
+      numberStats = BM.NullNanZeroMinMax(bagNumbers)
+      print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}, stats iinit(init_ix)={numberStats}')
       for ix in range(len(self.instances)):
         item = self.instances[ix]
         if item != None:
@@ -95,15 +99,23 @@ class ABCFile: # abcfile
           # propagate instance names into class objects
           self.classes[ix].nam_name = newItem.nam_name
           self.classes[ix].super_name = newItem.super_name
-      print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
+      print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])} #={len(self.instances)}')
 
-      print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])}')
+      print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])} #={len(self.methods)}')
       for ix in range(len(self.methods)):
         item = self.methods[ix]
         if item != None:
           newItem = ASMethodBis(item, self.constant_pool, ix)
           self.methods[ix] = newItem
-      print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])}')
+      print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])} #={len(self.methods)}')
+
+      bagNumbers = [item.method_ix for item in self.method_bodies]
+      numberStats = BM.NullNanZeroMinMax(bagNumbers)
+      print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}, stats method_ix={numberStats}')
+
+      bagNumbers = [item.init_ix for item in self.scripts]
+      numberStats = BM.NullNanZeroMinMax(bagNumbers)
+      print(f'@{BM.LINE()}  type(scripts[-1])={type(self.scripts[-1])}, stats init_ix={numberStats}')
 
 @dataclass
 class ASConstantPool: # cpool_info
@@ -129,29 +141,29 @@ class ASConstantPool: # cpool_info
     def _propagateStrings(self, callerInfo: str):
       print(f'@{BM.LINE()} cp _propagateStrings running (called from {callerInfo}) ... ')
 
-      print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])}')
+      print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])} #={len(self.namespaces)}')
       for ix in range(len(self.namespaces)):
         item = self.namespaces[ix]
         if item != None:
           newItem = ASNamespaceBis(item, self, ix)
           self.namespaces[ix] = newItem
-      print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])}')
+      print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])} #={len(self.namespaces)}')
 
-      print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])}')
+      print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])} #={len(self.ns_sets)}')
       for ix in range(len(self.ns_sets)):
         item = self.ns_sets[ix]
         if item != None:
           newItem = ASNamespaceSetBis(item, self, ix)
           self.ns_sets[ix] = newItem
-      print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])}')
+      print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])} #={len(self.ns_sets)}')
 
-      print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])}')
+      print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])} #={len(self.multinames)}')
       for ix in range(len(self.multinames)):
         item = self.multinames[ix]
         if item != None:
           newItem = ASMultinameBis(item, self, ix)
           self.multinames[ix] = newItem
-      print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])}')
+      print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])} #={len(self.multinames)}')
 
 @dataclass
 class ASNamespace: # namespace_info

@@ -196,6 +196,51 @@ class VirtualMachine:
         """
         self.init_script(ABCScriptIndex(-1))
 
+    def call_ClassInstanceInit(self, index_or_name: Union[ABCMethodIndex, str], *args) -> Any:
+        """
+        Call the specified class instance initialise method. Done for each instance
+        """
+        print(f'## @{BM.LINE()} ## call_static ## ...')
+        if isinstance(index_or_name, int):
+            index = ABCMethodIndex(index_or_name)
+        elif isinstance(index_or_name, str):
+            index = self.lookup_method(index_or_name)
+        else:
+            raise ValueError(index_or_name)
+        methodInfo = self.abc_file.methods[index]
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} -> index {BM.DumpVar(index)} mi.n={methodInfo.nam_name}:{"(add methodInfo)"} #M2B={len(self.method_to_body)} #a.MB={len(self.abc_file.method_bodies)}')
+
+        # TODO: init script on demand.
+        ixMB = self.method_to_body[index]
+        method_body = self.abc_file.method_bodies[ixMB]
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
+        environment = self.create_method_environment(method_body, *args)
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
+        res =self.execute_code(method_body.code, environment)
+        return res
+    def call_ClassClassInit(self, index_or_name: Union[ABCMethodIndex, str], *args) -> Any:
+        """
+        Call the specified class class initialise method. Done once only
+        """
+        print(f'## @{BM.LINE()} ## call_static ## ...')
+        if isinstance(index_or_name, int):
+            index = ABCMethodIndex(index_or_name)
+        elif isinstance(index_or_name, str):
+            index = self.lookup_method(index_or_name)
+        else:
+            raise ValueError(index_or_name)
+        methodInfo = self.abc_file.methods[index]
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} -> index {BM.DumpVar(index)} mi.n={methodInfo.nam_name}:{"(add methodInfo)"} #M2B={len(self.method_to_body)} #a.MB={len(self.abc_file.method_bodies)}')
+
+        # TODO: init script on demand.
+        ixMB = self.method_to_body[index]
+        method_body = self.abc_file.method_bodies[ixMB]
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
+        environment = self.create_method_environment(method_body, *args)
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
+        res =self.execute_code(method_body.code, environment)
+        return res
+
     def call_static(self, index_or_name: Union[ABCMethodIndex, str], *args) -> Any:
         """
         Call the specified static method and get a return value.
