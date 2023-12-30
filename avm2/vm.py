@@ -233,7 +233,16 @@ class VirtualMachine:
         if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)index_or_name={BM.DumpVar(index_or_name)} -> index {BM.DumpVar(index)} mi.n={methodInfo.nam_name}:{"(add methodInfo)"} #M2B={len(self.method_to_body)} #a.MB={len(self.abc_file.method_bodies)}')
 
         # TODO: init script on demand.
-        ixMB = self.method_to_body[index]
+        try:
+          ixMB = self.method_to_body[index]
+        except KeyError:
+          print(f'!! @{BM.LINE()} !! KeyError !! ... list of keys:')
+          n = 0
+          for k in self.method_to_body.keys():
+            n += 1
+            v = self.method_to_body[k]
+            print(f'!! @{BM.LINE()} #{n} [{k}]={v} d={k-v}')
+          raise
         method_body = self.abc_file.method_bodies[ixMB]
         if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, *args)

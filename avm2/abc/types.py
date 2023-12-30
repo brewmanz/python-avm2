@@ -458,7 +458,7 @@ class ASInstance: # instance_info
     super_nam_ix: ABCMultinameIndex # u30 super_name
     flags: ClassFlags # u8 flags
     interface_indices: List[ABCMultinameIndex] # u30 intrf_count + u30 interface[intrf_count]
-    init_ix: ABCMethodIndex # u30 iinit
+    init_ix: ABCMethodIndex # u30 iinit; index into abcFile.method array
     traits: List[ASTrait] # u30 trait_count + traits_info trait[trait_count]
     protected_namespace_index: Optional[ABCNamespaceIndex] = None # u30 protectedNs
 
