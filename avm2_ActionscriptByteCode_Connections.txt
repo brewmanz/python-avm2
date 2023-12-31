@@ -1,0 +1,197 @@
+
+abcFile # 4.2
+{
+u16           minor_version
+u16           major_version
+cpool_info    constant_pool > 4.3
+u30           method_count
+method_info   method[method_count] > 4.5
+u30           metadata_count
+metadata_info metadata[metadata_count] > 4.6 A
+u30           class_count
+instance_info instance[class_count] > 4.7
+class_info    class[class_count] > 4.9
+u30           script_count
+script_info   script[script_count]
+u30           method_body_count
+method_body_info method_body[method_body_count]
+}
+
+
+cpool_info # 4.3
+{
+u30           int_count
+s32           integer[int_count]
+u30           uint_count
+u32           uinteger[uint_count]
+u30           double_count
+d64           double[double_count]
+u30           string_count
+string_info   string[string_count] > 4.4
+u30           namespace_count
+namespace_info namespace[namespace_count] > 4.4.1
+u30           ns_set_count
+ns_set_info   ns_set[ns_set_count] > 4.4.2
+u30           multiname_count
+multiname_info multiname[multiname_count] > 4.4.3
+}
+
+
+string_info # 4.4 < 4.3 string[]
+{
+u30           size
+u8            utf8[size]
+}
+
+namespace_info # 4.4.1 < 4.3 namespace[]
+{
+u8            kind
+u30           name > 4.3 string[]
+}
+
+ns_set_info # 4.4.2 < 4.3 ns_set[]
+{
+u30           count
+u30           ns[count] > 4.3 namespace[]
+}
+
+multiname_info # 4.4.3 < 4.3 multiname[]
+{
+u8            kind
+u8            data[]
+}
+
+
+method_info # 4.5 < 4.2 method[]
+{
+u30           param_count
+u30           return_type
+u30           param_type[param_count]
+u30           name
+u8            flags
+option_info   options > 4.5.1 A
+param_info    param_names > 4.5.2
+}
+
+option_info # 4.5.1 A < 4.5 options
+{
+u30           option_count
+option_detail option[option_count] > 4.5.1 B
+}
+  option_detail # 4.5.1 B < 4.5.1 A option[]
+  {
+  u30           val
+  u8            kind
+  }
+
+param_info # 4.5.2 < 4.5 param_names
+{
+u30           param_name[param_count]
+}
+
+
+metadata_info # 4.6 A < 4.2 metadata[]
+{
+u30           name
+u30           item_count
+item_info     items[item_count] > 4.6 B
+}
+  item_info # 4.6 B < 4.6 A
+  {
+  u30           key
+  u30           value
+  }
+
+
+instance_info # 4.7 < 4.2 instance[]
+{
+u30           name
+u30           super_name
+u8            flags
+u30           protectedNs
+u30           intrf_count
+u30           interface[intrf_count]
+u30           iinit
+u30           trait_count
+traits_info   trait[trait_count] > 4.8
+}
+
+
+traits_info # 4.8 < 4.7 trait[], 4.9 traits[], 4.10 trait[], 4.11 trait[]
+{
+u30           name
+u8            kind
+u8            data[]
+u30           metadata_count
+u30           metadata[metadata_count] > 4.2
+}
+
+trait_slot # 4.8.2
+{
+u30           slot_id
+u30           type_name
+u30           vindex
+u8            vkind
+}
+
+trait_class # 4.8.3
+{
+u30           slot_id
+u30           classi
+}
+
+trait_function # 4.8.4
+{
+u30           slot_id
+u30           function
+}
+
+trait_method # 4.8.5
+{
+u30           disp_id
+u30           method
+}
+
+
+class_info # 4.9 < 4.2 class[]
+{
+u30           cinit
+u30           trait_count
+traits_info   traits[trait_count] > 4.8
+}
+
+
+script_info # 4.10
+{
+u30           init
+u30           trait_count
+traits_info   trait[trait_count] > 4.8
+}
+
+
+method_body_info # 4.11
+{
+u30           method
+u30           max_stack
+u30           local_count
+u30           init_scope_depth
+u30           max_scope_depth
+u30           code_length
+u8            code[code_length]
+u30           exception_count
+exception_info exception[exception_count]
+u30           trait_count
+traits_info   trait[trait_count] > 4.8
+}
+
+
+exception_info # 4.12
+{
+u30           from
+u30           to
+u30           target
+u30           exc_type
+u30           var_name
+}
+
+
