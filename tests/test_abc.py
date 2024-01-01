@@ -5,6 +5,7 @@ import tests.helper_abc as HA
 
 from avm2.abc.instructions import Instruction, read_instruction
 from avm2.abc.types import ABCFile, ASMethodBody
+import avm2.abc.types as AT
 from avm2.abc.enums import NamespaceKind
 from avm2.io import MemoryViewReader
 from datetime import datetime
@@ -14,6 +15,30 @@ import logging
 
 DEBUG = True or False # toggle and/or
 gDebugLevel = logging.INFO # DEBUG, INFO, WARNING, ERROR, CRITICAL # import logging
+
+def test_THA2010_file_Dump_Heroes_InstanceTraits(abc_file_heroes: ABCFile):
+    abc_file: ABCFile = abc_file_heroes # TODO fix HACK
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+    print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
+
+    # add name strings from name indices
+    abc_file.propagateStrings(BM.LINE(False))
+
+    nInstances = len(abc_file.instances)
+    n = 0
+    nT = 0
+    for ix in range(nInstances):
+      item = abc_file.instances[ix]
+      nTraits = len(item.traits)
+      if nTraits:
+        print(f'@{BM.LINE()}{BM.TERM_CYN()}+{n} inst[{ix}]/{nInstances} traits#{nTraits} name={item.nam_name}{BM.TERM_RESET()}')
+        n += 1
+        for ixT in range(nTraits):
+          itemT = item.traits[ixT]
+          print(f'@{BM.LINE()} +{ixT} {itemT}')
+          assert isinstance(itemT, AT.ASTraitBis), f'fix this; type(itemT)={type(itemT)}'
+          if nT > 99: assert 1==2, 'TODO add more lines'
+          nT += 1
 
 def test_THA2000_file_Dump_Heroes(abc_file_heroes: ABCFile):
     abc_file: ABCFile = abc_file_heroes # TODO fix HACK

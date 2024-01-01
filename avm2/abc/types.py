@@ -67,40 +67,82 @@ class ABCFile: # abcfile
       print(f'@{BM.LINE()} {BM.TERM_YLW()}{BM.FUNC_NAME()}{BM.TERM_RESET()} running (called from {callerInfo}) ... ')
       self.constant_pool._propagateStrings(callerInfo)
 
+      # classes
       bagNumbers = [item.init_ix for item in self.classes]
       numberStats = BM.NullNanZeroMinMax(bagNumbers)
       print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])} stats cinit(init_ix)={numberStats}')
       firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
       if firstClassWithTraits_orNull:
         print(f'@{BM.LINE()}  type(firstClassWithTraits_orNull.traits[-1])={type(firstClassWithTraits_orNull.traits[-1])}')
+      newItemT = None # trait - just in case there are none
+      newItemTS = None # traitSlot - just in case there are none
+      newItemTM = None # traitMethod - just in case there are none
+      newItemTG = None # traitGetter - just in case there are none
+      newItemTS = None # traitSetter - just in case there are none
+      newItemTC = None # traitClass - just in case there are none
+      newItemTF = None # traitFunction - just in case there are none
+      newItemTK = None # traitConst - just in case there are none
       for ix in range(len(self.classes)):
         item = self.classes[ix]
         if item != None:
           newItem = ASClassBis(item, self.constant_pool, ix)
-          self.classes[ix] = newItem
-          item = self.classes[ix]
           for ixT in range(len(item.traits)):
-            itemT = item.traits[ixT]
-            newItemT = ASTraitBis(itemT, self.constant_pool)
-            item.traits[ixT] = newItemT
+            itemT = newItem.traits[ixT]
+            newItemT = ASTraitBis(itemT, self.constant_pool, ixT)
+            newItem.traits[ixT] = newItemT
+
+          self.classes[ix] = newItem
+      print(f'@{BM.LINE()}  type(classes[*].trait[*])={type(newItemT)} {"" if newItemT else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitM[*])={type(newItemTM)} {"" if newItemTM else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitG[*])={type(newItemTG)} {"" if newItemTG else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitC[*])={type(newItemTC)} {"" if newItemTC else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitF[*])={type(newItemTF)} {"" if newItemTF else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitK[*])={type(newItemTK)} {"" if newItemTK else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])} #={len(self.classes)}')
       firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
       if firstClassWithTraits_orNull:
         print(f'@{BM.LINE()}  type(firstClassWithTraits_orNull.traits[-1])={type(firstClassWithTraits_orNull.traits[-1])}')
 
+      # instances
       bagNumbers = [item.init_ix for item in self.instances]
       numberStats = BM.NullNanZeroMinMax(bagNumbers)
       print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}, stats iinit(init_ix)={numberStats}')
+      newItemT = None # trait - just in case there are none
+      newItemTS = None # traitSlot - just in case there are none
+      newItemTM = None # traitMethod - just in case there are none
+      newItemTG = None # traitGetter - just in case there are none
+      newItemTS = None # traitSetter - just in case there are none
+      newItemTC = None # traitClass - just in case there are none
+      newItemTF = None # traitFunction - just in case there are none
+      newItemTK = None # traitConst - just in case there are none
       for ix in range(len(self.instances)):
         item = self.instances[ix]
         if item != None:
           newItem = ASInstanceBis(item, self.constant_pool, ix)
-          self.instances[ix] = newItem
           # propagate instance names into class objects
           self.classes[ix].nam_name = newItem.nam_name
           self.classes[ix].super_name = newItem.super_name
+
+          # update traits
+          for ixT in range(len(item.traits)):
+            itemT = newItem.traits[ixT]
+            newItemT = ASTraitBis(itemT, self.constant_pool, ixT)
+            newItem.traits[ixT] = newItemT
+
+          self.instances[ix] = newItem
+      print(f'@{BM.LINE()}  type(instances[*].trait[*])={type(newItemT)} {"" if newItemT else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitM[*])={type(newItemTM)} {"" if newItemTM else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitG[*])={type(newItemTG)} {"" if newItemTG else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitC[*])={type(newItemTC)} {"" if newItemTC else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitF[*])={type(newItemTF)} {"" if newItemTF else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitK[*])={type(newItemTK)} {"" if newItemTK else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
 
+      # methods
       print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])} #={len(self.methods)}')
       for ix in range(len(self.methods)):
         item = self.methods[ix]
@@ -109,18 +151,65 @@ class ABCFile: # abcfile
           self.methods[ix] = newItem
       print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])} #={len(self.methods)}')
 
+      # propagate instance-trait-method names back to methods
+      for item in self.instances:
+        for trait in item.traits:
+          if isinstance(trait.data, ASTraitMethod):
+            traitM: ASTraitMethod = trait.data
+            ixMethod = traitM.method_ix
+            itemM = self.methods[ixMethod]
+            assert isinstance(itemM, ASMethodBis)
+            assert itemM, f'itemM is None'
+            # sometimes, one method can be 'handler_stageResize' and 'heroes.handler_stageResize'
+            if trait.nam_name in itemM.nam_name: continue # leave as-is; old either exact or longer version of name
+            if itemM.nam_name in trait.nam_name: # if new name is longer than old name: update it
+              itemM.nam_name = trait.nam_name # name comes from trait, if traitM used
+              continue
+            # assert False, f'itemM.nam_name not empty or match but {itemM.nam_name}; was going to set it to {trait.nam_name}'
+
+      # method_bodies
       bagNumbers = [item.method_ix for item in self.method_bodies]
       numberStats = BM.NullNanZeroMinMax(bagNumbers)
       print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}, stats method_ix={numberStats}')
+      newItemE = None # exception - just in case there are none
+      newItemT = None # trait - just in case there are none
+      newItemTS = None # traitSlot - just in case there are none
+      newItemTM = None # traitMethod - just in case there are none
+      newItemTG = None # traitGetter - just in case there are none
+      newItemTS = None # traitSetter - just in case there are none
+      newItemTC = None # traitClass - just in case there are none
+      newItemTF = None # traitFunction - just in case there are none
+      newItemTK = None # traitConst - just in case there are none
       for ix in range(len(self.method_bodies)):
         item = self.method_bodies[ix]
         if item != None:
+          newItem = ASMethodBodyBis(item, self.constant_pool, ix)
+          # back-populate method.ixBody
           method = self.methods[item.method_ix]
           if isinstance(method, ASMethodBis):
             assert method.ixBody == None
             method.ixBody = ix
-      # print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}')
+          # update exceptions
+          for ixE in range(len(item.exceptions)):
+            newItemE = ASExceptionBis(item.exceptions[ixE], self.constant_pool, ixE)
+            newItem.exceptions[ixE] = newItemE
+          # update traits
+          for ixT in range(len(item.traits)):
+            newItemT = ASTraitBis(item.traits[ixT], self.constant_pool, ixT)
+            newItem.traits[ixT] = newItemT
+          self.method_bodies[ix] = newItem
+      print(f'@{BM.LINE()}  type(method_bodies[*].exceptions[*])={type(newItemE)}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traits[*])={type(newItemT)}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitM[*])={type(newItemTM)} {"" if newItemTM else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitG[*])={type(newItemTG)} {"" if newItemTG else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitC[*])={type(newItemTC)} {"" if newItemTC else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitF[*])={type(newItemTF)} {"" if newItemTF else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitK[*])={type(newItemTK)} {"" if newItemTK else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}')
 
+      # scripts
       bagNumbers = [item.init_ix for item in self.scripts]
       numberStats = BM.NullNanZeroMinMax(bagNumbers)
       print(f'@{BM.LINE()}  type(scripts[-1])={type(self.scripts[-1])}, stats init_ix={numberStats}')
@@ -148,6 +237,8 @@ class ASConstantPool: # cpool_info
 
     def _propagateStrings(self, callerInfo: str):
       print(f'@{BM.LINE()} cp _propagateStrings running (called from {callerInfo}) ... ')
+
+      print(f'@{BM.LINE()}  type(strings[-1])={type(self.strings[-1])} #={len(self.strings)}')
 
       print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])} #={len(self.namespaces)}')
       for ix in range(len(self.namespaces)):
@@ -529,17 +620,24 @@ class ASTrait: # traits_info
             self.metadata = read_array(reader, MemoryViewReader.read_int)
 @dataclass
 class ASTraitBis(ASTrait):
+    ixT: int = None
     nam_name: str = None
 
-    def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool):
+    def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool, ixT: int):
         self.nam_ix = rhs.nam_ix
         self.kind = rhs.kind
         self.attributes = rhs.attributes
         self.data = rhs.data
         self.metadata = rhs.metadata
 
+        self.ixT = ixT
         self.nam_name = constant_pool.multinames[self.nam_ix].qualified_name(constant_pool)
+        if self.nam_name[:5] != 'http:':
+          assert not '/' in self.nam_name, f'@{BM.LINE(False)} self.nam_ix={self.nam_ix}, self.nam_name = {self.nam_name}'
+          #assert not ':' in self.nam_name, f'@{BM.LINE(False)} self.nam_ix={self.nam_ix}, self.nam_name = {self.nam_name}'
 
+def GetNameOfTraitVindexVkind(vindex: int, vkind: Optional[ConstantKind]) -> str:
+  pass
 
 @dataclass
 class ASTraitSlot: # trait_slot
@@ -554,7 +652,19 @@ class ASTraitSlot: # trait_slot
         self.vindex = reader.read_int()
         if self.vindex:
             self.vkind = ConstantKind(reader.read_u8())
+@dataclass
+class ASTraitSlotBis(ASTraitSlot):
+  ixT: int = None
+  type_name_name: str = None
+  vname: str = None
+  def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool, ixT: int):
+    self.slot_id = rhs.slot_id
+    self.type_name_index = rhs.type_name_index
+    self.vindex = rhs.vindex
+    self.vkind = rhs.vkind
 
+    self.ixT = ixT
+    self.nam_name = constant_pool.multinames[self.nam_ix].qualified_name(constant_pool)
 
 @dataclass
 class ASTraitClass: # trait_class
@@ -639,6 +749,20 @@ class ASMethodBody: # method_body_info
         self.code = reader.read(reader.read_int())
         self.exceptions = read_array(reader, ASException)
         self.traits = read_array(reader, ASTrait)
+@dataclass
+class ASMethodBodyBis(ASMethodBody):
+    ixABC: int = None
+    def __init__(self, rhs: ASMethodBody, constant_pool: ASConstantPool, ixABC: int):
+        self.method_ix = rhs.method_ix
+        self.max_stack = rhs.max_stack
+        self.local_count = rhs.local_count
+        self.init_scope_depth = rhs.init_scope_depth
+        self.max_scope_depth = rhs.max_scope_depth
+        self.code = rhs.code
+        self.exceptions = rhs.exceptions
+        self.traits = rhs.traits
+
+        self.ixABC = ixABC
 
 
 @dataclass
@@ -655,3 +779,19 @@ class ASException: # exception_info
         self.target = reader.read_int()
         self.exc_typ_ix = reader.read_int()
         self.var_nam_ix = reader.read_int()
+
+@dataclass
+class ASExceptionBis(ASException):
+  ixMB: int = None
+  exc_typ_name: str = None
+  var_nam_name: str = None
+  def __init__(self, rhs: ASException, constant_pool: ASConstantPool, ixMB: int):
+    self.from_ = rhs.from_
+    self.to = rhs.to
+    self.target = rhs.target
+    self.exc_typ_ix = rhs.exc_typ_ix
+    self.var_nam_ix = rhs.var_nam_ix
+
+    self.ixMB = ixMB
+    self.exc_typ_name = constant_pool.strings[self.exc_typ_ix]
+    self.var_nam_name = constant_pool.strings[self.var_nam_ix]
