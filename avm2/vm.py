@@ -236,12 +236,15 @@ class VirtualMachine:
         try:
           ixMB = self.method_to_body[index]
         except KeyError:
-          print(f'!! @{BM.LINE()} !! KeyError !! ... list of keys:')
-          n = 0
+          print(f'!! @{BM.LINE()} !! KeyError !! ... list of keys:', end='')
+          ix = 0
           for k in self.method_to_body.keys():
-            n += 1
             v = self.method_to_body[k]
-            print(f'!! @{BM.LINE()} #{n} [{k}]={v} d={k-v}')
+            if ix % 10 == 0:
+              print(f'\n!! @{BM.LINE()}', end='')
+            print(f' +{ix} [{k}]={v} d={k-v},', end='')
+            ix += 1
+          print()
           raise
         method_body = self.abc_file.method_bodies[ixMB]
         if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')

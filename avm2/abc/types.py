@@ -10,6 +10,7 @@ from colorama import Fore, Style
 
 import math
 import BrewMaths as BM
+import type_enforced # pip install type_enforced
 
 from avm2.abc.enums import (
     ClassFlags,
@@ -66,7 +67,6 @@ class ABCFile: # abcfile
       print(f'@{BM.LINE()} {BM.TERM_YLW()}{BM.FUNC_NAME()}{BM.TERM_RESET()} running (called from {callerInfo}) ... ')
       self.constant_pool._propagateStrings(callerInfo)
 
-
       bagNumbers = [item.init_ix for item in self.classes]
       numberStats = BM.NullNanZeroMinMax(bagNumbers)
       print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])} stats cinit(init_ix)={numberStats}')
@@ -99,7 +99,7 @@ class ABCFile: # abcfile
           # propagate instance names into class objects
           self.classes[ix].nam_name = newItem.nam_name
           self.classes[ix].super_name = newItem.super_name
-      print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])} #={len(self.instances)}')
+      print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
 
       print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])} #={len(self.methods)}')
       for ix in range(len(self.methods)):
@@ -112,6 +112,14 @@ class ABCFile: # abcfile
       bagNumbers = [item.method_ix for item in self.method_bodies]
       numberStats = BM.NullNanZeroMinMax(bagNumbers)
       print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}, stats method_ix={numberStats}')
+      for ix in range(len(self.method_bodies)):
+        item = self.method_bodies[ix]
+        if item != None:
+          method = self.methods[item.method_ix]
+          if isinstance(method, ASMethodBis):
+            assert method.ixBody == None
+            method.ixBody = ix
+      # print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}')
 
       bagNumbers = [item.init_ix for item in self.scripts]
       numberStats = BM.NullNanZeroMinMax(bagNumbers)
@@ -376,8 +384,9 @@ class ASMethod: # method_info
             self.param_nam_ixs = read_array(reader, MemoryViewReader.read_int, self.param_count)
 @dataclass
 class ASMethodBis(ASMethod):
-    ixABC: int = None
-    isClassInit: bool = None
+    ixABC: ABCMethodIndex = None
+    ixBody: ABCMethodBodyIndex = None # Method to MethodBody
+    methodType: str = None # e.g. class init, instance init
     return_typ_name: str = None
     param_typ_names: List[str] = None
     nam_name: str = None
@@ -393,7 +402,8 @@ class ASMethodBis(ASMethod):
         self.param_nam_ixs = rhs.param_nam_ixs
 
         self.ixABC = ixABC
-        self.isClassInit = None
+        self.ixBody = None
+        self.methodType = None
 
         key = self.return_typ_ix
         self.return_typ_name = constant_pool.multinames[key].qualified_name(constant_pool) if key else None

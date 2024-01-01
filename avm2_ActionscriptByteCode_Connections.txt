@@ -37,6 +37,7 @@ multiname_info multiname[multiname_count] > 4.4.3
 }
 
 
+[ // string_info, namespace_info, ns_set_info, multiname_info
 string_info # 4.4 < 4.3 string[]
 {
 u30           size
@@ -60,7 +61,7 @@ multiname_info # 4.4.3 < 4.3 multiname[]
 u8            kind
 u8            data[]
 }
-
+]
 
 method_info # 4.5 < 4.2 method[]
 {
@@ -116,7 +117,7 @@ u30           trait_count
 traits_info   trait[trait_count] > 4.8
 }
 
-
+[ # traits_info, trait_slot, trait_class, trait_function, trait_method
 traits_info # 4.8 < 4.7 trait[], 4.9 traits[], 4.10 trait[], 4.11 trait[]
 {
 u30           name
@@ -151,7 +152,7 @@ trait_method # 4.8.5
 u30           disp_id
 u30           method
 }
-
+]
 
 class_info # 4.9 < 4.2 class[]
 {
@@ -171,7 +172,7 @@ traits_info   trait[trait_count] > 4.8
 
 method_body_info # 4.11
 {
-u30           method
+u30           method > 4.2 method[]
 u30           max_stack
 u30           local_count
 u30           init_scope_depth
