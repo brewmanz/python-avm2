@@ -663,24 +663,98 @@ class ASTrait: # traits_info
             self.metadata = read_array(reader, MemoryViewReader.read_int)
 @dataclass
 class ASTraitBis(ASTrait):
-    ixT: int = None
-    nam_name: str = None
+  ixT: int = None
+  nam_name: str = None
 
-    def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool, ixT: int):
-        self.nam_ix = rhs.nam_ix
-        self.kind = rhs.kind
-        self.attributes = rhs.attributes
-        self.data = rhs.data
-        self.metadata = rhs.metadata
+  def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool, ixT: int):
+    self.nam_ix = rhs.nam_ix
+    self.kind = rhs.kind
+    self.attributes = rhs.attributes
+    self.data = rhs.data
+    self.metadata = rhs.metadata
 
-        self.ixT = ixT
-        self.nam_name = constant_pool.multinames[self.nam_ix].qualified_name(constant_pool)
-        if self.nam_name[:5] != 'http:':
-          assert not '/' in self.nam_name, f'@{BM.LINE(False)} self.nam_ix={self.nam_ix}, self.nam_name = {self.nam_name}'
-          #assert not ':' in self.nam_name, f'@{BM.LINE(False)} self.nam_ix={self.nam_ix}, self.nam_name = {self.nam_name}'
+    self.ixT = ixT
+    self.nam_name = constant_pool.multinames[self.nam_ix].qualified_name(constant_pool)
+    if self.nam_name[:5] != 'http:':
+      assert not '/' in self.nam_name, f'@{BM.LINE(False)} self.nam_ix={self.nam_ix}, self.nam_name = {self.nam_name}'
+      #assert not ':' in self.nam_name, f'@{BM.LINE(False)} self.nam_ix={self.nam_ix}, self.nam_name = {self.nam_name}'
 
-def GetNameOfTraitVindexVkind(vindex: int, vkind: Optional[ConstantKind]) -> str:
-  pass
+    self.UpdateTraitData(constant_pool)
+
+  def UpdateTraitData(self, constant_pool: ASConstantPool):
+    newItem = self.data
+    if False: pass
+    elif isinstance(self.data, ASTraitSlot):
+      newItem = ASTraitSlotBis(self.data, constant_pool)
+    elif isinstance(self.data, ASTraitMethod):
+      pass
+    elif isinstance(self.data, ASTraitGetter):
+      pass
+    elif isinstance(self.data, ASTraitSetter):
+      pass
+    elif isinstance(self.data, ASTraitClass):
+      pass
+    elif isinstance(self.data, ASTraitFunction):
+      pass
+    elif isinstance(self.data, ASTraitConst):
+      pass
+    else:
+      assert False, f'!! @{BM.LINE()} unexpected TraitData of {self.data}'
+    self.data = newItem
+
+def GetNameOfTraitVindexVkind(vindex: int, vkind: Optional[ConstantKind], constant_pool: ASConstantPool) -> str:
+  if False: pass
+  elif vkind == None:
+    preResult = 'None'
+  elif vkind == ConstantKind.INT:
+    lookup = constant_pool.integers
+    preResult = lookup[vindex]
+  elif vkind == ConstantKind.UINT:
+    lookup = constant_pool.unsigned_integers
+    preResult = lookup[vindex]
+  elif vkind == ConstantKind.DOUBLE:
+    lookup = constant_pool.doubles
+    preResult = lookup[vindex]
+  elif vkind == ConstantKind.UTF8:
+    lookup = constant_pool.strings
+    preResult = lookup[vindex]
+  elif vkind == ConstantKind.TRUE:
+    preResult = True
+  elif vkind == ConstantKind.FALSE:
+    preResult = False
+  elif vkind == ConstantKind.NULL:
+    preResult = 'Null'
+  elif vkind == ConstantKind.UNDEFINED:
+    preResult = 'Undefined'
+  elif vkind == ConstantKind.NAMESPACE:
+    lookup = constant_pool.namespace
+    preResult = lookup[vindex].nam_name
+  elif vkind == ConstantKind.PACKAGE_NAMESPACE:
+    lookup = constant_pool.namespace
+    preResult = lookup[vindex].nam_name
+  elif vkind == ConstantKind.PACKAGE_INTERNAL_NS:
+    lookup = constant_pool.namespace
+    preResult = lookup[vindex].nam_name
+  elif vkind == ConstantKind.PROTECTED_NAMESPACE:
+    lookup = constant_pool.namespace
+    preResult = lookup[vindex].nam_name
+  elif vkind == ConstantKind.EXPLICIT_NAMESPACE:
+    lookup = constant_pool.namespace
+    preResult = lookup[vindex].nam_name
+  elif vkind == ConstantKind.STATIC_PROTECTED_NS:
+    lookup = constant_pool.namespace
+    preResult = lookup[vindex].nam_name
+  elif vkind == ConstantKind.PRIVATE_NS:
+    lookup = constant_pool.namespace
+    preResult = lookup[vindex].nam_name
+  elif vkind == ConstantKind.MULTINAME:
+    lookup = constant_pool.namespace
+    preResult = lookup[vindex].nam_name
+  else:
+    preResult = f'@{BM.LINE(False)} unexpected vkind:{vkind}'
+
+  result = f'{preResult}'
+  return result
 
 @dataclass
 class ASTraitSlot: # trait_slot
@@ -697,17 +771,16 @@ class ASTraitSlot: # trait_slot
             self.vkind = ConstantKind(reader.read_u8())
 @dataclass
 class ASTraitSlotBis(ASTraitSlot):
-  ixT: int = None
   type_name_name: str = None
   vname: str = None
-  def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool, ixT: int):
+  def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool):
     self.slot_id = rhs.slot_id
     self.type_name_index = rhs.type_name_index
     self.vindex = rhs.vindex
     self.vkind = rhs.vkind
 
-    self.ixT = ixT
-    self.nam_name = constant_pool.multinames[self.nam_ix].qualified_name(constant_pool)
+    self.type_name_name = constant_pool.multinames[self.type_name_index].qualified_name(constant_pool) if self.type_name_index else '*(Any)'
+    self.vname = GetNameOfTraitVindexVkind(self.vindex, self.vkind, constant_pool)
 
 @dataclass
 class ASTraitClass: # trait_class
