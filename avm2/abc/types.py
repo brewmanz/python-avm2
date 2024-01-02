@@ -77,29 +77,41 @@ class ABCFile: # abcfile
       newItemT = None # trait - just in case there are none
       newItemTS = None # traitSlot - just in case there are none
       newItemTM = None # traitMethod - just in case there are none
-      newItemTG = None # traitGetter - just in case there are none
-      newItemTS = None # traitSetter - just in case there are none
+      newItemTGt = None # traitGetter - just in case there are none
+      newItemTSt = None # traitSetter - just in case there are none
       newItemTC = None # traitClass - just in case there are none
       newItemTF = None # traitFunction - just in case there are none
       newItemTK = None # traitConst - just in case there are none
+      nItemTx = dict()
       for ix in range(len(self.classes)):
         item = self.classes[ix]
         if item != None:
+          BM.incrKeyedDict(nItemTx, 'T')
           newItem = ASClassBis(item, self.constant_pool, ix)
           for ixT in range(len(item.traits)):
             itemT = newItem.traits[ixT]
             newItemT = ASTraitBis(itemT, self.constant_pool, ixT)
             newItem.traits[ixT] = newItemT
 
+            if False: pass
+            elif isinstance(newItemT.data, ASTraitSlot): newItemTS = newItemT.data; BM.incrKeyedDict(nItemTx, 'TS')
+            elif isinstance(newItemT.data, ASTraitMethod): newItemTM = newItemT.data; BM.incrKeyedDict(nItemTx, 'TM')
+            elif isinstance(newItemT.data, ASTraitGetter): newItemTGt = newItemT.data; BM.incrKeyedDict(nItemTx, 'TGt')
+            elif isinstance(newItemT.data, ASTraitSetter): newItemTSt = newItemT.data; BM.incrKeyedDict(nItemTx, 'TSt')
+            elif isinstance(newItemT.data, ASTraitClass): newItemTC = newItemT.data; BM.incrKeyedDict(nItemTx, 'TC')
+            elif isinstance(newItemT.data, ASTraitFunction): newItemTF = newItemT.data; BM.incrKeyedDict(nItemTx, 'TF')
+            elif isinstance(newItemT.data, ASTraitConst): newItemTK = newItemT.data; BM.incrKeyedDict(nItemTx, 'TK')
+
           self.classes[ix] = newItem
       print(f'@{BM.LINE()}  type(classes[*].trait[*])={type(newItemT)} {"" if newItemT else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(classes[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(classes[*].traitM[*])={type(newItemTM)} {"" if newItemTM else "TODO NONE FOUND"}')
-      print(f'@{BM.LINE()}  type(classes[*].traitG[*])={type(newItemTG)} {"" if newItemTG else "TODO NONE FOUND"}')
-      print(f'@{BM.LINE()}  type(classes[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitGt[*])={type(newItemTGt)} {"" if newItemTGt else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].traitSt[*])={type(newItemTSt)} {"" if newItemTSt else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(classes[*].traitC[*])={type(newItemTC)} {"" if newItemTC else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(classes[*].traitF[*])={type(newItemTF)} {"" if newItemTF else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(classes[*].traitK[*])={type(newItemTK)} {"" if newItemTK else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(classes[*].trait* counts: {nItemTx}')
       print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])} #={len(self.classes)}')
       firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
       if firstClassWithTraits_orNull:
@@ -112,14 +124,16 @@ class ABCFile: # abcfile
       newItemT = None # trait - just in case there are none
       newItemTS = None # traitSlot - just in case there are none
       newItemTM = None # traitMethod - just in case there are none
-      newItemTG = None # traitGetter - just in case there are none
-      newItemTS = None # traitSetter - just in case there are none
+      newItemTGt = None # traitGetter - just in case there are none
+      newItemTSt = None # traitSetter - just in case there are none
       newItemTC = None # traitClass - just in case there are none
       newItemTF = None # traitFunction - just in case there are none
       newItemTK = None # traitConst - just in case there are none
+      nItemTx = dict()
       for ix in range(len(self.instances)):
         item = self.instances[ix]
         if item != None:
+          BM.incrKeyedDict(nItemTx, 'T')
           newItem = ASInstanceBis(item, self.constant_pool, ix)
           # propagate instance names into class objects
           self.classes[ix].nam_name = newItem.nam_name
@@ -131,15 +145,25 @@ class ABCFile: # abcfile
             newItemT = ASTraitBis(itemT, self.constant_pool, ixT)
             newItem.traits[ixT] = newItemT
 
+            if False: pass
+            elif isinstance(newItemT.data, ASTraitSlot): newItemTS = newItemT.data; BM.incrKeyedDict(nItemTx, 'TS')
+            elif isinstance(newItemT.data, ASTraitMethod): newItemTM = newItemT.data; BM.incrKeyedDict(nItemTx, 'TM')
+            elif isinstance(newItemT.data, ASTraitGetter): newItemTGt = newItemT.data; BM.incrKeyedDict(nItemTx, 'TGt')
+            elif isinstance(newItemT.data, ASTraitSetter): newItemTSt = newItemT.data; BM.incrKeyedDict(nItemTx, 'TSt')
+            elif isinstance(newItemT.data, ASTraitClass): newItemTC = newItemT.data; BM.incrKeyedDict(nItemTx, 'TC')
+            elif isinstance(newItemT.data, ASTraitFunction): newItemTF = newItemT.data; BM.incrKeyedDict(nItemTx, 'TF')
+            elif isinstance(newItemT.data, ASTraitConst): newItemTK = newItemT.data; BM.incrKeyedDict(nItemTx, 'TK')
+
           self.instances[ix] = newItem
       print(f'@{BM.LINE()}  type(instances[*].trait[*])={type(newItemT)} {"" if newItemT else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(instances[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(instances[*].traitM[*])={type(newItemTM)} {"" if newItemTM else "TODO NONE FOUND"}')
-      print(f'@{BM.LINE()}  type(instances[*].traitG[*])={type(newItemTG)} {"" if newItemTG else "TODO NONE FOUND"}')
-      print(f'@{BM.LINE()}  type(instances[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitGt[*])={type(newItemTGt)} {"" if newItemTGt else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].traitSt[*])={type(newItemTSt)} {"" if newItemTSt else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(instances[*].traitC[*])={type(newItemTC)} {"" if newItemTC else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(instances[*].traitF[*])={type(newItemTF)} {"" if newItemTF else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(instances[*].traitK[*])={type(newItemTK)} {"" if newItemTK else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(instances[*].trait* counts: {nItemTx}')
       print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}')
 
       # methods
@@ -175,14 +199,16 @@ class ABCFile: # abcfile
       newItemT = None # trait - just in case there are none
       newItemTS = None # traitSlot - just in case there are none
       newItemTM = None # traitMethod - just in case there are none
-      newItemTG = None # traitGetter - just in case there are none
-      newItemTS = None # traitSetter - just in case there are none
+      newItemTGt = None # traitGetter - just in case there are none
+      newItemTSt = None # traitSetter - just in case there are none
       newItemTC = None # traitClass - just in case there are none
       newItemTF = None # traitFunction - just in case there are none
       newItemTK = None # traitConst - just in case there are none
+      nItemTx = dict()
       for ix in range(len(self.method_bodies)):
         item = self.method_bodies[ix]
         if item != None:
+          BM.incrKeyedDict(nItemTx, 'T')
           newItem = ASMethodBodyBis(item, self.constant_pool, ix)
           # back-populate method.ixBody
           method = self.methods[item.method_ix]
@@ -197,16 +223,27 @@ class ABCFile: # abcfile
           for ixT in range(len(item.traits)):
             newItemT = ASTraitBis(item.traits[ixT], self.constant_pool, ixT)
             newItem.traits[ixT] = newItemT
+
+            if False: pass
+            elif isinstance(newItemT.data, ASTraitSlot): newItemTS = newItemT.data; BM.incrKeyedDict(nItemTx, 'TS')
+            elif isinstance(newItemT.data, ASTraitMethod): newItemTM = newItemT.data; BM.incrKeyedDict(nItemTx, 'TM')
+            elif isinstance(newItemT.data, ASTraitGetter): newItemTGt = newItemT.data; BM.incrKeyedDict(nItemTx, 'TGt')
+            elif isinstance(newItemT.data, ASTraitSetter): newItemTSt = newItemT.data; BM.incrKeyedDict(nItemTx, 'TSt')
+            elif isinstance(newItemT.data, ASTraitClass): newItemTC = newItemT.data; BM.incrKeyedDict(nItemTx, 'TC')
+            elif isinstance(newItemT.data, ASTraitFunction): newItemTF = newItemT.data; BM.incrKeyedDict(nItemTx, 'TF')
+            elif isinstance(newItemT.data, ASTraitConst): newItemTK = newItemT.data; BM.incrKeyedDict(nItemTx, 'TK')
+
           self.method_bodies[ix] = newItem
       print(f'@{BM.LINE()}  type(method_bodies[*].exceptions[*])={type(newItemE)}')
       print(f'@{BM.LINE()}  type(method_bodies[*].traits[*])={type(newItemT)}')
       print(f'@{BM.LINE()}  type(method_bodies[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(method_bodies[*].traitM[*])={type(newItemTM)} {"" if newItemTM else "TODO NONE FOUND"}')
-      print(f'@{BM.LINE()}  type(method_bodies[*].traitG[*])={type(newItemTG)} {"" if newItemTG else "TODO NONE FOUND"}')
-      print(f'@{BM.LINE()}  type(method_bodies[*].traitS[*])={type(newItemTS)} {"" if newItemTS else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitGt[*])={type(newItemTGt)} {"" if newItemTGt else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].traitSt[*])={type(newItemTSt)} {"" if newItemTSt else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(method_bodies[*].traitC[*])={type(newItemTC)} {"" if newItemTC else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(method_bodies[*].traitF[*])={type(newItemTF)} {"" if newItemTF else "TODO NONE FOUND"}')
       print(f'@{BM.LINE()}  type(method_bodies[*].traitK[*])={type(newItemTK)} {"" if newItemTK else "TODO NONE FOUND"}')
+      print(f'@{BM.LINE()}  type(method_bodies[*].trait* counts: {nItemTx}')
       print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}')
 
       # scripts
