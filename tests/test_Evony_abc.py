@@ -67,6 +67,52 @@ def test_TEA2100_CheckAddingFieldToDataclass():
     #assert f'{asnsBis}'.endswith("='flash.display')")
     assert f'{asnsBis}' == "ASNamespaceBis(kind=<NamespaceKind.NAMESPACE: 8>, nam_ix=7, ixCP=123, nam_name='flash.display')"
 
+def test_TEA2014_file_Dump_EvonyClient_MethodBodiesTraits(abc_file_EvonyClient_N: ABCFile):
+    abc_file: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+    print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
+
+    # add name strings from name indices
+    abc_file.propagateStrings(BM.LINE(False))
+
+    nItems = len(abc_file.method_bodies)
+    n = 0
+    nT = 0
+    for ix in range(nItems):
+      item = abc_file.method_bodies[ix]
+      nTraits = len(item.traits)
+      if nTraits:
+        print(f'@{BM.LINE()}{BM.TERM_CYN()}+{n} method_bodies[{ix}]/{nItems} traits#{nTraits} name={item.nam_name}{BM.TERM_RESET()}')
+        n += 1
+        for ixT in range(nTraits):
+          itemT = item.traits[ixT]
+          print(f'@{BM.LINE()} +{ixT} {itemT}')
+          assert isinstance(itemT, AT.ASTraitBis), f'fix this; type(itemT)={type(itemT)}'
+          if nT > 99: assert 1==2, 'TODO add more lines'
+          nT += 1
+def test_TEA2012_file_Dump_EvonyClient_ClassTraits(abc_file_EvonyClient_N: ABCFile):
+    abc_file: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
+    print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+    print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
+
+    # add name strings from name indices
+    abc_file.propagateStrings(BM.LINE(False))
+
+    nItems = len(abc_file.classes)
+    n = 0
+    nT = 0
+    for ix in range(nItems):
+      item = abc_file.classes[ix]
+      nTraits = len(item.traits)
+      if nTraits:
+        print(f'@{BM.LINE()}{BM.TERM_CYN()}+{n} class[{ix}]/{nItems} traits#{nTraits} name={item.nam_name}{BM.TERM_RESET()}')
+        n += 1
+        for ixT in range(nTraits):
+          itemT = item.traits[ixT]
+          print(f'@{BM.LINE()} +{ixT} {itemT}')
+          assert isinstance(itemT, AT.ASTraitBis), f'fix this; type(itemT)={type(itemT)}'
+          if nT > 99: assert 1==2, 'TODO add more lines'
+          nT += 1
 def test_TEA2010_file_Dump_EvonyClient_InstanceTraits(abc_file_EvonyClient_N: ABCFile):
     abc_file: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
@@ -75,14 +121,14 @@ def test_TEA2010_file_Dump_EvonyClient_InstanceTraits(abc_file_EvonyClient_N: AB
     # add name strings from name indices
     abc_file.propagateStrings(BM.LINE(False))
 
-    nInstances = len(abc_file.instances)
+    nItems = len(abc_file.instances)
     n = 0
     nT = 0
-    for ix in range(nInstances):
+    for ix in range(nItems):
       item = abc_file.instances[ix]
       nTraits = len(item.traits)
       if nTraits:
-        print(f'@{BM.LINE()}{BM.TERM_CYN()}+{n} inst[{ix}]/{nInstances} traits#{nTraits} name={item.nam_name}{BM.TERM_RESET()}')
+        print(f'@{BM.LINE()}{BM.TERM_CYN()}+{n} inst[{ix}]/{nItems} traits#{nTraits} name={item.nam_name}{BM.TERM_RESET()}')
         n += 1
         for ixT in range(nTraits):
           itemT = item.traits[ixT]

@@ -210,15 +210,19 @@ class ABCFile: # abcfile
         if item != None:
           BM.incrKeyedDict(nItemTx, 'T')
           newItem = ASMethodBodyBis(item, self.constant_pool, ix)
-          # back-populate method.ixBody
+
+          # back-populate method.ixBody & fwd populate nam_name from method
           method = self.methods[item.method_ix]
           if isinstance(method, ASMethodBis):
             assert method.ixBody == None
             method.ixBody = ix
+          newItem.nam_name = method.nam_name
+
           # update exceptions
           for ixE in range(len(item.exceptions)):
             newItemE = ASExceptionBis(item.exceptions[ixE], self.constant_pool, ixE)
             newItem.exceptions[ixE] = newItemE
+
           # update traits
           for ixT in range(len(item.traits)):
             newItemT = ASTraitBis(item.traits[ixT], self.constant_pool, ixT)
@@ -492,6 +496,7 @@ class ASMultinameBis(ASMultiname):
 
 @dataclass
 class ASMethod: # method_info
+    nam_name: str # not available at creation time
     param_count: int # u30 param_count
     return_typ_ix: ABCMultinameIndex # u30 return_type
     param_typ_ixs: List[ABCMultinameIndex] # u30 param_type[param_count]
@@ -501,6 +506,7 @@ class ASMethod: # method_info
     param_nam_ixs: Optional[List[ABCStringIndex]] = None # param_info param_names
 
     def __init__(self, reader: MemoryViewReader):
+        self.nam_name = None
         self.param_count = reader.read_int()
         self.return_typ_ix = reader.read_int()
         self.param_typ_ixs = read_array(reader, MemoryViewReader.read_int, self.param_count)
@@ -517,10 +523,10 @@ class ASMethodBis(ASMethod):
     methodType: str = None # e.g. class init, instance init
     return_typ_name: str = None
     param_typ_names: List[str] = None
-    nam_name: str = None
     param_nam_names: List[str] = None
 
     def __init__(self, rhs: ASMethod, constant_pool: ASConstantPool, ixABC: int):
+        self.nam_name = rhs.nam_name # will get clobbered later in this method
         self.param_count = rhs.param_count
         self.return_typ_ix = rhs.return_typ_ix
         self.param_typ_ixs = rhs.param_typ_ixs
@@ -548,7 +554,7 @@ class ASMethodBis(ASMethod):
           nam_name = None
         else:
           nam_name = '' if key == 0 else constant_pool.strings[key]
-        self.nam_name = nam_name
+        self.nam_name = nam_name # TODO check if already set somehow?
 
         self.param_nam_names = None
         if self.flags:
@@ -768,6 +774,7 @@ class ASScript: # script_info
 
 @dataclass
 class ASMethodBody: # method_body_info
+    nam_name: str # not available at creation time
     method_ix: ABCMethodIndex # u30 method
     max_stack: int # u30 max_stack
     local_count: int # u30 local_count
@@ -778,6 +785,7 @@ class ASMethodBody: # method_body_info
     traits: List[ASTrait] # u30 trait_count + traits_info trait[trait_count]
 
     def __init__(self, reader: MemoryViewReader):
+        self.nam_name = None # will be gleaned from method later
         self.method_ix = reader.read_int()
         self.max_stack = reader.read_int()
         self.local_count = reader.read_int()
@@ -790,6 +798,7 @@ class ASMethodBody: # method_body_info
 class ASMethodBodyBis(ASMethodBody):
     ixABC: int = None
     def __init__(self, rhs: ASMethodBody, constant_pool: ASConstantPool, ixABC: int):
+        self.nam_name = rhs.nam_name
         self.method_ix = rhs.method_ix
         self.max_stack = rhs.max_stack
         self.local_count = rhs.local_count
