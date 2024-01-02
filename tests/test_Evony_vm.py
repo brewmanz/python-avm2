@@ -15,13 +15,17 @@ import BrewMaths as BM
 
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages
 
-def test_TEV4000_EvC_HospitalWin_bits(machine_EvonyClient_N: VirtualMachine):
+def test_TEV6000_EvC_HospitalWin_bits(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   assert 1 == 2
 
-def test_TEV3000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMachine):
+def test_TEV5000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   assert 1 == 2
+
+def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMachine):
+  print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+  assert False, f'TODO @{BM.LINE(False)} LoaderUtil.createAbsoluteURL'
 
 def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')

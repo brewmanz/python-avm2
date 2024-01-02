@@ -90,7 +90,7 @@ class ABCFile: # abcfile
           newItem = ASClassBis(item, self.constant_pool, ix)
           for ixT in range(len(item.traits)):
             itemT = newItem.traits[ixT]
-            newItemT = ASTraitBis(itemT, self.constant_pool, ixT)
+            newItemT = ASTraitBis(itemT, self, ixT)
             newItem.traits[ixT] = newItemT
 
             if False: pass
@@ -142,7 +142,7 @@ class ABCFile: # abcfile
           # update traits
           for ixT in range(len(item.traits)):
             itemT = newItem.traits[ixT]
-            newItemT = ASTraitBis(itemT, self.constant_pool, ixT)
+            newItemT = ASTraitBis(itemT, self, ixT)
             newItem.traits[ixT] = newItemT
 
             if False: pass
@@ -225,7 +225,7 @@ class ABCFile: # abcfile
 
           # update traits
           for ixT in range(len(item.traits)):
-            newItemT = ASTraitBis(item.traits[ixT], self.constant_pool, ixT)
+            newItemT = ASTraitBis(item.traits[ixT], self, ixT)
             newItem.traits[ixT] = newItemT
 
             if False: pass
@@ -666,7 +666,7 @@ class ASTraitBis(ASTrait):
   ixT: int = None
   nam_name: str = None
 
-  def __init__(self, rhs: ASTrait, constant_pool: ASConstantPool, ixT: int):
+  def __init__(self, rhs: ASTrait, abcFile: ABCFile, ixT: int):
     self.nam_ix = rhs.nam_ix
     self.kind = rhs.kind
     self.attributes = rhs.attributes
@@ -674,30 +674,30 @@ class ASTraitBis(ASTrait):
     self.metadata = rhs.metadata
 
     self.ixT = ixT
-    self.nam_name = constant_pool.multinames[self.nam_ix].qualified_name(constant_pool)
+    self.nam_name = abcFile.constant_pool.multinames[self.nam_ix].qualified_name(abcFile.constant_pool)
     if self.nam_name[:5] != 'http:':
       assert not '/' in self.nam_name, f'@{BM.LINE(False)} self.nam_ix={self.nam_ix}, self.nam_name = {self.nam_name}'
       #assert not ':' in self.nam_name, f'@{BM.LINE(False)} self.nam_ix={self.nam_ix}, self.nam_name = {self.nam_name}'
 
-    self.UpdateTraitData(constant_pool)
+    self.UpdateTraitData(abcFile)
 
-  def UpdateTraitData(self, constant_pool: ASConstantPool):
+  def UpdateTraitData(self, abcFile: ABCFile):
     newItem = self.data
     if False: pass
     elif isinstance(self.data, ASTraitSlot):
-      newItem = ASTraitSlotBis(self.data, constant_pool)
+      newItem = ASTraitSlotBis(self.data, abcFile.constant_pool)
     elif isinstance(self.data, ASTraitMethod):
-      pass
+      newItem = ASTraitMethodBis(self.data, abcFile)
     elif isinstance(self.data, ASTraitGetter):
-      pass
+      assert False, f'!! @{BM.LINE()} unexpected TraitData of {self.data}'
     elif isinstance(self.data, ASTraitSetter):
-      pass
+      assert False, f'!! @{BM.LINE()} unexpected TraitData of {self.data}'
     elif isinstance(self.data, ASTraitClass):
-      pass
+      assert False, f'!! @{BM.LINE()} unexpected TraitData of {self.data}'
     elif isinstance(self.data, ASTraitFunction):
-      pass
+      newItem = ASTraitFunctionBis(self.data, abcFile)
     elif isinstance(self.data, ASTraitConst):
-      pass
+      assert False, f'!! @{BM.LINE()} unexpected TraitData of {self.data}'
     else:
       assert False, f'!! @{BM.LINE()} unexpected TraitData of {self.data}'
     self.data = newItem
@@ -751,6 +751,7 @@ def GetNameOfTraitVindexVkind(vindex: int, vkind: Optional[ConstantKind], consta
     lookup = constant_pool.namespace
     preResult = lookup[vindex].nam_name
   else:
+    assert False, f'@{BM.LINE(False)} unexpected vkind:{vkind}'
     preResult = f'@{BM.LINE(False)} unexpected vkind:{vkind}'
 
   result = f'{preResult}'
@@ -800,6 +801,15 @@ class ASTraitFunction: # trait_function
     def __init__(self, reader: MemoryViewReader):
         self.slot_id = reader.read_int()
         self.function_ix = reader.read_int()
+@dataclass
+class ASTraitFunctionBis(ASTraitFunction):
+  function_name: str
+
+  def __init__(self, rhs: ASTrait, abcFile: ABCFile):
+    self.slot_id = rhs.slot_id
+    self.function_ix = rhs.function_ix
+
+    self.function_name = abcFile.methods[self.function_ix]
 
 
 @dataclass
@@ -810,6 +820,15 @@ class ASTraitMethod: # trait_method
     def __init__(self, reader: MemoryViewReader):
         self.disposition_id = reader.read_int()
         self.method_ix = reader.read_int()
+@dataclass
+class ASTraitMethodBis(ASTraitMethod):
+  method_name: str
+
+  def __init__(self, rhs: ASTrait, abcFile: ABCFile):
+    self.disposition_id = rhs.disposition_id
+    self.method_ix = rhs.method_ix
+
+    self.method_name = abcFile.methods[self.method_ix]
 
 
 @dataclass
