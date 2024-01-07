@@ -69,7 +69,7 @@ class ABCFile: # abcfile
 
       # classes
       bagNumbers = [item.init_ix for item in self.classes]
-      numberStats = BM.NullNanZeroMinMax(bagNumbers)
+      numberStats = BM.NullNanZeroMinMax(bagNumbers, 'for_classes')
       print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])} stats cinit(init_ix)={numberStats}')
       firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
       if firstClassWithTraits_orNull:
@@ -119,7 +119,7 @@ class ABCFile: # abcfile
 
       # instances
       bagNumbers = [item.init_ix for item in self.instances]
-      numberStats = BM.NullNanZeroMinMax(bagNumbers)
+      numberStats = BM.NullNanZeroMinMax(bagNumbers, 'for_instances')
       print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}, stats iinit(init_ix)={numberStats}')
       newItemT = None # trait - just in case there are none
       newItemTS = None # traitSlot - just in case there are none
@@ -193,7 +193,7 @@ class ABCFile: # abcfile
 
       # method_bodies
       bagNumbers = [item.method_ix for item in self.method_bodies]
-      numberStats = BM.NullNanZeroMinMax(bagNumbers)
+      numberStats = BM.NullNanZeroMinMax(bagNumbers, 'for_method_bodies')
       print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}, stats method_ix={numberStats}')
       newItemE = None # exception - just in case there are none
       newItemT = None # trait - just in case there are none
@@ -252,7 +252,7 @@ class ABCFile: # abcfile
 
       # scripts
       bagNumbers = [item.init_ix for item in self.scripts]
-      numberStats = BM.NullNanZeroMinMax(bagNumbers)
+      numberStats = BM.NullNanZeroMinMax(bagNumbers, 'for_scripts')
       print(f'@{BM.LINE()}  type(scripts[-1])={type(self.scripts[-1])}, stats init_ix={numberStats}')
 
 @dataclass
@@ -407,6 +407,7 @@ class ASMultiname: # multiname_info
       return f'<#[{ns_ix}]>{constant_pool.strings[ns.nam_ix]}##.##<#[{self.nam_ix}]>{constant_pool.strings[self.nam_ix]}'.strip('.')
 
     def qualified_name(self, constant_pool: ASConstantPool) -> str:
+      namespaceConcatChar = ':' # was '.'
       if False: pass
       elif self.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A):
         assert self.kind == MultinameKind.Q_NAME, self.kind
@@ -439,7 +440,7 @@ class ASMultiname: # multiname_info
           print(f'@{BM.LINE()} .. {BM.TERM_WHT_ON_RED()}{BM.FUNC_NAME()} about to crash on <assert namespace.nam_ix> ..{BM.TERM_RESET()}')
           # ^^^ DEBUG INFO
         assert namespace.nam_ix
-        return f'{constant_pool.strings[namespace.nam_ix]}.{constant_pool.strings[self.nam_ix]}'.strip('.')
+        return f'{constant_pool.strings[namespace.nam_ix]}{namespaceConcatChar}{constant_pool.strings[self.nam_ix]}'.strip(namespaceConcatChar)
       elif self.kind == MultinameKind.TYPE_NAME:
         refMultiName = constant_pool.multinames[self.q_nam_ix]
         qn = f'!! RESOLVE q_nam_ix={self.q_nam_ix}=>{refMultiName.nam_name} type_ixs={self.type_ixs} !!'
@@ -447,7 +448,7 @@ class ASMultiname: # multiname_info
         #print(msg)
         if constant_pool.cbNotifications:
           constant_pool.cbNotifications(msg)
-        return f'{self.ns_name}.{self.nam_name}'.strip('.')
+        return f'{self.ns_name}{namespaceConcatChar}{self.nam_name}'.strip(namespaceConcatChar)
         #return qn
       else:
         if constant_pool.cbNotifications:

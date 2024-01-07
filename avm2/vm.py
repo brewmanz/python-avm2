@@ -132,7 +132,7 @@ class VirtualMachine:
     def lookup_class(self, qualified_name: str) -> ABCClassIndex:
       try:
         return self.name_to_class[qualified_name]
-      except KeyEr:
+      except KeyError:
         self.GDictFails += 1
         if self.GDictFails < 5:
           print(F'!! @{BM.LINE()} n2c KeyError [{qualified_name}]')

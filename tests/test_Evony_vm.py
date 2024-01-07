@@ -139,10 +139,10 @@ def test_TEV1200_lookup_class_EvonyClient_N(machine_EvonyClient_N: VirtualMachin
   print(f'## @{BM.LINE()} $$ machine_EvonyClient_N={machine_EvonyClient_N}')
   assert len(machine_EvonyClient_N.name_to_class) == 87 # -111
   #assert machine_EvonyClient_N.lookup_class('com.evony.util.UIUtil') == 2241
-  assert machine_EvonyClient_N.lookup_class('mx.core.IChildList') == 1
+  assert machine_EvonyClient_N.lookup_class('mx.core:IChildList') == 1
   assert machine_EvonyClient_N.lookup_class('_EvonyClient_mx_managers_SystemManager') == 6
-  assert machine_EvonyClient_N.lookup_class('mx.managers.IFocusManagerContainer') == 8
-  assert machine_EvonyClient_N.lookup_class('mx.core.RSLListLoader') == 66
+  assert machine_EvonyClient_N.lookup_class('mx.managers:IFocusManagerContainer') == 8
+  assert machine_EvonyClient_N.lookup_class('mx.core:RSLListLoader') == 66
   # assert len(machine_heroes.name_to_class) == 3739
   # assert machine_heroes.lookup_class('battle.BattleCore') == 2241
   # assert machine_heroes.lookup_class('game.battle.controller.BattleController') == 989
@@ -155,11 +155,11 @@ def test_TEV1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
     if BM.IsSignificantBinary(ix): print(f'  ##{ix} n2m={item} > {machine_EvonyClient_N.lookup_method(item)}')
     ix += 1
   assert len(machine_EvonyClient_N.name_to_method) == 77 # -111
-  assert machine_EvonyClient_N.lookup_method('mx.managers.SystemManager.getSWFRoot') == 127
-  assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trimArrayElements') == 951
+  assert machine_EvonyClient_N.lookup_method('mx.managers:SystemManager.getSWFRoot') == 127
+  assert machine_EvonyClient_N.lookup_method('mx.utils:StringUtil.trimArrayElements') == 951
   # not found # assert machine_EvonyClient_N.lookup_method('view.ui.TimeLabel.getDateStr') == 9999
   # not found # assert machine_EvonyClient_N.lookup_method('com.evony.Context.getTimeDiff') == 9999
-  assert machine_EvonyClient_N.lookup_method('mx.utils.StringUtil.trim') == 950 # Mainflash/mx/utils/StringUtil.as:18
+  assert machine_EvonyClient_N.lookup_method('mx.utils:StringUtil.trim') == 950 # Mainflash/mx/utils/StringUtil.as:18
 
 def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
@@ -184,7 +184,7 @@ def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
 
   # do class init
   ixClass = 67
-  assert machine_EvonyClient_N.abc_file.classes[ixClass].nam_name == 'mx.utils.StringUtil' # right class
+  assert machine_EvonyClient_N.abc_file.classes[ixClass].nam_name == 'mx.utils:StringUtil' # right class
   assert machine_EvonyClient_N.abc_file.classes[ixClass].init_ix == 949 # right class init method
   act = machine_EvonyClient_N.call_static(machine_EvonyClient_N.abc_file.classes[ixClass].init_ix, '')
   print(f'## @{BM.LINE()} SU_T init=<{act}>')
@@ -192,22 +192,22 @@ def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz", None) # eould return empty string, but asserts as charAt fails to be found
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz") # that undefined throws an assertion PushScope
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', None, "xyz") # PushScope asserts
-  act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', '', "xyz")
+  act = machine_EvonyClient_N.call_static('mx.utils:StringUtil.trim', '', "xyz")
   machine_EvonyClient_N.cbOnInsExe = None
   print(f'## @{BM.LINE()} SU_T act=<{act}>')
-  assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz") == "xyz"
-  assert machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "  abc  ") == "abc"
+  assert machine_EvonyClient_N.call_static('mx.utils:StringUtil.trim', "xyz") == "xyz"
+  assert machine_EvonyClient_N.call_static('mx.utils:StringUtil.trim', "  abc  ") == "abc"
 
 @pytest.mark.skip(reason="change to fit Evony") # import pytest
 def test_TEV1500_call_hitrate_intensity(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   # scripts/battle/BattleCore.as:57 public static function hitrateIntensity(param1:int, param2:int, param3:int = 4) : Number
-  assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, -100, 0) == 1
-  assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 100, 0) == 1
-  assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 0, 100) == 0
-  assert machine_EvonyClient_N.call_method('battle.BattleCore.hitrateIntensity', undefined, 4, 8) == 0.5
+  assert machine_EvonyClient_N.call_method('battle:BattleCore.hitrateIntensity', undefined, -100, 0) == 1
+  assert machine_EvonyClient_N.call_method('battle:BattleCore.hitrateIntensity', undefined, 100, 0) == 1
+  assert machine_EvonyClient_N.call_method('battle:BattleCore.hitrateIntensity', undefined, 0, 100) == 0
+  assert machine_EvonyClient_N.call_method('battle:BattleCore.hitrateIntensity', undefined, 4, 8) == 0.5
 
 @pytest.mark.skip(reason="change to fit Evony") # import pytest
 def test_TEV1600_new_battle_enemy_reward(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-  machine_EvonyClient_N.new_instance('game.battle.controller.BattleEnemyReward')
+  machine_EvonyClient_N.new_instance('game.battle.controller:BattleEnemyReward')
