@@ -10,6 +10,7 @@ import pytest
 # ln -s ~/git/BDL/Games/Evony/PythonBits/BrewMaths.py (in git/python-avm2_AdobeSwfActionScript)
 import MyGamesHelper as MGH
 import BrewMaths as BM
+import avm2.abc.enums as EN
 
 #from /home/bryan/git/BDL/Games/Evony/PythonBits/MyGamesHelper import MyGamesHelper as MGH
 
@@ -25,6 +26,27 @@ def test_TEV5000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMa
 
 def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
+
+  class_mx_utils_LoaderUtil_ix = machine_EvonyClient_N.lookup_class('mx.utils:LoaderUtil')
+  assert class_mx_utils_LoaderUtil_ix == 17
+  myClass = machine_EvonyClient_N.abc_file.classes[class_mx_utils_LoaderUtil_ix]
+
+  for ixT in range(len(myClass.traits)):
+    item = myClass.traits[ixT]
+    print(f'@{BM.LINE()} traits[{ixT}] = {item}')
+
+  traitName = 'createAbsoluteURL'
+  myTrait = next((x for x in myClass.traits if x.nam_name == traitName), None)
+  assert myTrait, f'class {myClass.nam_name}, trait <{traitName}> not found'
+  print(f'@{BM.LINE()} trait = {myTrait}')
+  assert myTrait.kind == EN.TraitKind.METHOD, f'class {myClass.nam_name}, trait <{traitName}> wrong kind'
+
+  methodIx = myTrait.data.method_ix
+  assert methodIx == 411, f'methodIx {methodIx} has unexpected value'
+  callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
+  machine_EvonyClient_N.cbOnInsExe = callback
+  act = machine_EvonyClient_N.call_static(methodIx, myClass) == None
+
   assert False, f'TODO @{BM.LINE(False)} LoaderUtil.createAbsoluteURL'
 
 def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):

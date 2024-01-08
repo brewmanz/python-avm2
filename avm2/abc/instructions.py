@@ -557,8 +557,17 @@ class CoerceAny(Instruction):
 
 
 @instruction(133)
-class CoerceString(Instruction):
-    pass
+class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
+  """
+  Coerce a value to a string.
+  value is popped off of the stack and coerced to a String. If value is null or undefined, then stringvalue is set to null .
+  Otherwise stringvalue is set to the result of the ToString algorithm, as specified in ECMA-262 section 9.8. stringvalue is pushed onto the stack.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    valueRaw = environment.operand_stack.pop()
+    value = f'{valueRaw}'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
+    environment.operand_stack.append(value)
 
 
 @instruction(66)
@@ -688,20 +697,27 @@ class ConstructSuper(Instruction): # …, object, arg1, arg2, ..., argn => …
 
 
 @instruction(118)
-class ConvertToBoolean(Instruction):
-    pass
+class ConvertToBoolean(Instruction): # convert_b # …, value => …, booleanvalue
+  """
+  Convert a value to a Boolean.
+  value is popped off of the stack and converted to a Boolean. The result, booleanvalue, is pushed onto the stack.
+  This uses the ToBoolean algorithm, as described in ECMA-262 section 9.2, to perform the conversion.
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    valueRaw = environment.operand_stack.pop()
+    value = bool(valueRaw)
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
+    environment.operand_stack.append(value)
 
 
 @instruction(115)
 class ConvertToInteger(Instruction): # …, value => …, intvalue
     """
-    `value` is popped off of the stack and converted to an integer. The result, `intvalue`, is pushed
-    onto the stack. This uses the `ToInt32` algorithm, as described in ECMA-262 section 9.5, to
-    perform the conversion.
+    `value` is popped off of the stack and converted to an integer. The result, `intvalue`, is pushed onto the stack.
+    This uses the `ToInt32` algorithm, as described in ECMA-262 section 9.5, to perform the conversion.
     """
-
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        valueRaw = int(environment.operand_stack.pop())
+        valueRaw = environment.operand_stack.pop()
         value = int(valueRaw)
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
         environment.operand_stack.append(value)
@@ -714,9 +730,8 @@ class ConvertToDouble(Instruction): # …, value => …, doublevalue
     onto the stack. This uses the `ToNumber` algorithm, as described in ECMA-262 section 9.3,
     to perform the conversion.
     """
-
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-        valueRaw = float(environment.operand_stack.pop())
+        valueRaw = environment.operand_stack.pop()
         value = float(valueRaw)
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
         environment.operand_stack.append(value)
@@ -1796,9 +1811,25 @@ class RightShift(Instruction):
     pass
 
 
+@instruction(111)
+class SetGlobalSlot(Instruction):
+    slot_ix: u30
+
+
 @instruction(99)
-class SetLocal(Instruction):
-    index: u30
+class SetLocal(Instruction): # …, value => …
+  """
+  Set a local register.
+  index is a u30 that must be an index of a local register.
+  The register at index is set to value, and value is popped off the stack.
+  """
+  index: u30
+
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    value = environment.operand_stack.pop()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
+    assert self.index < len(environment.registers)
+    environment.registers[self.index] = value
 
 
 @instruction(212)
@@ -1843,15 +1874,10 @@ class SetLocal3(Instruction): # …, value => …
   <n> = 3 is an index of a local register.
   The register at that index is set to value, and value is popped off the stack.
   """
-def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     value = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
     environment.registers[3] = value
-
-
-@instruction(111)
-class SetGlobalSlot(Instruction):
-    slot_ix: u30
 
 
 @instruction(97)
