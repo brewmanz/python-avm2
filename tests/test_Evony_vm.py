@@ -2,6 +2,7 @@ from avm2.runtime import undefined
 from avm2.swf.types import DoABCTag, Tag
 from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
 from avm2.abc.instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
+import avm2.runtime as RT
 import inspect, sys
 import pytest
 
@@ -45,7 +46,8 @@ def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMach
   assert methodIx == 411, f'methodIx {methodIx} has unexpected value'
   callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
   machine_EvonyClient_N.cbOnInsExe = callback
-  act = machine_EvonyClient_N.call_static(methodIx, myClass) == None
+  dummyInstance = RT.ASObject(f'@{BM.LINE(False)} dummyInstance')
+  act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, 'param1', 'param2') == None
 
   assert False, f'TODO @{BM.LINE(False)} LoaderUtil.createAbsoluteURL'
 

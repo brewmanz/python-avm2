@@ -117,7 +117,8 @@ class VirtualMachine:
                     return self.resolve_qname(scopeObject_, namespace, name), name, namespace, scopeObject_
                 except KeyError:
                     pass
-        raise KeyError(name, namespaces)
+        raise KeyError(f'KeyError; name={BM.DumpVar(name)}, namespaces={BM.DumpVar(namespaces)}, scopeStack={BM.DumpVar(scopeStack)}')
+        # KeyError; name='Math', namespaces=[1]=[''], scopeStack=[2]=[ASObject(traceHint='v.p:__i_:51#5', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:53#3', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:54#4', class_ix=None, properties={})}), ASObject(traceHint='@tEv.p:tTEV3000LUcAURL:49 dummyInstance#6', class_ix=None, properties={})]":
 
     def resolve_qname(self, scopeObject_: ASObject, namespace: str, name: str) -> Any:
         # Typically, the order of the search for resolving multinames is
