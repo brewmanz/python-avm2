@@ -282,7 +282,7 @@ class Math_Methods: # check https://help.adobe.com/en_US/FlashPlatform/reference
     >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
     >>> Math_Methods.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} FMFB_C {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> print(f'@{BM.LINE()} FMFB_D {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
     "<class '__main__.Math_Methods'>"
     >>> str(bag.foundFunction)  # doctest: +ELLIPSIS
@@ -352,6 +352,37 @@ def string_method_index_of(item: str, val: str, startIndex: int = 0) -> int:
   """
   res = item.find(val, startIndex)
   return res
+def string_method_last_index_of(item: str, val: str, startIndex: int = 0x7fffffff) -> int:
+  """
+  Returns the character in the position specified by the index parameter.
+  >>> myObj = 'abcdefa'
+  >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
+  >>> myMethod = 'lastIndexOf'
+  >>> myArgs = list()
+  >>> myArgs.append('z')
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+  >>> res = string_method_last_index_of(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  -1
+  >>> myArgs = list()
+  >>> myArgs.append('a')
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+  >>> res = string_method_last_index_of(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  6
+  >>> myArgs = list()
+  >>> myArgs.append('a')
+  >>> myArgs.append(1)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+  >>> res = string_method_last_index_of(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  0
+  """
+  res = item.rfind(val, 0, startIndex)
+  return res
 def string_method_substr(item: str, startIndex: int = 0, len: int = 0x7fffffff):
   """
   Returns a substring consisting of the characters that start at the specified startIndex and with a length specified by len.
@@ -407,6 +438,7 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
   dictSwfNameToMethod: ClassVar[dict[str, object]] = dict( \
     [ ('charAt', string_method_char_at ) \
     , ('indexOf', string_method_index_of) \
+    , ('lastIndexOf', string_method_last_index_of) \
     , ('substr', string_method_substr) \
     , ('substring', string_method_substring) \
     ])
@@ -667,9 +699,9 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1') # DEBUG
 
     multiname = machine.multinames[self.index]
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     argN=[]
     for ix in range(self.arg_count)[::-1]:
@@ -679,13 +711,13 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
 
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2') # DEBUG
 
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'nam/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     theSStack = environment.scope_stack
-    theName  = environment.operand_stack.pop() if getNameFromStack else machine.strings[multiname.nam_ix]
-    theNS    = environment.operand_stack.pop() if getNamespaceFromStack else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
+    theName  = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
+    theNS    = environment.operand_stack.pop() if getNsFromStk else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
 
     if machine.cbOnInsExe is not None:
       machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
@@ -718,9 +750,9 @@ class CallPropLex(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, 
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(79)
@@ -730,9 +762,9 @@ class CallPropVoid(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(68)
@@ -748,9 +780,9 @@ class CallSuper(Instruction):
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(78)
@@ -760,9 +792,9 @@ class CallSuperVoid(Instruction):
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(120)
@@ -845,9 +877,9 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1') # DEBUG
 
     multiname = machine.multinames[self.index]
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     argN=[]
     for ix in range(self.arg_count)[::-1]:
@@ -857,13 +889,13 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
 
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2') # DEBUG
 
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'nam/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     theSStack = environment.scope_stack
-    theName  = environment.operand_stack.pop() if getNameFromStack else machine.strings[multiname.nam_ix]
-    theNS    = environment.operand_stack.pop() if getNamespaceFromStack else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
+    theName  = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
+    theNS    = environment.operand_stack.pop() if getNsFromStk else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
 
     if machine.cbOnInsExe is not None:
       machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
@@ -1050,9 +1082,9 @@ class DeleteProperty(Instruction):
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(163)
@@ -1147,14 +1179,14 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
     # TODO: other kinds of multinames.
     assert multiname.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A), multiname
 
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'nam/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     try:
       theSStack     = environment.scope_stack
-      theName       = environment.operand_stack.pop() if getNameFromStack else machine.strings[multiname.nam_ix]
-      theNamespaces = [environment.operand_stack.pop()] if getNamespaceFromStack else [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
+      theName       = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
+      theNamespaces = [environment.operand_stack.pop()] if getNsFromStk else [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
 
       if machine.cbOnInsExe is not None:
         #machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
@@ -1200,14 +1232,14 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
     # TODO: other kinds of multinames.
     assert multiname.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A), multiname
 
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'nam/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     try:
       theSStack     = environment.scope_stack
-      theName       = environment.operand_stack.pop() if getNameFromStack else machine.strings[multiname.nam_ix]
-      theNamespaces = [environment.operand_stack.pop()] if getNamespaceFromStack else [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
+      theName       = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
+      theNamespaces = [environment.operand_stack.pop()] if getNsFromStk else [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
 
       if machine.cbOnInsExe is not None:
         #machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
@@ -1231,9 +1263,9 @@ class GetDescendants(Instruction):
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(100)
@@ -1272,6 +1304,7 @@ class GetLex(Instruction): # … => …, obj
       hint = 'tNSs'; theNamespaces = [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
       hint = 'm.cOIE';
       if machine.cbOnInsExe is not None:
+        machine.cbOnInsExe.MakeExtraObservation(f'mn={BM.DumpVar(multiname)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tS#{len(theStack)}={BM.DumpVar(theStack)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tNa={BM.DumpVar(theNamespaces)}')
@@ -1281,7 +1314,8 @@ class GetLex(Instruction): # … => …, obj
           theNamespaces, # [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
       )
     except KeyError as err:
-      raise NotImplementedError(f'err={err}: ReferenceError: hint={hint}')
+      print(f'@{BM.LINE()} HACK SHOULD STOP BUT I WANT TO SEE NEXT BIT err={err}: ReferenceError: hint={hint}') # HACK
+      # raise NotImplementedError(f'err={err}: ReferenceError: hint={hint}') # HACK must uncomment this
     else:
       result = object_.properties[namespace, name]
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
@@ -1354,9 +1388,9 @@ class GetProperty(Instruction):
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(101)
@@ -1387,9 +1421,9 @@ class GetSuper(Instruction):
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(176)
@@ -1699,14 +1733,14 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
     value = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
 
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'nam/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     try:
       theSStack     = environment.scope_stack
-      theName       = environment.operand_stack.pop() if getNameFromStack else machine.strings[multiname.nam_ix]
-      theNamespace  = environment.operand_stack.pop() if getNamespaceFromStack else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
+      theName       = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
+      theNamespace  = environment.operand_stack.pop() if getNsFromStk else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
       theNamespaces = [theNamespace]
 
       if machine.cbOnInsExe is not None:
@@ -2201,9 +2235,9 @@ class SetProperty(Instruction): # …, obj, [ns], [name], value => …
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(109)
@@ -2217,9 +2251,9 @@ class SetSuper(Instruction):
 
   def PlaceHolder():
     multiname = None
-    getNameFromStack = multiname.getNameFromStack()
-    getNamespaceFromStack = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNameFromStack)}/{BM.DumpVar(getNamespaceFromStack)}')
+    getNamFromStk = multiname.getNameFromStack()
+    getNsFromStk = multiname.getNamespaceFromStack()
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
 
 @instruction(172)
