@@ -76,6 +76,8 @@ class findInternalMethod:
     'None'
     >>> str(bag.foundFunction)[:33]
     'None'
+    >>> str(bag) # doctest: +ELLIPSIS
+    'bagForFindingInternalMethod(instance=123.456, namespaceName=\\'http://adobe.com/AS3/2006/builtin\\', methodName=\\'charAt\\', arguments=[3], foundClass=None, foundFunction=None, foundResultHint=["@i.p:fCAMFB:... in findClassAndMethodFromBag; no class <class \\'float\\'> + method <charAt> found"], result=None, debug=False)'
     >>> # should find
     >>> myObj = 'abcdef'
     >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
@@ -89,6 +91,8 @@ class findInternalMethod:
     "<class '__main__.string_Methods'>"
     >>> str(bag.foundFunction)[:34]
     '<function string_method_char_at at'
+    >>> str(bag) # doctest: +ELLIPSIS
+    "bagForFindingInternalMethod(instance='abcdef', namespaceName='http://adobe.com/AS3/2006/builtin', methodName='charAt', arguments=[3], foundClass=<class '__main__.string_Methods'>, foundFunction=<function string_method_char_at at 0x...>, foundResultHint=[], result=None, debug=False)"
     """
     for cls in [ string_Methods ]:
       cls.findMethodFromBag(bag)
@@ -116,13 +120,15 @@ class findInternalMethod:
     '<function string_method_char_at at'
     >>> str(bag.result)
     'd'
+    >>> str(bag) # doctest: +ELLIPSIS
+    "bagForFindingInternalMethod(instance='abcdef', namespaceName='http://adobe.com/AS3/2006/builtin', methodName='charAt', arguments=[3], foundClass=<class '__main__.string_Methods'>, foundFunction=<function string_method_char_at at 0x...>, foundResultHint=[], result='d', debug=False)"
     """
     if bag.foundFunction == None:
       bag.foundResultHint.append(f'@{BM.LINE(False)} in {inspect.stack()[0].function}; empty foundFunction')
       return
     bag.result = bag.foundFunction(bag.instance, *bag.arguments)
 
-def Math_method_max(item1, item2, *args):
+def Math_method_max(itemIgnored, *args):
   """
   Returns the maximum of two or more numbers
   >>> myObj = None
@@ -135,7 +141,7 @@ def Math_method_max(item1, item2, *args):
   >>> myArgs.append(myItem2)
   >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
   >>> res = Math_method_max(bag.instance, *bag.arguments)
-  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> print(f'@{BM.LINE()} MMMx_A {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
   123.45
   >>> myItem1 = -123.45
@@ -147,7 +153,7 @@ def Math_method_max(item1, item2, *args):
   >>> myArgs.append(myItem2)
   >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
   >>> res = Math_method_max(bag.instance, *bag.arguments)
-  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> print(f'@{BM.LINE()} MMMx_B {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
   23
   >>> myItem1 = -123.45
@@ -161,14 +167,63 @@ def Math_method_max(item1, item2, *args):
   >>> myArgs.append(myItem3)
   >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
   >>> res = Math_method_max(bag.instance, *bag.arguments)
-  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> print(f'@{BM.LINE()} MMMx_C {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
   234
   """
-  res = item1
+  #print(f'@{BM.LINE()} MMMx called [{len(args)}] ({args})', file=sys.stderr)
+  if len(args) < 2:
+    raise NotImplementedError(f'@{BM.LINE()} expected 2+ args but {len(args)}')
+  res = max(args)
   return res
-def Math_method_min(item1, item2, *args):
-  pass
+def Math_method_min(itemIgnored, *args):
+  """
+  Returns the minimum of two or more numbers
+  >>> myObj = None
+  >>> myItem1 = 23.45
+  >>> myItem2 = 123
+  >>> myNamespace ='Math'
+  >>> myMethod = 'min'
+  >>> myArgs = list()
+  >>> myArgs.append(myItem1)
+  >>> myArgs.append(myItem2)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+  >>> res = Math_method_min(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} MMMn_A {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  23.45
+  >>> myItem1 = 123.45
+  >>> myItem2 = -23
+  >>> myNamespace ='Math'
+  >>> myMethod = 'min'
+  >>> myArgs = list()
+  >>> myArgs.append(myItem1)
+  >>> myArgs.append(myItem2)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+  >>> res = Math_method_min(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} MMMn_B {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  -23
+  >>> myItem1 = -23.45
+  >>> myItem2 = 23
+  >>> myItem3 = -234
+  >>> myNamespace ='Math'
+  >>> myMethod = 'min'
+  >>> myArgs = list()
+  >>> myArgs.append(myItem1)
+  >>> myArgs.append(myItem2)
+  >>> myArgs.append(myItem3)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+  >>> res = Math_method_min(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} MMMn_C {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  -234
+  """
+  #print(f'@{BM.LINE()} MMMn called [{len(args)}] ({args})', file=sys.stderr)
+  if len(args) < 2:
+    raise NotImplementedError(f'@{BM.LINE()} expected 2+ args but {len(args)}')
+  res = min(args)
+  return res
 class Math_Methods: # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/Math.html
 
   dictSwfNameToMethod: ClassVar[dict[str, object]] = dict( \
@@ -181,56 +236,69 @@ class Math_Methods: # check https://help.adobe.com/en_US/FlashPlatform/reference
     """
     >>> # no find
     >>> myObj = None
-    >>> myNamespace ='Math'
+    >>> myNamespace ='MathUnknown'
     >>> myMethod = 'max'
     >>> myArgs = list()
     >>> myArgs.append(3)
     >>> myArgs.append(4)
-    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
-    >>> string_Methods.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+    >>> Math_Methods.findMethodFromBag(bag)
+    >>> print(f'@{BM.LINE()} FMFB_A {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
     'None'
     >>> str(bag.foundFunction)[:33]
     'None'
     >>> # should not find
-    >>> myObj = 'abcdef'
+    >>> myObj = None
     >>> myNamespace ='Math'
-    >>> myMethod = 'max'
+    >>> myMethod = 'maxUnknown'
     >>> myArgs = list()
     >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
-    >>> string_Methods.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+    >>> Math_Methods.findMethodFromBag(bag)
+    >>> print(f'@{BM.LINE()} FMFB_B {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
     'None'
     >>> str(bag.foundFunction)[:33]
     'None'
     >>> # should find
-    >>> myObj = 'abcdef'
+    >>> myObj = None
     >>> myNamespace ='Math'
     >>> myMethod = 'max'
     >>> myArgs = list()
     >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
-    >>> string_Methods.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+    >>> Math_Methods.findMethodFromBag(bag)
+    >>> print(f'@{BM.LINE()} FMFB_C {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
     "<class '__main__.Math_Methods'>"
-    >>> str(bag.foundFunction)[:34]
-    '<function Math_method_max at'
+    >>> str(bag.foundFunction)  # doctest: +ELLIPSIS
+    '<function Math_method_max at 0x...'
+    >>> # should find
+    >>> myObj = None
+    >>> myNamespace ='Math'
+    >>> myMethod = 'min'
+    >>> myArgs = list()
+    >>> myArgs.append(3)
+    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
+    >>> Math_Methods.findMethodFromBag(bag)
+    >>> print(f'@{BM.LINE()} FMFB_C {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> str(bag.foundClass)
+    "<class '__main__.Math_Methods'>"
+    >>> str(bag.foundFunction)  # doctest: +ELLIPSIS
+    '<function Math_method_min at 0x...'
     """
-    if bag.namespaceName == 'http://adobe.com/AS3/2006/builtin':
-      if isinstance(bag.instance, str):
+    if bag.namespaceName == 'Math':
+      if True or isinstance(bag.instance, str): # TODO Check what object type is
         for k, v in cls.dictSwfNameToMethod.items():
           if k == bag.methodName:
-            bag.foundClass = string_Methods
+            bag.foundClass = Math_Methods
             bag.foundFunction = v
             if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} matched <{bag.methodName}> with {v}')
             return
-        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} is a string but no match for <{bag.methodName}>')
+        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} could be Math but no match for <{bag.methodName}>')
       else:
-        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a string')
+        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a .. what?')
         pass
     else:
       if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {bag.namespaceName} not expected namespace')
@@ -245,9 +313,9 @@ def string_method_char_at(item: str, index: int = 0):
   >>> myMethod = 'charAt'
   >>> myArgs = list()
   >>> myArgs.append(3)
-  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
   >>> res = string_method_char_at(bag.instance, *bag.arguments)
-  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> print(f'@{BM.LINE()} SMCA_A {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
   'd'
   """
@@ -261,14 +329,14 @@ def string_method_index_of(item: str, val: str, startIndex: int = 0) -> int:
   >>> myMethod = 'indexOf'
   >>> myArgs = list()
   >>> myArgs.append('z')
-  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
   >>> res = string_method_index_of(bag.instance, *bag.arguments)
   >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
   -1
   >>> myArgs = list()
   >>> myArgs.append('a')
-  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
   >>> res = string_method_index_of(bag.instance, *bag.arguments)
   >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
@@ -276,7 +344,7 @@ def string_method_index_of(item: str, val: str, startIndex: int = 0) -> int:
   >>> myArgs = list()
   >>> myArgs.append('a')
   >>> myArgs.append(1)
-  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
   >>> res = string_method_index_of(bag.instance, *bag.arguments)
   >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
@@ -354,7 +422,7 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
     >>> string_Methods.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> print(f'@{BM.LINE()} FMFB_A {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> bag.foundClass
     >>> str(bag.foundClass)
     'None'
@@ -368,7 +436,7 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
     >>> string_Methods.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> print(f'@{BM.LINE()} FMFB_B {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
     'None'
     >>> str(bag.foundFunction)[:33]
@@ -381,7 +449,7 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
     >>> string_Methods.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+    >>> print(f'@{BM.LINE()} FMFB_C {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
     "<class '__main__.string_Methods'>"
     >>> str(bag.foundFunction)[:34]
