@@ -370,6 +370,24 @@ class VirtualMachine:
             return self.multinames[index]
         raise NotImplementedError(kind)
 
+    @staticmethod
+    def from_Evony() -> VirtualMachine:
+      import os
+      from pathlib import Path
+      from avm2.swf.swf_parser import parse_swf
+
+      base_path = Path(avm2.__file__).parent.parent / 'data'      #base_path = Path(tests.__file__).parent.parent / 'data'
+      swf: memoryview = (base_path / 'EvonyClient1922.swf').read_bytes()       #swf: memoryview = swf_EvonyClient_N()
+      raw_do_abc_tag: Tag = None    # = raw_do_abc_tag_EvonyClient_N(swf)
+      for tag in parse_swf(swf):
+        if tag.type_ == TagType.DO_ABC:
+          raw_do_abc_tag = tag
+          break
+      assert raw_do_abc_tag
+      do_abc_tag: DoABCTag = DoABCTag(raw_do_abc_tag.raw)
+      abc: ABCFile = ABCFile(MemoryViewReader(do_abc_tag.abc_file))
+      vm: VirtualMachine = VirtualMachine(abc)
+      return vm
 
 @dataclass
 class MethodEnvironment:
@@ -378,7 +396,13 @@ class MethodEnvironment:
     operand_stack: List[Any] = field(default_factory=list)  # FIXME: should be ASObject's too.
     lastNInstr: List(str) = field(default_factory=list)
     instrExeCnt: int = 0
-
+    @staticmethod
+    def for_testing(localRegCount: int, vm: VirtualMachine) -> MethodEnvironment:
+      registers: List[Any] = list()
+      for _ in range(localRegCount):
+        registers.append(ASUndefined(f'{BM.LINE(False)}#{_} '))
+      env = MethodEnvironment(registers=registers, scope_stack=[vm.global_object])
+      return env
 
 def execute_tag(tag: Tag) -> VirtualMachine:
     """

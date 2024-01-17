@@ -16,6 +16,7 @@ import avm2.runtime as RT
 
 import inspect
 
+# to run doctest, go up a few levels and use 'python avm2/abc/abc_instructions.py'
 strBACKWARDS_n = 'BACKWARDS\n'
 
 @dataclass
@@ -77,7 +78,7 @@ class findInternalMethod:
     >>> str(bag.foundFunction)[:33]
     'None'
     >>> str(bag) # doctest: +ELLIPSIS
-    'bagForFindingInternalMethod(instance=123.456, namespaceName=\\'http://adobe.com/AS3/2006/builtin\\', methodName=\\'charAt\\', arguments=[3], foundClass=None, foundFunction=None, foundResultHint=["@i.p:fCAMFB:... in findClassAndMethodFromBag; no class <class \\'float\\'> + method <charAt> found"], result=None, debug=False)'
+    'bagForFindingInternalMethod(instance=123.456, namespaceName=\\'http://adobe.com/AS3/2006/builtin\\', methodName=\\'charAt\\', arguments=[3], foundClass=None, foundFunction=None, foundResultHint=["@ai.p:fCAMFB:... in findClassAndMethodFromBag; no class <class \\'float\\'> + method <charAt> found"], result=None, debug=False)'
     >>> # should find
     >>> myObj = 'abcdef'
     >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
@@ -553,7 +554,19 @@ class Instruction:
     def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment) -> Optional[int]:
         raise NotImplementedError(self)
 
-class CallbackOnInstructionExecuting:
+def instruction(opcode: int) -> Callable[[], Type[T]]:
+  def wrapper(class_: Type[T]) -> Type[T]:
+    assert opcode not in opcode_to_instruction, opcode_to_instruction[opcode]
+    opcode_to_instruction[opcode] = class_
+    class_.at_inst = opcode # helpful for testing
+    return dataclass(init=False)(class_)
+  return wrapper
+
+T = TypeVar('T', bound=Instruction)
+opcode_to_instruction: Dict[int, Type[T]] = {}
+
+
+class ICallbackOnInstructionExecuting:
   """
   Derive your callback listener from here
   """
@@ -564,11 +577,8 @@ class CallbackOnInstructionExecuting:
   def MakeExtraObservation(self, extraObservation):
     raise NotImplementedError(F'Someone forgot to override {BM.FUNC_NAME()} ({self})')
 
-T = TypeVar('T', bound=Instruction)
-opcode_to_instruction: Dict[int, Type[T]] = {}
-
 @dataclass
-class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(CallbackOnInstructionExecuting):
+class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnInstructionExecuting):
   """
   set limitCalls to -1 for all, or 0+ to limit the number of calls processed
   """
@@ -592,14 +602,6 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(CallbackOnInst
   def __init__(self, limitCalls: int):
     self.limitCalls = limitCalls
     self.callsSoFar: int = 0
-
-
-def instruction(opcode: int) -> Callable[[], Type[T]]:
-  def wrapper(class_: Type[T]) -> Type[T]:
-    assert opcode not in opcode_to_instruction, opcode_to_instruction[opcode]
-    opcode_to_instruction[opcode] = class_
-    return dataclass(init=False)(class_)
-  return wrapper
 
 
 # Instructions implementation.
@@ -1434,11 +1436,6 @@ class GreaterEquals(Instruction): # …, value1, value2 => …, result
   the comparison is `false`, push `true` onto the stack. Otherwise push `false` onto the stack.
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    """
-    >>> inst = GreaterEquals()
-    >>> inst
-    (sommat)
-    """
     value_2 = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
     value_1 = environment.operand_stack.pop()
@@ -1456,6 +1453,23 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
   If the result of the comparison is 'true', push 'true' onto the stack. Otherwise push 'false' onto the stack.
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    """
+    >>> # GreaterThan.__name__, GreaterThan.at_opcode # ('GreaterThan', 175)
+    >>> inst = GreaterThan(GreaterThan.at_inst, MemoryViewReader(bytes(99)))
+    >>> inst
+    GreaterThan(opcode=175)
+    >>> vm = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+    @...
+    >>> vm # doctest: +ELLIPSIS
+    <avm2.vm.VirtualMachine object at 0x...>
+    >>> env = avm2.vm.MethodEnvironment.for_testing(5, vm)
+    >>> env.operand_stack.append('value1')
+    >>> env.operand_stack.append('value2')
+    >>> env.operand_stack
+    ['value1', 'value2']
+    >>> 'TODO'
+    """
+    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f' @@##$$ $$##@@ =<{BM.DumpVar(GetLocal0.at_opcode)}>') # DEBUG
     value_2 = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
     value_1 = environment.operand_stack.pop()
@@ -2316,7 +2330,7 @@ class TypeOf(Instruction):
 class UnsignedRightShift(Instruction):
   pass
 
-if __name__ == '__main__':  # 2023-05-28 # when you run 'python thisModuleName.py' ...
+if __name__ == '__main__':  # 2024-01-17 # when you run 'python thisModuleName.py' ...
   import doctest, os, sys
   # vvvv use BM.LINE() in other modules (after 'import BrewMaths as BM')
   print(f'@{BM.LINE()} ### run embedded unit tests via \'python ' + os.path.basename(__file__) + '\'')
@@ -2324,5 +2338,6 @@ if __name__ == '__main__':  # 2023-05-28 # when you run 'python thisModuleName.p
     res = doctest.testmod(verbose=True) # then the tests in block comments will run. nb or testmod(verbose=True)
   else:
     res = doctest.testmod() # then the tests in block comments will run. nb or testmod(verbose=True)
-  print(f'@{BM.LINE()} ### BTW res = <{res}>, res.failed=<{res.failed}>')
+  emoji = '\u263a \U0001f60a' if res.failed == 0 else '\u2639 \U0001f534'
+  print(f'@{BM.LINE()} ### BTW res = <{res}>, res.failed=<{res.failed}> {"!"*res.failed} {emoji}')
   sys.exit(res.failed) # return number of failed tests
