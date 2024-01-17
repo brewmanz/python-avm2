@@ -1458,15 +1458,20 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> inst = GreaterThan(GreaterThan.at_inst, MemoryViewReader(bytes(99)))
     >>> inst
     GreaterThan(opcode=175)
-    >>> vm = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+    >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
     @...
-    >>> vm # doctest: +ELLIPSIS
+    >>> myVM # doctest: +ELLIPSIS
     <avm2.vm.VirtualMachine object at 0x...>
-    >>> env = avm2.vm.MethodEnvironment.for_testing(5, vm)
+    >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
+    "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
+    >>> scopeStack = [myVM.global_object]
+    >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS
+    "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+    >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
     >>> env.operand_stack.append('value1')
     >>> env.operand_stack.append('value2')
-    >>> env.operand_stack
-    ['value1', 'value2']
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    "[2]=['value1', 'value2']"
     >>> 'TODO'
     """
     #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f' @@##$$ $$##@@ =<{BM.DumpVar(GetLocal0.at_opcode)}>') # DEBUG

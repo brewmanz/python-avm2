@@ -397,11 +397,15 @@ class MethodEnvironment:
     lastNInstr: List(str) = field(default_factory=list)
     instrExeCnt: int = 0
     @staticmethod
-    def for_testing(localRegCount: int, vm: VirtualMachine) -> MethodEnvironment:
+    def for_testing(localRegCount: int, scope_stack: List[Any]) -> MethodEnvironment:
+      '''
+      scope_stack=[ASObject(traceHint='v.p:__i_:51#5', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:53#3', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:54#4', class_ix=None, properties={})})]
+      operand_stack=['value1', 'value2']
+      '''
       registers: List[Any] = list()
       for _ in range(localRegCount):
         registers.append(ASUndefined(f'{BM.LINE(False)}#{_} '))
-      env = MethodEnvironment(registers=registers, scope_stack=[vm.global_object])
+      env = MethodEnvironment(registers=registers, scope_stack=scope_stack)
       return env
 
 def execute_tag(tag: Tag) -> VirtualMachine:
