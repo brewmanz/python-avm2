@@ -12,7 +12,7 @@ import math
 import BrewMaths as BM
 import type_enforced # pip install type_enforced
 
-from avm2.abc.enums import (
+from avm2.abc.abc_enums import (
     ClassFlags,
     ConstantKind,
     MethodFlags,
@@ -21,7 +21,7 @@ from avm2.abc.enums import (
     TraitAttributes,
     TraitKind,
 )
-from avm2.abc.parser import read_array, read_array_with_default, read_string
+from avm2.abc.abc_parser import read_array, read_array_with_default, read_string
 from avm2.io import MemoryViewReader
 
 ABCStringIndex = NewType('ABCStringIndex', int)

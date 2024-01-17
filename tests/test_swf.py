@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import BrewMaths as BM
 
-from avm2.swf.parser import parse_swf
-from avm2.swf.types import DoABCTag, DoABCTagFlags
+from avm2.swf.swf_parser import parse_swf
+from avm2.swf.swf_types import DoABCTag, DoABCTagFlags
 
 def test_parse_swf_EvonyClient_N(swf_EvonyClient_N: memoryview):
     print(f'## @{BM.LINE()} being run ##')

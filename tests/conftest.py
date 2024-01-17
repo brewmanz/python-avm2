@@ -4,11 +4,11 @@ from pytest import fixture
 
 import inspect
 import tests
-from avm2.abc.types import ABCFile
+from avm2.abc.abc_types import ABCFile
 from avm2.io import MemoryViewReader
-from avm2.swf.enums import TagType
-from avm2.swf.parser import parse_swf
-from avm2.swf.types import DoABCTag, Tag
+from avm2.swf.swf_enums import TagType
+from avm2.swf.swf_parser import parse_swf
+from avm2.swf.swf_types import DoABCTag, Tag
 from avm2.vm import VirtualMachine
 
 # run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages. in ~/git/python-avm2_AdobeSwfActionScript

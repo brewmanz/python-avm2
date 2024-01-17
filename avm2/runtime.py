@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple
 
-from avm2.abc.types import ABCClassIndex
+from avm2.abc.abc_types import ABCClassIndex
 
 import BrewMaths as BM
 

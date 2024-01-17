@@ -9,9 +9,9 @@ import BrewMaths as BM
 import avm2.vm
 from avm2.exceptions import ASReturnException, ASJumpException
 from avm2.runtime import undefined, ASPrimitive
-from avm2.abc.parser import read_array
+from avm2.abc.abc_parser import read_array
 from avm2.io import MemoryViewReader
-from avm2.abc.enums import MultinameKind
+from avm2.abc.abc_enums import MultinameKind
 import avm2.runtime as RT
 
 import inspect
@@ -1307,7 +1307,7 @@ class GetLex(Instruction): # … => …, obj
         machine.cbOnInsExe.MakeExtraObservation(f'mn={BM.DumpVar(multiname)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tS#{len(theStack)}={BM.DumpVar(theStack)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
-        machine.cbOnInsExe.MakeExtraObservation(f'tNa={BM.DumpVar(theNamespaces)}')
+        machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
       hint = 'm.rmn';object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
           theStack, # environment.scope_stack,
           theName, # machine.strings[multiname.nam_ix],
@@ -1315,7 +1315,7 @@ class GetLex(Instruction): # … => …, obj
       )
     except KeyError as err:
       print(f'@{BM.LINE()} HACK SHOULD STOP BUT I WANT TO SEE NEXT BIT err={err}: ReferenceError: hint={hint}') # HACK
-      # raise NotImplementedError(f'err={err}: ReferenceError: hint={hint}') # HACK must uncomment this
+      # HACK must uncomment this # raise NotImplementedError(f'err={err}: ReferenceError: hint={hint}') # HACK must uncomment this
     else:
       result = object_.properties[namespace, name]
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
@@ -1434,6 +1434,11 @@ class GreaterEquals(Instruction): # …, value1, value2 => …, result
   the comparison is `false`, push `true` onto the stack. Otherwise push `false` onto the stack.
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    """
+    >>> inst = GreaterEquals()
+    >>> inst
+    (sommat)
+    """
     value_2 = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
     value_1 = environment.operand_stack.pop()

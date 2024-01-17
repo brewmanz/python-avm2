@@ -1,7 +1,7 @@
 from avm2.runtime import undefined
-from avm2.swf.types import DoABCTag, Tag
+from avm2.swf.swf_types import DoABCTag, Tag
 from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
-from avm2.abc.instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
+from avm2.abc.abc_instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
 import inspect, sys
 import os
 

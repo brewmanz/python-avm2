@@ -1,7 +1,7 @@
 from avm2.runtime import undefined
-from avm2.swf.types import DoABCTag, Tag
+from avm2.swf.swf_types import DoABCTag, Tag
 from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
-from avm2.abc.instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
+from avm2.abc.abc_instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
 import avm2.runtime as RT
 import inspect, sys
 import pytest
@@ -11,7 +11,7 @@ import pytest
 # ln -s ~/git/BDL/Games/Evony/PythonBits/BrewMaths.py (in git/python-avm2_AdobeSwfActionScript)
 import MyGamesHelper as MGH
 import BrewMaths as BM
-import avm2.abc.enums as EN
+import avm2.abc.abc_enums as EN
 
 #from /home/bryan/git/BDL/Games/Evony/PythonBits/MyGamesHelper import MyGamesHelper as MGH
 

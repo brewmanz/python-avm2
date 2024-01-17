@@ -2,9 +2,9 @@ from typing import Iterable, List
 
 import BrewMaths as BM
 
-from avm2.abc.instructions import Instruction, read_instruction
-from avm2.abc.types import ABCFile, ASMethodBody, ASMultiname, ASNamespace, ASNamespaceBis
-from avm2.abc.enums import NamespaceKind
+from avm2.abc.abc_instructions import Instruction, read_instruction
+from avm2.abc.abc_types import ABCFile, ASMethodBody, ASMultiname, ASNamespace, ASNamespaceBis
+from avm2.abc.abc_enums import NamespaceKind
 from avm2.io import MemoryViewReader
 from datetime import datetime
 
@@ -13,7 +13,7 @@ import logging
 
 gDebugLevel = logging.INFO # DEBUG, INFO, WARNING, ERROR, CRITICAL # import logging
 
-def BuildSymbolsLookup():
+def BuildSymbolsLookup(): # global g_SymbolsLookupFromNumber from 'data/BryanHomeGamesEvonyCachstuffSwfMainflash/symbols.csv'
   # int;str matches swf/MainFlash/sprites/DefineSprite_ numbers and strings
   global g_SymbolsLookupFromNumber
   g_SymbolsLookupFromNumber = dict()
@@ -38,7 +38,7 @@ def BuildSymbolsLookup():
         if '_swf_' in v: continue
         print(f'@{BM.LINE()} [{k}] = {v}')
 
-def BuildColourNameLookup():
+def BuildColourNameLookup(): # global g_ColourNameLookupFromNumber from internal code
   global g_ColourNameLookupFromNumber
   g_ColourNameLookupFromNumber = dict()
   namNum = {
@@ -68,7 +68,7 @@ def BuildColourNameLookup():
   for k, v in namNum.items(): # 'reverse' dictionary
     g_ColourNameLookupFromNumber[v] = k
 
-def DumpAttribute(project: str, item: object, attrNam: str, attrPrefix: str, indent: int) -> str:
+def DumpAttribute(project: str, item: object, attrNam: str, attrPrefix: str, indent: int) -> str: # also write *.$txt file
     #print(f'{" "*indent}@@10@ [{attrNam}]:{indent}')
     att = getattr(item, attrNam)
     typ = type(att)
@@ -196,7 +196,7 @@ def DumpAttribute(project: str, item: object, attrNam: str, attrPrefix: str, ind
             fTxt.write('\n') # end line
             ix += 1
 
-def DumpAttributes(project: str, item: object, title: str, prefix: str, detail: int) -> str:
+def DumpAttributes(project: str, item: object, title: str, prefix: str, detail: int) -> str: # and call DumpAttribute
   print(f'## @{BM.LINE()} $$31$$ title:{title}, prefix:{prefix}, dir={dir(item)}')
   dir_i = dir(item)
   # for it in dir_i if it[:2] != '__' and it[-2:] != '__' :

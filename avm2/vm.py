@@ -4,9 +4,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, DefaultDict, Dict, Iterable, List, Tuple, Union
 
-import avm2.abc.instructions
-from avm2.abc.enums import ConstantKind, MethodFlags, TraitKind
-from avm2.abc.types import (
+import avm2.abc.abc_instructions
+from avm2.abc.abc_enums import ConstantKind, MethodFlags, TraitKind
+from avm2.abc.abc_types import (
     ABCClassIndex,
     ABCFile,
     ABCMethodBodyIndex,
@@ -17,7 +17,7 @@ from avm2.abc.types import (
 from avm2.exceptions import ASJumpException, ASReturnException
 from avm2.io import MemoryViewReader
 from avm2.runtime import ASObject, ASUndefined, undefined
-from avm2.swf.types import DoABCTag, Tag, TagType
+from avm2.swf.swf_types import DoABCTag, Tag, TagType
 
 import BrewMaths as BM
 
@@ -306,7 +306,7 @@ class VirtualMachine:
             try:
                 # FIXME: cache already read instructions.
                 offsetOfInst = reader.position
-                avm2.abc.instructions.read_instruction(reader).doExecute(self, environment, offsetOfInst)
+                avm2.abc.abc_instructions.read_instruction(reader).doExecute(self, environment, offsetOfInst)
             except ASReturnException as e:
                 return e.return_value
             except ASJumpException as e:

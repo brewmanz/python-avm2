@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from avm2.swf.enums import DoABCTagFlags, TagType
+from avm2.swf.swf_enums import DoABCTagFlags, TagType
 from avm2.io import MemoryViewReader
 
 

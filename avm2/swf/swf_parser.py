@@ -5,8 +5,8 @@ import zlib
 from typing import Iterable, Union
 
 from avm2.io import MemoryViewReader
-from avm2.swf.enums import Signature
-from avm2.swf.types import Tag, TagType
+from avm2.swf.swf_enums import Signature
+from avm2.swf.swf_types import Tag, TagType
 
 
 def parse_swf(input_: Union[memoryview, bytes]) -> Iterable[Tag]:

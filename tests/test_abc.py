@@ -3,10 +3,10 @@ from typing import Iterable, List
 import BrewMaths as BM
 import tests.helper_abc as HA
 
-from avm2.abc.instructions import Instruction, read_instruction
-from avm2.abc.types import ABCFile, ASMethodBody
-import avm2.abc.types as AT
-from avm2.abc.enums import NamespaceKind
+from avm2.abc.abc_instructions import Instruction, read_instruction
+from avm2.abc.abc_types import ABCFile, ASMethodBody
+import avm2.abc.abc_types as AT
+from avm2.abc.abc_enums import NamespaceKind
 from avm2.io import MemoryViewReader
 from datetime import datetime
 
