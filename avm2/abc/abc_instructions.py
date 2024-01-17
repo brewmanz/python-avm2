@@ -580,9 +580,11 @@ class ICallbackOnInstructionExecuting:
 @dataclass
 class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnInstructionExecuting):
   """
-  set limitCalls to -1 for all, or 0+ to limit the number of calls processed
+  set limitCalls to -1 for all, or 0+ to limit the number of calls processed.
+  tc = 'tab char'
   """
   limitCalls: int
+  tc: str
 
   def ObserveInstructionExecuting(self, theInstruction: Instruction, machine: VirtualMachine, environment: MethodEnvironment, offsetOfInstruction: int):
     self.callsSoFar += 1
@@ -591,17 +593,18 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
       DumpEnvironmentRegisters(machine, environment)
 
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar < self.limitCalls):
-      print(f'\t{BM.LINE()}: {theInstruction}\t\t// +{hex(offsetOfInstruction)} #{self.callsSoFar} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}')
+      print(f'{self.tc}{BM.LINE()}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}')
 
   def MakeExtraObservation(self, extraObservation):
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar < self.limitCalls):
       callerF = inspect.currentframe() #getframeinfo(stack()[1][0])
       callerLine = callerF.f_back.f_lineno
-      print(f'\t{BM.LINE()}: \tExtra@{callerLine}:{extraObservation}.')
+      print(f'{self.tc}{BM.LINE()}: {self.tc}Extra@{callerLine}:{extraObservation}.')
 
-  def __init__(self, limitCalls: int):
+  def __init__(self, limitCalls: int, tabChar: string = '\t'):
     self.limitCalls = limitCalls
     self.callsSoFar: int = 0
+    self.tc = tabChar
 
 
 # Instructions implementation.
@@ -1460,6 +1463,8 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     GreaterThan(opcode=175)
     >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
     @...
+    >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
+    >>> if True and False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
     >>> myVM # doctest: +ELLIPSIS
     <avm2.vm.VirtualMachine object at 0x...>
     >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
@@ -1468,11 +1473,41 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS
     "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
     >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
+    >>> #
     >>> env.operand_stack.append('value1')
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    "[1]=['value1']"
     >>> env.operand_stack.append('value2')
+    >>> print(' abc');
+     abc
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     "[2]=['value1', 'value2']"
-    >>> 'TODO'
+    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    '[1]=[False]'
+    >>> _ = env.operand_stack.pop()
+    >>> #
+    >>> env.operand_stack.append('value1')
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    "[1]=['value1']"
+    >>> env.operand_stack.append('value02')
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    "[2]=['value1', 'value02']"
+    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    '[1]=[True]'
+    >>> _ = env.operand_stack.pop()
+    >>> #
+    >>> env.operand_stack.append('value1')
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    "[1]=['value1']"
+    >>> env.operand_stack.append('value1')
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    "[2]=['value1', 'value1']"
+    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+    >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+    '[1]=[False]'
+    >>> _ = env.operand_stack.pop()
     """
     #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f' @@##$$ $$##@@ =<{BM.DumpVar(GetLocal0.at_opcode)}>') # DEBUG
     value_2 = environment.operand_stack.pop()
