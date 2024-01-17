@@ -7,6 +7,43 @@ from avm2.abc.abc_types import ABCClassIndex
 
 import BrewMaths as BM
 
+def ValueIsNull(value) -> bool:
+  '''
+  >>> ValueIsNull(None)
+  True
+  >>> ValueIsNull(undefined)
+  False
+  >>> ValueIsNull(123)
+  False
+  >>> ValueIsNull(123.45)
+  False
+  >>> ValueIsNull('')
+  False
+  >>> ValueIsNull('a')
+  False
+  '''
+  if value == None: return True
+  return False
+
+def ValueIsNullOrUndefined(value) -> bool:
+  '''
+  >>> ValueIsNullOrUndefined(None)
+  True
+  >>> ValueIsNullOrUndefined(undefined)
+  True
+  >>> ValueIsNullOrUndefined(123)
+  False
+  >>> ValueIsNullOrUndefined(123.45)
+  False
+  >>> ValueIsNullOrUndefined('')
+  False
+  >>> ValueIsNullOrUndefined('a')
+  False
+  '''
+  if value == None: return True
+  if isinstance(value, ASUndefined): return True
+  return False
+
 
 @dataclass
 class ASO_Seq:
@@ -52,3 +89,15 @@ class ASPrimitive(ASObject):
     def __init__(self, traceHint: str, value: Any):
       super().__init__(traceHint, class_ix=None, properties=None)
       self.value = value
+
+if __name__ == '__main__':  # 2024-01-17 # when you run 'python thisModuleName.py' ...
+  import doctest, os, sys
+  # vvvv use BM.LINE() in other modules (after 'import BrewMaths as BM')
+  print(f'@{BM.LINE()} ### run embedded unit tests via \'python ' + os.path.basename(__file__) + '\'')
+  if False and True: # 'and' = not verbose; 'or' = verbose
+    res = doctest.testmod(verbose=True) # then the tests in block comments will run. nb or testmod(verbose=True)
+  else:
+    res = doctest.testmod() # then the tests in block comments will run. nb or testmod(verbose=True)
+  emoji = '\u263a \U0001f60a' if res.failed == 0 else '\u2639 \U0001f534'  # smile+happy else sad+red
+  print(f'@{BM.LINE()} ### BTW res = <{res}>, res.failed=<{res.failed}> {"!"*res.failed} {emoji}')
+  sys.exit(res.failed) # return number of failed tests

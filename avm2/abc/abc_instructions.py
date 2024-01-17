@@ -606,7 +606,6 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
     self.callsSoFar: int = 0
     self.tc = tabChar
 
-
 # Instructions implementation.
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -821,12 +820,69 @@ class CoerceAny(Instruction):
 class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   """
   Coerce a value to a string.
+
   value is popped off of the stack and coerced to a String. If value is null or undefined, then stringvalue is set to null .
   Otherwise stringvalue is set to the result of the ToString algorithm, as specified in ECMA-262 section 9.8. stringvalue is pushed onto the stack.
+
+  This opcode is very similar to the convert_s opcode.
+  The difference is that convert_s will convert a null or undefined value to the string "null" or "undefined"
+  whereas coerce_s will convert those values to the null value.
+
+  >>> # 2024-01-18
+  >>> inst = CoerceString(CoerceString.at_inst, MemoryViewReader(bytes(99)))
+  >>> inst
+  CoerceString(opcode=133)
+  >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+  @...
+  >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
+  >>> if True and False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> myVM # doctest: +ELLIPSIS
+  <avm2.vm.VirtualMachine object at 0x...>
+  >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
+  "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
+  >>> scopeStack = [myVM.global_object]
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+  >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
+  >>>
+  >>> # 2024-01-18
+  >>> env.operand_stack.append('value1')
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['value1']"
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['value1']"
+  >>> #
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append(123.45)
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[1]=[123.45]'
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['123.45']"
+  >>> #
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append(None) # to None
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[1]=[None]'
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[1]=[None]'
+  >>> #
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append(RT.undefined) # to None
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=[ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={})]"
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[1]=[None]'
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     valueRaw = environment.operand_stack.pop()
-    value = f'{valueRaw}'
+    value = None if RT.ValueIsNullOrUndefined(valueRaw) else f'{valueRaw}'
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
     environment.operand_stack.append(value)
 
@@ -1007,8 +1063,80 @@ class ConvertToUnsignedInteger(Instruction):
 
 
 @instruction(112)
-class ConvertToString(Instruction):
-  pass
+class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
+  """
+  Convert a value to a string.
+
+  value is popped off of the stack and converted to a string. The result, stringvalue, is pushed onto the stack.
+  This uses the ToString algorithm, as described in ECMA-262 section 9.8
+
+  This is very similar to the coerce_s opcode.
+  The difference is that coerce_s will not convert a null or undefined value to the string "null" or "undefined" whereas convert_s will.
+
+  >>> # 2024-01-18
+  >>> inst = ConvertToString(ConvertToString.at_inst, MemoryViewReader(bytes(99)))
+  >>> inst
+  ConvertToString(opcode=112)
+  >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+  @...
+  >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
+  >>> if True and False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> myVM # doctest: +ELLIPSIS
+  <avm2.vm.VirtualMachine object at 0x...>
+  >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
+  "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
+  >>> scopeStack = [myVM.global_object]
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+  >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
+  >>>
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append('value1')
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['value1']"
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['value1']"
+  >>> #
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append(123.45)
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[1]=[123.45]'
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['123.45']"
+  >>> #
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append(None) # to string 'Null'
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[1]=[None]'
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['null']"
+  >>> #
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append(RT.undefined) # to string 'Undefined')
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=[ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={})]"
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['undefined']"
+  """
+  def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
+    valueRaw = environment.operand_stack.pop()
+    if False: pass
+    elif RT.ValueIsNull(valueRaw):
+      value = 'null'
+    elif RT.ValueIsNullOrUndefined(valueRaw):
+      value = 'undefined'
+    else:
+      value = f'{valueRaw}'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
+    environment.operand_stack.append(value)
 
 
 @instruction(239)
@@ -1457,6 +1585,7 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     """
+    >>> # 2024-01-17
     >>> # GreaterThan.__name__, GreaterThan.at_opcode # ('GreaterThan', 175)
     >>> inst = GreaterThan(GreaterThan.at_inst, MemoryViewReader(bytes(99)))
     >>> inst
@@ -1474,6 +1603,8 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
     >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
     >>> #
+    >>> # 2024-01-17
+    >>> env.operand_stack.clear()
     >>> env.operand_stack.append('value1')
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     "[1]=['value1']"
@@ -1485,8 +1616,9 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     '[1]=[False]'
-    >>> _ = env.operand_stack.pop()
     >>> #
+    >>> # 2024-01-17
+    >>> env.operand_stack.clear()
     >>> env.operand_stack.append('value1')
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     "[1]=['value1']"
@@ -1496,8 +1628,9 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     '[1]=[True]'
-    >>> _ = env.operand_stack.pop()
     >>> #
+    >>> # 2024-01-17
+    >>> env.operand_stack.clear()
     >>> env.operand_stack.append('value1')
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     "[1]=['value1']"
@@ -1507,7 +1640,6 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     '[1]=[False]'
-    >>> _ = env.operand_stack.pop()
     """
     #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f' @@##$$ $$##@@ =<{BM.DumpVar(GetLocal0.at_opcode)}>') # DEBUG
     value_2 = environment.operand_stack.pop()

@@ -205,3 +205,4 @@ def read_method_body(method_body: ASMethodBody) -> List[Instruction]:
 def read_instructions(reader: MemoryViewReader) -> Iterable[Instruction]:
     while not reader.is_eof():
         yield read_instruction(reader)
+
