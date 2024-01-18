@@ -710,6 +710,59 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   The [[Call]] property is invoked on the value of the resolved property with the arguments obj, arg1, ..., argn.
 
   The result of the call is pushed onto the stack.
+
+  >>> # 2024-01-19
+  >>> inst = CallProperty(CallProperty.at_inst, MemoryViewReader(bytes(99)))
+  >>> inst.index=1391
+  >>> inst.arg_count=1
+  >>> inst
+  CallProperty(opcode=70, index=1391, arg_count=1)
+  >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+  @...
+  >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
+  >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> myVM # doctest: +ELLIPSIS
+  <avm2.vm.VirtualMachine object at 0x...>
+  >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
+  "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
+  >>> scopeStack = [myVM.global_object]
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
+          properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+  >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
+  >>> BM.DumpVar(env.registers) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[5]=[ASUndefined(traceHint='v.p:ft:...#0 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#1 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#2 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#3 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#4 #...', class_ix=None, properties={})]"
+  >>>
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append('some:kinda:string')
+  >>> env.operand_stack.append(':')
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[2]=['some:kinda:string', ':']"
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    ai.p:MEO:...: Extra@...:ostack=<[2]=['some:kinda:string', ':']> CP_1.
+    ai.p:MEO:...: Extra@...:-os.pop arg[0]=':'.
+    ai.p:MEO:...: Extra@...:ostack=<[1]=['some:kinda:string']> CP_2.
+    ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
+    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#5', class_ix=None,
+          properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#3', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#4', class_ix=None, properties={})})].
+    ai.p:MEO:...: Extra@...:tN='indexOf'.
+    ai.p:MEO:...: Extra@...:tNs='http://adobe.com/AS3/2006/builtin'.
+    ai.p:MEO:...: Extra@...:-os.pop obj='some:kinda:string'.
+    ai.p:MEO:...: Extra@...:ostack=<[0]=[]> CP_3.
+    ai.p:MEO:...: Extra@...:+os.push result=<4>.
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[1]=[4]'
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
+          properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
   """
   index: u30
   arg_count: u30
@@ -865,7 +918,7 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['value1']"
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-   ai.p:MEO:...: Extra@...:os-.pop 'value1' > +os.push 'value1'.
+   ai.p:MEO:...: Extra@...:-os.pop 'value1' > +os.push 'value1'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['value1']"
   >>> #
@@ -875,7 +928,7 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[123.45]'
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-   ai.p:MEO:...: Extra@...:os-.pop 123.45 > +os.push '123.45'.
+   ai.p:MEO:...: Extra@...:-os.pop 123.45 > +os.push '123.45'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['123.45']"
   >>> #
@@ -885,7 +938,7 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[None]'
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-   ai.p:MEO:...: Extra@...:os-.pop None > +os.push None.
+   ai.p:MEO:...: Extra@...:-os.pop None > +os.push None.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[None]'
   >>> #
@@ -895,14 +948,14 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=[ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={})]"
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-   ai.p:MEO:...: Extra@...:os-.pop ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={}) > +os.push None.
+   ai.p:MEO:...: Extra@...:-os.pop ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={}) > +os.push None.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[None]'
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     valueRaw = environment.operand_stack.pop()
     value = None if RT.ValueIsNullOrUndefined(valueRaw) else f'{valueRaw}'
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
     environment.operand_stack.append(value)
 
 
@@ -1040,7 +1093,7 @@ class ConvertToBoolean(Instruction): # convert_b # …, value => …, booleanval
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     valueRaw = environment.operand_stack.pop()
     value = bool(valueRaw)
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
     environment.operand_stack.append(value)
 
 
@@ -1053,7 +1106,7 @@ class ConvertToInteger(Instruction): # …, value => …, intvalue
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     valueRaw = environment.operand_stack.pop()
     value = int(valueRaw)
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
     environment.operand_stack.append(value)
 
 
@@ -1067,7 +1120,7 @@ class ConvertToDouble(Instruction): # …, value => …, doublevalue
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     valueRaw = environment.operand_stack.pop()
     value = float(valueRaw)
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
     environment.operand_stack.append(value)
 
 
@@ -1115,7 +1168,7 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['value1']"
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-   ai.p:MEO:...: Extra@...:os-.pop 'value1' > +os.push 'value1'.
+   ai.p:MEO:...: Extra@...:-os.pop 'value1' > +os.push 'value1'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['value1']"
   >>> #
@@ -1125,7 +1178,7 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[123.45]'
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-   ai.p:MEO:...: Extra@...:os-.pop 123.45 > +os.push '123.45'.
+   ai.p:MEO:...: Extra@...:-os.pop 123.45 > +os.push '123.45'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['123.45']"
   >>> #
@@ -1135,7 +1188,7 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[None]'
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-   ai.p:MEO:...: Extra@...:os-.pop None > +os.push 'null'.
+   ai.p:MEO:...: Extra@...:-os.pop None > +os.push 'null'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['null']"
   >>> #
@@ -1145,7 +1198,7 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=[ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={})]"
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-   ai.p:MEO:...: Extra@...:os-.pop ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={}) > +os.push 'undefined'.
+   ai.p:MEO:...: Extra@...:-os.pop ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={}) > +os.push 'undefined'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['undefined']"
   """
@@ -1158,7 +1211,7 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
       value = 'undefined'
     else:
       value = f'{valueRaw}'
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'os-.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop {BM.DumpVar(valueRaw)} > +os.push {BM.DumpVar(value)}')
     environment.operand_stack.append(value)
 
 
@@ -2325,12 +2378,53 @@ class PushNull(Instruction): # … => …, null
 class PushScope(Instruction): # …, value => …
   """
   Pop value off of the stack. Push value onto the scope stack.
+
+  >>> # 2024-01-19
+  >>> inst = PushScope(PushScope.at_inst, MemoryViewReader(bytes(99)))
+  >>> inst
+  PushScope(opcode=48)
+  >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+  @...
+  >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
+  >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> myVM # doctest: +ELLIPSIS
+  <avm2.vm.VirtualMachine object at 0x...>
+  >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
+  "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
+  >>> scopeStack = [myVM.global_object]
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
+          properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+  >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
+  >>> BM.DumpVar(env.registers) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[5]=[ASUndefined(traceHint='v.p:ft:...#0 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#1 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#2 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#3 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#4 #...', class_ix=None, properties={})]"
+  >>>
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> env.operand_stack.append('SomeScopeThing')
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=['SomeScopeThing']"
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:-os.pop value=<'SomeScopeThing'>.
+   ai.p:MEO:...: Extra@...:+ss.push value=<'SomeScopeThing'>.
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[0]=[]'
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[2]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
+          properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})}),
+        'SomeScopeThing']"
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     value = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value=<{BM.DumpVar(value)}>')
     assert value is not None and value is not undefined
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ss+.push value=<{BM.DumpVar(value)}>')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+ss.push value=<{BM.DumpVar(value)}>')
     environment.scope_stack.append(value)
 
 @instruction(37)
