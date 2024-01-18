@@ -1503,6 +1503,38 @@ def DumpEnvironmentRegisters(machine: avm2.vm.VirtualMachine, environment: avm2.
 class GetLocal0(Instruction): # … => …, value
   """
   `<n>` is the index of a local register. The value of that register is pushed onto the stack.
+
+  >>> # 2024-01-19
+  >>> inst = GetLocal0(GetLocal0.at_inst, MemoryViewReader(bytes(99)))
+  >>> inst
+  GetLocal0(opcode=208)
+  >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+  @...
+  >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
+  >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> myVM # doctest: +ELLIPSIS
+  <avm2.vm.VirtualMachine object at 0x...>
+  >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
+  "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
+  >>> scopeStack = [myVM.global_object]
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+  >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
+  >>> BM.DumpVar(env.registers) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[5]=[ASUndefined(traceHint='v.p:ft:...#0 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#1 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#2 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#3 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#4 #...', class_ix=None, properties={})]"
+  >>>
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[0]=[]'
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:+os.push value=<ASUndefined(traceHint='v.p:ft:...#0 #...', class_ix=None, properties={})>.
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=[ASUndefined(traceHint='v.p:ft:...#0 #...', class_ix=None, properties={})]"
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     value = environment.registers[0]
@@ -1531,6 +1563,41 @@ class GetLocal2(Instruction): # … => …, value
 
 @instruction(211)
 class GetLocal3(Instruction): # … => …, value
+  """
+  `<n>` is the index of a local register. The value of that register is pushed onto the stack.
+
+  >>> # 2024-01-19
+  >>> inst = GetLocal3(GetLocal3.at_inst, MemoryViewReader(bytes(99)))
+  >>> inst
+  GetLocal3(opcode=211)
+  >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+  @...
+  >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
+  >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> myVM # doctest: +ELLIPSIS
+  <avm2.vm.VirtualMachine object at 0x...>
+  >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
+  "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
+  >>> scopeStack = [myVM.global_object]
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+  >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
+  >>> BM.DumpVar(env.registers) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[5]=[ASUndefined(traceHint='v.p:ft:...#0 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#1 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#2 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#3 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#4 #...', class_ix=None, properties={})]"
+  >>>
+  >>> # 2024-01-18
+  >>> env.operand_stack.clear()
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[0]=[]'
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:+os.push value=<ASUndefined(traceHint='v.p:ft:...#3 #...', class_ix=None, properties={})>.
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=[ASUndefined(traceHint='v.p:ft:...#3 #...', class_ix=None, properties={})]"
+  """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     value = environment.registers[3]
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push value=<{BM.DumpVar(value)}>')
