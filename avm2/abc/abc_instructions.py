@@ -593,19 +593,34 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
       DumpEnvironmentRegisters(machine, environment)
 
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar < self.limitCalls):
-      print(f'{self.tc}{BM.LINE()}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}')
+      print(f'{self.tc}{BM.LINE(False)}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}')
 
   def MakeExtraObservation(self, extraObservation):
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar < self.limitCalls):
       callerF = inspect.currentframe() #getframeinfo(stack()[1][0])
       callerLine = callerF.f_back.f_lineno
-      print(f'{self.tc}{BM.LINE()}: {self.tc}Extra@{callerLine}:{extraObservation}.')
+      print(f'{self.tc}{BM.LINE(False)}: {self.tc}Extra@{callerLine}:{extraObservation}.')
 
   def __init__(self, limitCalls: int, tabChar: string = '\t'):
     self.limitCalls = limitCalls
     self.callsSoFar: int = 0
     self.tc = tabChar
 
+def DummyTest():
+  '''
+  >>> DummyTest() # works fine # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  <BLANKLINE>
+  <BLANKLINE>
+  ai.p:MEO:...:  Extra@...:-os.pop value_2=<'value2'>.
+  ai.p:MEO:...: Extra@...:-os.pop value_1=<'value1'>.
+  <BLANKLINE>
+  ai.p:MEO:...:   Extra@...:+os.push   result=<False>.
+  '''
+  #print("")
+  print("  ai.p:MEO:602: \t\t\t Extra@1654:-os.pop value_2=<'value2'>. ")
+  print("  \tai.p:MEO:602:  Extra@1656:-os.pop value_1=<'value1'>. ", end='')
+  print("  ai.p:MEO:602:  Extra@1666:+os.push result=<False>.")
+  #print("")
 # Instructions implementation.
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -835,7 +850,7 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
-  >>> if True and False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
   <avm2.vm.VirtualMachine object at 0x...>
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
@@ -849,7 +864,8 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> env.operand_stack.append('value1')
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['value1']"
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:os-.pop 'value1' > +os.push 'value1'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['value1']"
   >>> #
@@ -858,7 +874,8 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> env.operand_stack.append(123.45)
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[123.45]'
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:os-.pop 123.45 > +os.push '123.45'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['123.45']"
   >>> #
@@ -867,7 +884,8 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> env.operand_stack.append(None) # to None
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[None]'
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:os-.pop None > +os.push None.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[None]'
   >>> #
@@ -876,7 +894,8 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> env.operand_stack.append(RT.undefined) # to None
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=[ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={})]"
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:os-.pop ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={}) > +os.push None.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[None]'
   """
@@ -1080,7 +1099,7 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
-  >>> if True and False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
   <avm2.vm.VirtualMachine object at 0x...>
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
@@ -1095,7 +1114,8 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> env.operand_stack.append('value1')
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['value1']"
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:os-.pop 'value1' > +os.push 'value1'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['value1']"
   >>> #
@@ -1104,7 +1124,8 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> env.operand_stack.append(123.45)
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[123.45]'
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:os-.pop 123.45 > +os.push '123.45'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['123.45']"
   >>> #
@@ -1113,7 +1134,8 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> env.operand_stack.append(None) # to string 'Null'
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[None]'
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:os-.pop None > +os.push 'null'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['null']"
   >>> #
@@ -1122,7 +1144,8 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> env.operand_stack.append(RT.undefined) # to string 'Undefined')
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=[ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={})]"
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+   ai.p:MEO:...: Extra@...:os-.pop ASUndefined(traceHint='r.p:<:...', class_ix=None, properties={}) > +os.push 'undefined'.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[1]=['undefined']"
   """
@@ -1592,8 +1615,8 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     GreaterThan(opcode=175)
     >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
     @...
-    >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
-    >>> if True and False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+    >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, ' ')
+    >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
     >>> myVM # doctest: +ELLIPSIS
     <avm2.vm.VirtualMachine object at 0x...>
     >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
@@ -1613,7 +1636,10 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
      abc
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     "[2]=['value1', 'value2']"
-    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    ai.p:MEO:...:  Extra@...:-os.pop value_2=<'value2'>.
+    ai.p:MEO:...:  Extra@...:-os.pop value_1=<'value1'>.
+    ai.p:MEO:...:  Extra@...:+os.push result=<False>.
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     '[1]=[False]'
     >>> #
@@ -1625,7 +1651,10 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> env.operand_stack.append('value02')
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     "[2]=['value1', 'value02']"
-    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    ai.p:MEO:...:  Extra@...:-os.pop value_2=<'value02'>.
+    ai.p:MEO:...:  Extra@...:-os.pop value_1=<'value1'>.
+    ai.p:MEO:...:  Extra@...:+os.push result=<True>.
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     '[1]=[True]'
     >>> #
@@ -1637,7 +1666,10 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> env.operand_stack.append('value1')
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     "[2]=['value1', 'value1']"
-    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS
+    >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    ai.p:MEO:...:  Extra@...:-os.pop value_2=<'value1'>.
+    ai.p:MEO:...:  Extra@...:-os.pop value_1=<'value1'>.
+    ai.p:MEO:...:  Extra@...:+os.push result=<False>.
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     '[1]=[False]'
     """
@@ -2502,7 +2534,7 @@ class TypeOf(Instruction):
 class UnsignedRightShift(Instruction):
   pass
 
-if __name__ == '__main__':  # 2024-01-17 # when you run 'python thisModuleName.py' ...
+if __name__ == '__main__':  # 2024-01-18 # when you run 'python thisModuleName.py' ...
   import doctest, os, sys
   # vvvv use BM.LINE() in other modules (after 'import BrewMaths as BM')
   print(f'@{BM.LINE()} ### run embedded unit tests via \'python ' + os.path.basename(__file__) + '\'')
@@ -2510,6 +2542,7 @@ if __name__ == '__main__':  # 2024-01-17 # when you run 'python thisModuleName.p
     res = doctest.testmod(verbose=True) # then the tests in block comments will run. nb or testmod(verbose=True)
   else:
     res = doctest.testmod() # then the tests in block comments will run. nb or testmod(verbose=True)
-  emoji = '\u263a \U0001f60a' if res.failed == 0 else '\u2639 \U0001f534'
+  #emoji = '\u263a \U0001f60a' if res.failed == 0 else '\u2639 \U0001f534' # smily + yellow smiley if passed else sad + red
+  emoji = '\u2639 \U0001f534' if res.failed else '\u263a \U0001f7e2' # sad + red if failed else smily and green
   print(f'@{BM.LINE()} ### BTW res = <{res}>, res.failed=<{res.failed}> {"!"*res.failed} {emoji}')
   sys.exit(res.failed) # return number of failed tests
