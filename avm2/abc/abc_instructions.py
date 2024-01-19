@@ -15,6 +15,7 @@ from avm2.abc.abc_enums import MultinameKind
 import avm2.runtime as RT
 
 import inspect
+import logging
 
 # to run doctest, go up a few levels and use 'python avm2/abc/abc_instructions.py'
 strBACKWARDS_n = 'BACKWARDS\n'
@@ -585,6 +586,7 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
   """
   limitCalls: int
   tc: str
+  loggingLevel: int
 
   def ObserveInstructionExecuting(self, theInstruction: Instruction, machine: VirtualMachine, environment: MethodEnvironment, offsetOfInstruction: int):
     self.callsSoFar += 1
@@ -601,10 +603,14 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
       callerLine = callerF.f_back.f_lineno
       print(f'{self.tc}{BM.LINE(False)}: {self.tc}Extra@{callerLine}:{extraObservation}.')
 
-  def __init__(self, limitCalls: int, tabChar: string = '\t'):
+  def GetLoggingLevel(self) -> int:
+    return self.loggingLevel
+
+  def __init__(self, limitCalls: int, tabChar: string = '\t', /, loggingLevel: int = logging.INFO):
     self.limitCalls = limitCalls
     self.callsSoFar: int = 0
     self.tc = tabChar
+    self.loggingLevel = loggingLevel
 
 def DummyTest():
   '''
@@ -749,9 +755,10 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
     ai.p:MEO:...: Extra@...:-os.pop arg[0]=':'.
     ai.p:MEO:...: Extra@...:ostack=<[1]=['some:kinda:string']> CP_2.
     ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
-    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#5', class_ix=None,
+    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#6', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#3', class_ix=None, properties={}),
-                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#4', class_ix=None, properties={})})].
+                      ('', 'Math'):                       ASObject(traceHint='v.p:__i_:... Math object#4', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#5', class_ix=None, properties={})})].
     ai.p:MEO:...: Extra@...:tN='indexOf'.
     ai.p:MEO:...: Extra@...:tNs='http://adobe.com/AS3/2006/builtin'.
     ai.p:MEO:...: Extra@...:-os.pop obj='some:kinda:string'.
@@ -1500,6 +1507,60 @@ class GetLex(Instruction): # … => …, obj
 
   A `ReferenceError` is thrown if the property is unresolved in all of the objects on the scope
   stack.
+
+  >>> # 2024-01-19
+  >>> inst = GetLex(GetLex.at_inst, MemoryViewReader(bytes(99)))
+  >>> inst.index=1334
+  >>> inst
+  GetLex(opcode=96, index=1334)
+  >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
+  @...
+  >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '', loggingLevel = logging.DEBUG)
+  >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
+  >>> myVM # doctest: +ELLIPSIS
+  <avm2.vm.VirtualMachine object at 0x...>
+  >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
+  "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
+  >>> scopeStack = [myVM.global_object]
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
+          properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+  >>> env = avm2.vm.MethodEnvironment.for_testing(5, scopeStack)
+  >>> BM.DumpVar(env.registers) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[5]=[ASUndefined(traceHint='v.p:ft:...#0 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#1 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#2 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#3 #...', class_ix=None, properties={}),
+  ASUndefined(traceHint='v.p:ft:...#4 #...', class_ix=None, properties={})]"
+  >>>
+  >>> # 2024-01-19
+  >>> env.operand_stack.clear()
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[0]=[]'
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    ai.p:MEO:...: Extra@...:mn=ASMultinameBis(kind=<MultinameKind.Q_NAME: 7>, ns_ix=2, nam_ix=1332, ns_set_ix=None, q_nam_ix=None, type_ixs=None, ixCP=1334, ns_name='', nam_name='Math', ns_set_names=None, q_nam_name=None).
+    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
+          properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
+                      ('', 'Math'):                       ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
+    ai.p:MEO:...: Extra@...: [0] props#3.
+    ai.p:MEO:...: Extra@...:  props[ns='', n='Object'] = ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
+    ai.p:MEO:...: Extra@...:  props[ns='', n='Math'] = ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}).
+    ai.p:MEO:...: Extra@...:  props[ns='flash.utils', n='Dictionary'] = ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
+    ai.p:MEO:...: Extra@...:tN='Math'.
+    ai.p:MEO:...: Extra@...:tNs=[1]=[''].
+    ai.p:MEO:...: Extra@...:(v.p)ResMulNam.name=<'Math'> SS#=1.
+    ai.p:MEO:...: Extra@...:(v.p) ResMulNam.sobj=<ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('', 'Math'): ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})>.
+    ai.p:MEO:...: Extra@...:(v.p)  ResQNam try ns ''.
+    ai.p:MEO:...: Extra@...:object_=ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}), namespace='', name='Math'.
+    ai.p:MEO:...: Extra@...:+os.push result=<ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={})>.
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[1]=[ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={})]"
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
+          properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
   """
   index: u30
 
@@ -1507,18 +1568,29 @@ class GetLex(Instruction): # … => …, obj
     multiname = machine.multinames[self.index]
     assert multiname.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A)
     hint = '?'
+    hint = 'tS';   theSStack     = environment.scope_stack
+    hint = 'tN';   theName       = machine.strings[multiname.nam_ix]
+    hint = 'tNSs'; theNamespaces = [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
+    hint = 'm.cOIE';
+    if machine.cbOnInsExe is not None:
+      machine.cbOnInsExe.MakeExtraObservation(f'mn={BM.DumpVar(multiname)}')
+      machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
+      if machine.cbOnInsExe.GetLoggingLevel() == logging.DEBUG:
+        for ix in range(len(theSStack)):
+          item = theSStack[ix]
+          machine.cbOnInsExe.MakeExtraObservation(f' [{ix}] props#{len(item.properties)}')
+          for keyNS_N in item.properties:
+            itemL = item.properties[keyNS_N]
+            if len(keyNS_N) == 2:
+              machine.cbOnInsExe.MakeExtraObservation(f'  props[ns={BM.DumpVar(keyNS_N[0])}, n={BM.DumpVar(keyNS_N[1])}] = {BM.DumpVar(itemL)}')
+            else:
+              machine.cbOnInsExe.MakeExtraObservation(f'  props[{keyNS_N}] (k#{len(keyNS_N)}) = {BM.DumpVar(itemL)}')
+
+      machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
+      machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
     try:
-      hint = 'tS';   theStack      = environment.scope_stack
-      hint = 'tN';   theName       = machine.strings[multiname.nam_ix]
-      hint = 'tNSs'; theNamespaces = [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
-      hint = 'm.cOIE';
-      if machine.cbOnInsExe is not None:
-        machine.cbOnInsExe.MakeExtraObservation(f'mn={BM.DumpVar(multiname)}')
-        machine.cbOnInsExe.MakeExtraObservation(f'tS#{len(theStack)}={BM.DumpVar(theStack)}')
-        machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
-        machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
       hint = 'm.rmn';object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
-          theStack, # environment.scope_stack,
+          theSStack, # environment.scope_stack,
           theName, # machine.strings[multiname.nam_ix],
           theNamespaces, # [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
       )
@@ -1526,7 +1598,10 @@ class GetLex(Instruction): # … => …, obj
       print(f'@{BM.LINE()} HACK SHOULD STOP BUT I WANT TO SEE NEXT BIT err={err}: ReferenceError: hint={hint}') # HACK
       # HACK must uncomment this # raise NotImplementedError(f'err={err}: ReferenceError: hint={hint}') # HACK must uncomment this
     else:
-      result = object_.properties[namespace, name]
+      if machine.cbOnInsExe.GetLoggingLevel() == logging.DEBUG:
+        machine.cbOnInsExe.MakeExtraObservation(f'object_={BM.DumpVar(object_)}, namespace={BM.DumpVar(namespace)}, name={BM.DumpVar(name)}')
+      # NO! no need to access via key result = object_.properties[namespace, name]
+      result = object_
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
       environment.operand_stack.append(result)
 
@@ -1677,7 +1752,6 @@ class GetScopeObject(Instruction): # … => …, scope
   `index` is retrieved and pushed onto the stack. The scope at the top of the stack is at index
   `scope_depth - 1`, and the scope at the bottom of the stack is index `0`.
   """
-
   index: u8
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
@@ -2087,7 +2161,7 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
       theNamespaces = [theNamespace]
 
       if machine.cbOnInsExe is not None:
-        #machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
+        #machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}') # TODO why did I stop logging this?
         machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
       object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
@@ -2295,7 +2369,7 @@ class PopScope(Instruction):
   """
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
     value = environment.scope_stack.pop()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ss-.pop discard<{BM.DumpVar(value)}>')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-ss.pop discard<{BM.DumpVar(value)}>')
 
 
 @instruction(36)

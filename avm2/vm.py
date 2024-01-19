@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, DefaultDict, Dict, Iterable, List, Tuple, Union
+import logging
 
 import avm2.abc.abc_instructions
 from avm2.abc.abc_enums import ConstantKind, MethodFlags, TraitKind
@@ -51,6 +52,7 @@ class VirtualMachine:
         self.global_object = ASObject(BM.LINE(False), properties={
             # key seems to be tuple of (namespace, name)
             ('', 'Object'): ASObject(BM.LINE(False)),
+            ('', 'Math'): ASObject(f'{BM.LINE(False)} Math object'), # for Math.max
             ('flash.utils', 'Dictionary'): ASObject(BM.LINE(False)),
         })  # FIXME: unsure, prototypes again?
 
@@ -110,12 +112,20 @@ class VirtualMachine:
         Returns resolved object, its name, and its namespace. Also its scopeStack entry
         If the scopeStack entry is a string, then the string IS the resolved object
         '''
+        debug = False
+        if self.cbOnInsExe:
+          if self.cbOnInsExe.GetLoggingLevel() == logging.DEBUG:
+            debug = True
+
+        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.name=<{BM.DumpVar(name)}> SS#={len(scopeStack)}')
         for scopeObject_ in reversed(scopeStack):
-            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.sobj=<{BM.DumpVar(scopeObject_)}>')
+            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) ResMulNam.sobj=<{BM.DumpVar(scopeObject_)}>')
             for namespace in namespaces:
                 try:
+                    if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.p)  ResQNam try ns {BM.DumpVar(namespace)}')
                     return self.resolve_qname(scopeObject_, namespace, name), name, namespace, scopeObject_
                 except KeyError:
+                    if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.p)   ResQNam try *fail*')
                     pass
         raise KeyError(f'KeyError; name={BM.DumpVar(name)}, namespaces={BM.DumpVar(namespaces)}, scopeStack={BM.DumpVar(scopeStack)}')
         # KeyError; name='Math', namespaces=[1]=[''], scopeStack=[2]=[ASObject(traceHint='v.p:__i_:51#5', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:53#3', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:54#4', class_ix=None, properties={})}), ASObject(traceHint='@tEv.p:tTEV3000LUcAURL:49 dummyInstance#6', class_ix=None, properties={})]":
