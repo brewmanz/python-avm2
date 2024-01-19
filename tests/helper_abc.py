@@ -206,7 +206,7 @@ def DumpAttributes(project: str, item: object, title: str, prefix: str, detail: 
       if nam[:2] == '__' or nam[-2:] == '__': continue
     indent = 1; DumpAttribute(project, item, nam, prefix, indent)
 
-if __name__ == '__main__':  # 2024-01-17 # when you run 'python thisModuleName.py' ...
+if __name__ == '__main__':  # 2024-01-18 # when you run 'python thisModuleName.py' ...
   import doctest, os, sys
   # vvvv use BM.LINE() in other modules (after 'import BrewMaths as BM')
   print(f'@{BM.LINE()} ### run embedded unit tests via \'python ' + os.path.basename(__file__) + '\'')
@@ -214,6 +214,7 @@ if __name__ == '__main__':  # 2024-01-17 # when you run 'python thisModuleName.p
     res = doctest.testmod(verbose=True) # then the tests in block comments will run. nb or testmod(verbose=True)
   else:
     res = doctest.testmod() # then the tests in block comments will run. nb or testmod(verbose=True)
-  emoji = '\u263a \U0001f60a' if res.failed == 0 else '\u2639 \U0001f534'  # smile+happy else sad+red
+  #emoji = '\u263a \U0001f60a' if res.failed == 0 else '\u2639 \U0001f534' # smily + yellow smiley if passed else sad + red
+  emoji = '\u2639 \U0001f534' if res.failed else '\u263a \U0001f7e2' # sad + red if failed else smily and green
   print(f'@{BM.LINE()} ### BTW res = <{res}>, res.failed=<{res.failed}> {"!"*res.failed} {emoji}')
   sys.exit(res.failed) # return number of failed tests

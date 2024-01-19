@@ -770,6 +770,41 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
           properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
+  >>>
+  >>> # 2024-01-19
+  >>> inst.index=1335
+  >>> inst.arg_count=2
+  >>> inst
+  CallProperty(opcode=70, index=1335, arg_count=2)
+  >>> env.operand_stack.clear()
+  >>> mathObject = myVM.global_object.properties['', 'Math'] # get Math object
+  >>> mathObject # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={})
+  >>> env.operand_stack.append(mathObject)
+  >>> env.operand_stack.append(45)
+  >>> env.operand_stack.append(123.45)
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  "[3]=[ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}), 45, 123.45]"
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    ai.p:MEO:...: Extra@...:ostack=<[2]=['some:kinda:string', ':']> CP_1.
+    ai.p:MEO:...: Extra@...:-os.pop arg[0]=':'.
+    ai.p:MEO:...: Extra@...:ostack=<[1]=['some:kinda:string']> CP_2.
+    ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
+    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#6', class_ix=None,
+          properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#3', class_ix=None, properties={}),
+                      ('', 'Math'):                       ASObject(traceHint='v.p:__i_:... Math object#4', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#5', class_ix=None, properties={})})].
+    ai.p:MEO:...: Extra@...:tN='indexOf'.
+    ai.p:MEO:...: Extra@...:tNs='http://adobe.com/AS3/2006/builtin'.
+    ai.p:MEO:...: Extra@...:-os.pop obj='some:kinda:string'.
+    ai.p:MEO:...: Extra@...:ostack=<[0]=[]> CP_3.
+    ai.p:MEO:...: Extra@...:+os.push result=<4>.
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
+  '[1]=[123.45]'
+  >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
+          properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
   """
   index: u30
   arg_count: u30
