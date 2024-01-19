@@ -52,7 +52,7 @@ class VirtualMachine:
         self.global_object = ASObject(BM.LINE(False), properties={
             # key seems to be tuple of (namespace, name)
             ('', 'Object'): ASObject(BM.LINE(False)),
-            ('', 'Math'): ASObject(f'{BM.LINE(False)} Math object'), # for Math.max
+            ('', 'Math'): avm2.abc.abc_instructions.Math_Methods(BM.LINE(False)), # for Math.max
             ('flash.utils', 'Dictionary'): ASObject(BM.LINE(False)),
         })  # FIXME: unsure, prototypes again?
 

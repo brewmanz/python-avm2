@@ -226,7 +226,7 @@ def Math_method_min(itemIgnored, *args):
     raise NotImplementedError(f'@{BM.LINE()} expected 2+ args but {len(args)}')
   res = min(args)
   return res
-class Math_Methods: # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/Math.html
+class Math_Methods(RT.ASObject): # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/Math.html
 
   dictSwfNameToMethod: ClassVar[dict[str, object]] = dict( \
     [ ('max', Math_method_max ) \
@@ -756,9 +756,9 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
     ai.p:MEO:...: Extra@...:ostack=<[1]=['some:kinda:string']> CP_2.
     ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
     ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#6', class_ix=None,
-          properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#3', class_ix=None, properties={}),
-                      ('', 'Math'):                       ASObject(traceHint='v.p:__i_:... Math object#4', class_ix=None, properties={}),
-                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#5', class_ix=None, properties={})})].
+          properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
+                      ('', 'Math'):                       Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
     ai.p:MEO:...: Extra@...:tN='indexOf'.
     ai.p:MEO:...: Extra@...:tNs='http://adobe.com/AS3/2006/builtin'.
     ai.p:MEO:...: Extra@...:-os.pop obj='some:kinda:string'.
@@ -779,12 +779,12 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   >>> env.operand_stack.clear()
   >>> mathObject = myVM.global_object.properties['', 'Math'] # get Math object
   >>> mathObject # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-  ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={})
+  Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={})
   >>> env.operand_stack.append(mathObject)
   >>> env.operand_stack.append(45)
   >>> env.operand_stack.append(123.45)
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
-  "[3]=[ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}), 45, 123.45]"
+  "[3]=[Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), 45, 123.45]"
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
     ai.p:MEO:...: Extra@...:ostack=<[2]=['some:kinda:string', ':']> CP_1.
     ai.p:MEO:...: Extra@...:-os.pop arg[0]=':'.
@@ -792,7 +792,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
     ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
     ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#6', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#3', class_ix=None, properties={}),
-                      ('', 'Math'):                       ASObject(traceHint='v.p:__i_:... Math object#4', class_ix=None, properties={}),
+                      ('', 'Math'):                       Math_Methods(traceHint='v.p:__i_:...#4', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#5', class_ix=None, properties={})})].
     ai.p:MEO:...: Extra@...:tN='indexOf'.
     ai.p:MEO:...: Extra@...:tNs='http://adobe.com/AS3/2006/builtin'.
@@ -1577,21 +1577,21 @@ class GetLex(Instruction): # … => …, obj
     ai.p:MEO:...: Extra@...:mn=ASMultinameBis(kind=<MultinameKind.Q_NAME: 7>, ns_ix=2, nam_ix=1332, ns_set_ix=None, q_nam_ix=None, type_ixs=None, ixCP=1334, ns_name='', nam_name='Math', ns_set_names=None, q_nam_name=None).
     ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
-                      ('', 'Math'):                       ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}),
+                      ('', 'Math'):                       Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
     ai.p:MEO:...: Extra@...: [0] props#3.
     ai.p:MEO:...: Extra@...:  props[ns='', n='Object'] = ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
-    ai.p:MEO:...: Extra@...:  props[ns='', n='Math'] = ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}).
+    ai.p:MEO:...: Extra@...:  props[ns='', n='Math'] = Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
     ai.p:MEO:...: Extra@...:  props[ns='flash.utils', n='Dictionary'] = ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
     ai.p:MEO:...: Extra@...:tN='Math'.
     ai.p:MEO:...: Extra@...:tNs=[1]=[''].
     ai.p:MEO:...: Extra@...:(v.p)ResMulNam.name=<'Math'> SS#=1.
-    ai.p:MEO:...: Extra@...:(v.p) ResMulNam.sobj=<ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('', 'Math'): ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})>.
+    ai.p:MEO:...: Extra@...:(v.p) ResMulNam.sobj=<ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('', 'Math'): Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})>.
     ai.p:MEO:...: Extra@...:(v.p)  ResQNam try ns ''.
-    ai.p:MEO:...: Extra@...:object_=ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={}), namespace='', name='Math'.
-    ai.p:MEO:...: Extra@...:+os.push result=<ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={})>.
+    ai.p:MEO:...: Extra@...:object_=Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), namespace='', name='Math'.
+    ai.p:MEO:...: Extra@...:+os.push result=<Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={})>.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
-  "[1]=[ASObject(traceHint='v.p:__i_:... Math object#...', class_ix=None, properties={})]"
+  "[1]=[Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={})]"
   >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
   "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
           properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
