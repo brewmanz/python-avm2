@@ -96,7 +96,7 @@ class findInternalMethod:
     >>> str(bag) # doctest: +ELLIPSIS
     "bagForFindingInternalMethod(instance='abcdef', namespaceName='http://adobe.com/AS3/2006/builtin', methodName='charAt', arguments=[3], foundClass=<class '__main__.string_Methods'>, foundFunction=<function string_method_char_at at 0x...>, foundResultHint=[], result=None, debug=False)"
     """
-    for cls in [ string_Methods ]:
+    for cls in [ string_Methods, Math_Object ]:
       cls.findMethodFromBag(bag)
       if bag.foundFunction: return
     bag.foundResultHint.append(f'@{BM.LINE(False)} in {inspect.stack()[0].function}; no class {type(bag.instance)} + method <{bag.methodName}> found')
@@ -226,7 +226,7 @@ def Math_method_min(itemIgnored, *args):
     raise NotImplementedError(f'@{BM.LINE()} expected 2+ args but {len(args)}')
   res = min(args)
   return res
-class Math_Methods(RT.ASObject): # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/Math.html
+class Math_Object(RT.ASObject): # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/Math.html
 
   dictSwfNameToMethod: ClassVar[dict[str, object]] = dict( \
     [ ('max', Math_method_max ) \
@@ -244,68 +244,73 @@ class Math_Methods(RT.ASObject): # check https://help.adobe.com/en_US/FlashPlatf
     >>> myArgs.append(3)
     >>> myArgs.append(4)
     >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
-    >>> Math_Methods.findMethodFromBag(bag)
+    >>> Math_Object.findMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} FMFB_A {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
     'None'
     >>> str(bag.foundFunction)[:33]
     'None'
     >>> # should not find
-    >>> myObj = None
-    >>> myNamespace ='Math'
+    >>> myObj = Math_Object_Singleton
+    >>> myNamespace = '' # 'Math'
     >>> myMethod = 'maxUnknown'
     >>> myArgs = list()
     >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
-    >>> Math_Methods.findMethodFromBag(bag)
+    >>> Math_Object.findMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} FMFB_B {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
     'None'
     >>> str(bag.foundFunction)[:33]
     'None'
     >>> # should find
-    >>> myObj = None
-    >>> myNamespace ='Math'
+    >>> myObj = Math_Object_Singleton
+    >>> myNamespace = '' # 'Math'
     >>> myMethod = 'max'
     >>> myArgs = list()
     >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
-    >>> Math_Methods.findMethodFromBag(bag)
+    >>> Math_Object.findMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} FMFB_C {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
-    "<class '__main__.Math_Methods'>"
+    "<class '__main__.Math_Object'>"
     >>> str(bag.foundFunction)  # doctest: +ELLIPSIS
     '<function Math_method_max at 0x...'
     >>> # should find
-    >>> myObj = None
-    >>> myNamespace ='Math'
+    >>> myObj = Math_Object_Singleton
+    >>> myNamespace = '' # 'Math'
     >>> myMethod = 'min'
     >>> myArgs = list()
     >>> myArgs.append(3)
     >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
-    >>> Math_Methods.findMethodFromBag(bag)
+    >>> Math_Object.findMethodFromBag(bag)
     >>> print(f'@{BM.LINE()} FMFB_D {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
     >>> str(bag.foundClass)
-    "<class '__main__.Math_Methods'>"
+    "<class '__main__.Math_Object'>"
     >>> str(bag.foundFunction)  # doctest: +ELLIPSIS
     '<function Math_method_min at 0x...'
     """
-    if bag.namespaceName == 'Math':
-      if True or isinstance(bag.instance, str): # TODO Check what object type is
+    expectedNS = '' # was 'Math' but refactored out
+    expectedInstanceClass = Math_Object
+
+    if bag.namespaceName == expectedNS:
+      #if True or isinstance(bag.instance, str): # TODO Check what object type is
+      if isinstance(bag.instance, expectedInstanceClass): # TODO Check what object type is
         for k, v in cls.dictSwfNameToMethod.items():
           if k == bag.methodName:
-            bag.foundClass = Math_Methods
+            bag.foundClass = Math_Object
             bag.foundFunction = v
-            if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} matched <{bag.methodName}> with {v}')
+            if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} matched <{bag.methodName}> with {v}')
             return
-        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} could be Math but no match for <{bag.methodName}>')
+        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} could be Math but no match for <{bag.methodName}>')
       else:
-        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a .. what?')
+        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} not instance of {expectedInstanceClass}')
         pass
     else:
-      if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {bag.namespaceName} not expected namespace')
+      if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} <{bag.namespaceName}> not expected namespace of <{expectedNS}>')
       pass
     return
+Math_Object_Singleton = Math_Object(BM.LINE(False))
 
 def string_method_char_at(item: str, index: int = 0):
   """
@@ -489,22 +494,26 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     >>> str(bag.foundFunction)[:34]
     '<function string_method_char_at at'
     """
-    if bag.namespaceName == 'http://adobe.com/AS3/2006/builtin':
-      if isinstance(bag.instance, str):
+    expectedNS = 'http://adobe.com/AS3/2006/builtin'
+    expectedInstanceClass = str
+
+    if bag.namespaceName == expectedNS:
+      if isinstance(bag.instance, expectedInstanceClass):
         for k, v in cls.dictSwfNameToMethod.items():
           if k == bag.methodName:
             bag.foundClass = string_Methods
             bag.foundFunction = v
-            if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} matched <{bag.methodName}> with {v}')
+            if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} matched <{bag.methodName}> with {v}')
             return
-        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} is a string but no match for <{bag.methodName}>')
+        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} is a string but no match for <{bag.methodName}>')
       else:
-        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {type(bag.instance)} not a string')
+        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} not instance of {expectedInstanceClass}')
         pass
     else:
-      if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {bag.namespaceName} not expected namespace')
+      if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} namespace <{bag.namespaceName}> not matching <{expectedNS}>')
       pass
     return
+
 
 def read_instruction(reader: MemoryViewReader) -> Instruction:
     opcode: int = reader.read_u8()
@@ -755,9 +764,9 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
     ai.p:MEO:...: Extra@...:-os.pop arg[0]=':'.
     ai.p:MEO:...: Extra@...:ostack=<[1]=['some:kinda:string']> CP_2.
     ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
-    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#6', class_ix=None,
+    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
-                      ('', 'Math'):                       Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
+                      ('', 'Math'):                       Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
     ai.p:MEO:...: Extra@...:tN='indexOf'.
     ai.p:MEO:...: Extra@...:tNs='http://adobe.com/AS3/2006/builtin'.
@@ -777,33 +786,35 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   >>> inst
   CallProperty(opcode=70, index=1335, arg_count=2)
   >>> env.operand_stack.clear()
-  >>> mathObject = myVM.global_object.properties['', 'Math'] # get Math object
+  >>> mathObject = Math_Object_Singleton # myVM.global_object.properties['', 'Math'] # get Math object
   >>> mathObject # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-  Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={})
+  Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={})
   >>> env.operand_stack.append(mathObject)
   >>> env.operand_stack.append(45)
   >>> env.operand_stack.append(123.45)
-  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
-  "[3]=[Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), 45, 123.45]"
+  >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  "[3]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), 45, 123.45]"
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    ai.p:MEO:...: Extra@...:ostack=<[2]=['some:kinda:string', ':']> CP_1.
-    ai.p:MEO:...: Extra@...:-os.pop arg[0]=':'.
-    ai.p:MEO:...: Extra@...:ostack=<[1]=['some:kinda:string']> CP_2.
+    ai.p:MEO:...: Extra@...:ostack=<[3]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), 45, 123.45]> CP_1.
+    ai.p:MEO:...: Extra@...:-os.pop arg[1]=123.45.
+    ai.p:MEO:...: Extra@...:-os.pop arg[0]=45.
+    ai.p:MEO:...: Extra@...:ostack=<[1]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={})]> CP_2.
     ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
-    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#6', class_ix=None,
-          properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#3', class_ix=None, properties={}),
-                      ('', 'Math'):                       Math_Methods(traceHint='v.p:__i_:...#4', class_ix=None, properties={}),
-                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#5', class_ix=None, properties={})})].
-    ai.p:MEO:...: Extra@...:tN='indexOf'.
-    ai.p:MEO:...: Extra@...:tNs='http://adobe.com/AS3/2006/builtin'.
-    ai.p:MEO:...: Extra@...:-os.pop obj='some:kinda:string'.
+    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
+          properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
+                      ('', 'Math'):                       Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}),
+                      ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
+    ai.p:MEO:...: Extra@...:tN='max'.
+    ai.p:MEO:...: Extra@...:tNs=''.
+    ai.p:MEO:...: Extra@...:-os.pop obj=Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}).
     ai.p:MEO:...: Extra@...:ostack=<[0]=[]> CP_3.
-    ai.p:MEO:...: Extra@...:+os.push result=<4>.
+    ai.p:MEO:...: Extra@...:+os.push result=<123.45>.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[123.45]'
   >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
   "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
           properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
+                      ('', 'Math'):                  Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})]"
   """
   index: u30
@@ -1577,21 +1588,21 @@ class GetLex(Instruction): # … => …, obj
     ai.p:MEO:...: Extra@...:mn=ASMultinameBis(kind=<MultinameKind.Q_NAME: 7>, ns_ix=2, nam_ix=1332, ns_set_ix=None, q_nam_ix=None, type_ixs=None, ixCP=1334, ns_name='', nam_name='Math', ns_set_names=None, q_nam_name=None).
     ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
-                      ('', 'Math'):                       Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
+                      ('', 'Math'):                       Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
     ai.p:MEO:...: Extra@...: [0] props#3.
     ai.p:MEO:...: Extra@...:  props[ns='', n='Object'] = ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
-    ai.p:MEO:...: Extra@...:  props[ns='', n='Math'] = Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
+    ai.p:MEO:...: Extra@...:  props[ns='', n='Math'] = Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}).
     ai.p:MEO:...: Extra@...:  props[ns='flash.utils', n='Dictionary'] = ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
     ai.p:MEO:...: Extra@...:tN='Math'.
     ai.p:MEO:...: Extra@...:tNs=[1]=[''].
     ai.p:MEO:...: Extra@...:(v.p)ResMulNam.name=<'Math'> SS#=1.
-    ai.p:MEO:...: Extra@...:(v.p) ResMulNam.sobj=<ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('', 'Math'): Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})>.
+    ai.p:MEO:...: Extra@...:(v.p) ResMulNam.sobj=<ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('', 'Math'): Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})>.
     ai.p:MEO:...: Extra@...:(v.p)  ResQNam try ns ''.
-    ai.p:MEO:...: Extra@...:object_=Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), namespace='', name='Math'.
-    ai.p:MEO:...: Extra@...:+os.push result=<Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={})>.
+    ai.p:MEO:...: Extra@...:object_=Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), namespace='', name='Math'.
+    ai.p:MEO:...: Extra@...:+os.push result=<Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={})>.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
-  "[1]=[Math_Methods(traceHint='v.p:__i_:...#...', class_ix=None, properties={})]"
+  "[1]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={})]"
   >>> BM.DumpVar(scopeStack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
   "[1]=[ASObject(traceHint='v.p:__i_:...', class_ix=None,
           properties={('', 'Object'):                ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}),
