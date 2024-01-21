@@ -5,10 +5,12 @@ from avm2.abc.abc_instructions import CallbackOnInstructionExecuting_GenerateAVM
 import avm2.runtime as RT
 import inspect, sys
 import pytest
-
 # to run selected tests # pytest -k "test_E_T1400 or test_T1400" -s
 # ln -s ~/git/BDL/Games/Evony/PythonBits/MyGamesHelper.py (in git/python-avm2_AdobeSwfActionScript)
 # ln -s ~/git/BDL/Games/Evony/PythonBits/BrewMaths.py (in git/python-avm2_AdobeSwfActionScript)
+
+from pytest_check import check # pip install pytest-check
+
 import MyGamesHelper as MGH
 import BrewMaths as BM
 import avm2.abc.abc_enums as EN
@@ -47,9 +49,97 @@ def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMach
   callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
   machine_EvonyClient_N.cbOnInsExe = callback
   dummyInstance = RT.ASObject(f'@{BM.LINE(False)} dummyInstance')
-  act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, 'param1', 'param2') == None
 
-  assert False, f'TODO @{BM.LINE(False)} LoaderUtil.createAbsoluteURL'
+  # 2024-01-00
+  act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, 'param1', 'param2')
+  print(f'@{BM.LINE()} act = {act}')
+
+  # 2024-01-21
+
+  # param1 exists, and param2 either contains colon, or starts with fwd slash or bwd slash) then ...
+  # .. if param1 contains '?', then param1 is stripped of it and all following
+  # .. if param1 contains '#', then param1 is stripped of it and all following
+  # .. set loc5 to rightmost / or \ in param1
+  # .. if param2 starts with ./ then strip off 1st 2 chars
+  # .. while param2 starts with ../ then strip off 1st 3 chars and loc5 is stepped back to previous rightmost / or \ in (param1 prior to loc5)
+  # .. if loc5 points to useable fwd or bwd slash, then
+  # .... return param1 up to and including fwd or bwd slash, plus param2
+  # else return param2
+
+  if True: # various no slash in param2
+    print(f'@{BM.LINE()} ...')
+    param1 = 'PARAM1'; param2 = 'param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    #print(f'@{BM.LINE()} act = {act}')
+    #check.equal(act, 'SANITYCHECK', f'@{BM.LINE()} (traitName){BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, param2, f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = ''; param2 = 'param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, param2, f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = None; param2 = 'param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, param2, f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    # fails # param1 = undefined; param2 = 'param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    # fails # check.equal(act, param2, f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+  if True: # various slash in param2 but no param1
+    print(f'@{BM.LINE()} ...')
+    param1 = ''; param2 = 'p/aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, param2, f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = None; param2 = 'p/aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, param2, f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = None; param2 = 'pa\\ram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, param2, f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+  if True: # colon in param2 with param1 with (nothing special) or ? or #
+    print(f'@{BM.LINE()} ...')
+    param1 = 'PARAM1'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'param1?a.b'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'param1#a.b'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'param1?a#b'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'param1#a?b'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+  if True: # / in param2 with param1 with ? or # or not
+    print(f'@{BM.LINE()} ...')
+    param1 = 'PARAM1'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1par', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PARAM1?a.b'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PARAM1#a.b'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PARAM1?a#b'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PARAM1#a?b'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+  if True: # \ in param2 with param1 with ? or # or not
+    print(f'@{BM.LINE()} ...')
+    param1 = 'PARAM1'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1par', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PARAM1?a.b'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PARAM1#a.b'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PARAM1?a#b'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PARAM1#a?b'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+  if True: # / twice in param1 with param2 starting with ./ or ../
+    print(f'@{BM.LINE()} ...')
+    param1 = 'PAR/AM/1?a'; param2 = 'param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PA/RA/M1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PAR/AM/1?a'; param2 = '/param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PA/RA/M1/param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PAR/AM/1?a'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PA/RA/M1par/am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PAR\\AM\\1?a'; param2 = './param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PAR\\AM\\1/param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PAR/AM/1?a'; param2 = '././pa/ram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PAR/AM/1pa/ram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PAR/AM/1?a'; param2 = '../param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PAR/AMparam2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    param1 = 'PAR/AM/1?a'; param2 = '../../param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'PARparam2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+
+  #assert False, f'TODO @{BM.LINE(False)} LoaderUtil.createAbsoluteURL'
 
 def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')

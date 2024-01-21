@@ -421,6 +421,8 @@ def string_method_substring(item: str, startIndex: int = 0, endIndex: int = 0x7f
   >>> myObj = 'abcdef'
   >>> myNamespace ='http://adobe.com/AS3/2006/builtin'
   >>> myMethod = 'substring'
+  >>> #
+  >>> # 2024-01-00
   >>> myArgs = list()
   >>> myArgs.append(1)
   >>> myArgs.append(4)
@@ -437,7 +439,22 @@ def string_method_substring(item: str, startIndex: int = 0, endIndex: int = 0x7f
   >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
   >>> res
   'bcd'
+  >>> #
+  >>> # 2024-01-21
+  >>> myArgs = list()
+  >>> myArgs.append(0)
+  >>> myArgs.append(-1)
+  >>> myObj[myArgs[0]: myArgs[1] ] # this is NOT what should happen
+  'abcde'
+  >>> myObj[myArgs[0]: 0 ] # this is what should happen
+  ''
+  >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, '?c', '?m')
+  >>> res = string_method_substring(bag.instance, *bag.arguments)
+  >>> print(f'@{BM.LINE()} {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
+  >>> res
+  ''
   """
+  if endIndex < 0: endIndex = 0 # this is what SHOULD happen
   res = item[startIndex:endIndex] # f'!! ## TODO: {inspect.stack()[0].function} ## !!'
   return res
 class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/String.html
@@ -599,15 +616,16 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
 
   def ObserveInstructionExecuting(self, theInstruction: Instruction, machine: VirtualMachine, environment: MethodEnvironment, offsetOfInstruction: int):
     self.callsSoFar += 1
+    strFinal = ' $FINAL$' if self.callsSoFar == self.limitCalls else ''
 
-    if self.callsSoFar == 1 and self.callsSoFar < self.limitCalls: # display on first call
+    if self.callsSoFar == 1 and self.callsSoFar <= self.limitCalls: # display on first call
       DumpEnvironmentRegisters(machine, environment)
 
-    if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar < self.limitCalls):
-      print(f'{self.tc}{BM.LINE(False)}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}')
+    if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar <= self.limitCalls):
+      print(f'{self.tc}{BM.LINE(False)}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}{strFinal}')
 
   def MakeExtraObservation(self, extraObservation):
-    if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar < self.limitCalls):
+    if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar <= self.limitCalls):
       callerF = inspect.currentframe() #getframeinfo(stack()[1][0])
       callerLine = callerF.f_back.f_lineno
       print(f'{self.tc}{BM.LINE(False)}: {self.tc}Extra@{callerLine}:{extraObservation}.')
@@ -862,7 +880,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       result = bag.result
     else:
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'Internal Method failure, bag={bag}')
-      assert False, f'@{BM.LINE(False)} Internal Method failure, bag={bag}'
+      assert False, f'@{BM.LINE(False)} Internal Method failure, tNs={BM.DumpVar(theNS)}, tN={BM.DumpVar(theName)}, bag={bag}'
 
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
     environment.operand_stack.append(result)
