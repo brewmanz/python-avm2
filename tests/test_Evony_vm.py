@@ -310,16 +310,20 @@ def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   ixClass = 67
   assert machine_EvonyClient_N.abc_file.classes[ixClass].nam_name == 'mx.utils:StringUtil' # right class
   assert machine_EvonyClient_N.abc_file.classes[ixClass].init_ix == 949 # right class init method
+  print(f'## @{BM.LINE()} pre call_static ...')
   act = machine_EvonyClient_N.call_static(machine_EvonyClient_N.abc_file.classes[ixClass].init_ix, '')
   print(f'## @{BM.LINE()} SU_T init=<{act}>')
 
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', "xyz", None) # eould return empty string, but asserts as charAt fails to be found
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', undefined, "xyz") # that undefined throws an assertion PushScope
   # act = machine_EvonyClient_N.call_static('mx.utils.StringUtil.trim', None, "xyz") # PushScope asserts
+  print(f'## @{BM.LINE()} pre call_static ...')
   act = machine_EvonyClient_N.call_static('mx.utils:StringUtil.trim', '', "xyz")
   machine_EvonyClient_N.cbOnInsExe = None
   print(f'## @{BM.LINE()} SU_T act=<{act}>')
+  print(f'## @{BM.LINE()} pre call_static ...')
   assert machine_EvonyClient_N.call_static('mx.utils:StringUtil.trim', "xyz") == "xyz"
+  print(f'## @{BM.LINE()} pre call_static ...')
   assert machine_EvonyClient_N.call_static('mx.utils:StringUtil.trim', "  abc  ") == "abc"
 
 @pytest.mark.skip(reason="change to fit Evony") # import pytest

@@ -22,8 +22,13 @@ from avm2.swf.swf_types import DoABCTag, Tag, TagType
 
 import BrewMaths as BM
 
-class VirtualMachine:
-    def __init__(self, abc_file: ABCFile):
+class VirtualMachine(ASObject):
+    def __init__(self, traceHint: str, abc_file: ABCFile):
+        properties={
+            # key seems to be tuple of (namespace, name)
+            ('', 'TheMainVm'): ASObject(BM.LINE(False)),
+        }
+        super().__init__(traceHint, None, properties)
         self.abc_file = abc_file
 
         # extend classes (via ASxxxBis classes) and add strings
@@ -357,14 +362,11 @@ class VirtualMachine:
         registers: List[Any] = list() # [-1] = undefined2 # DEBUG aid in checking ASObject definitions
         for _ in range(method_body.local_count):
           registers.append(ASUndefined(BM.LINE(False)))
-        if debug:
-          self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
         # Register 0 holds the "this" object. This value is never null.
-        registers[0] = this # Register 0 holds the “this” object. This value is never null .
+        registers[0] = self # Register 0 holds the “this”(self) object. This value is never null .
         # Registers 1 through `method_info.param_count` holds parameter values coerced to the declared types
         # of the parameters.
-        if debug:
-          self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
+        if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
 
         assert len(args) <= method.param_count
         registers[1:len(args) + 1] = args
@@ -374,24 +376,22 @@ class VirtualMachine:
             assert len(method.options) <= method.param_count
             for i, option in zip(range(len(args) + 1, method_body.local_count), method.options):
                 registers[i] = self.get_constant(option.kind, option.value)
-            if debug:
-              self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
+            if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
 
         # If `NEED_REST` is set in `method_info.flags`, the `method_info.param_count + 1` register is set up to
         # reference an array that holds the superflous arguments.
         if MethodFlags.NEED_REST in method.flags:
             registers[method.param_count + 1] = args[method.param_count:]
-            if debug:
-              self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
+            if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
 
         # If `NEED_ARGUMENTS` is set in `method_info.flags`, the `method_info.param_count + 1` register is set up
         # to reference an "arguments" object that holds all the actual arguments: see ECMA-262 for more
         # information.
         if MethodFlags.NEED_ARGUMENTS in method.flags:
             registers[method.param_count + 1] = args
-            if debug:
-              self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
+            if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
 
+        if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
         assert len(registers) == method_body.local_count
         # FIXME: unsure about the global object here.
         return MethodEnvironment(registers=registers, scope_stack=[self.global_object])
@@ -432,7 +432,7 @@ class VirtualMachine:
       assert raw_do_abc_tag
       do_abc_tag: DoABCTag = DoABCTag(raw_do_abc_tag.raw)
       abc: ABCFile = ABCFile(MemoryViewReader(do_abc_tag.abc_file))
-      vm: VirtualMachine = VirtualMachine(abc)
+      vm: VirtualMachine = VirtualMachine(BM.LINE(False), abc)
       return vm
 
 @dataclass
@@ -469,5 +469,5 @@ def execute_do_abc_tag(do_abc_tag: DoABCTag) -> VirtualMachine:
     Create a virtual machine and execute the tag.
     """
     abcFile = ABCFile(MemoryViewReader(do_abc_tag.abc_file))
-    vm = VirtualMachine(abcFile)
+    vm = VirtualMachine(BM.LINE(False), abcFile)
     return vm

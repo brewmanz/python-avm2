@@ -53,7 +53,7 @@ def abc_file_EvonyClient_N(do_abc_tag_EvonyClient_N: DoABCTag) -> ABCFile: # , N
 @fixture(scope='session')
 def machine_EvonyClient_N(abc_file_EvonyClient_N: ABCFile) -> VirtualMachine: # , N: int) -> VirtualMachine:
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-    return VirtualMachine(abc_file_EvonyClient_N)
+    return VirtualMachine(BM.LINE(False), abc_file_EvonyClient_N)
 
 ####
 
@@ -108,7 +108,7 @@ def abc_file_heroes(do_abc_tag_heroes: DoABCTag) -> ABCFile:
 @fixture(scope='session')
 def machine_heroes(abc_file_heroes: ABCFile) -> VirtualMachine:
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-    return VirtualMachine(abc_file_heroes)
+    return VirtualMachine(BM.LINE(False), abc_file_heroes)
 
 if __name__ == '__main__':  # when you run 'python thisModuleName.py' ...
   import doctest, os, sys

@@ -764,7 +764,8 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
   >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
-  <avm2.vm.VirtualMachine object at 0x...>
+  VirtualMachine(traceHint='v.p:fE:...#...', class_ix=None, properties={('', 'TheMainVm'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})
+  >>> # <avm2.vm.VirtualMachine object at 0x...>
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
   "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
   >>> scopeStack = [myVM.global_object]
@@ -985,7 +986,7 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
   >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
-  <avm2.vm.VirtualMachine object at 0x...>
+  VirtualMachine(traceHint='v.p:fE:...#...', class_ix=None, properties={('', 'TheMainVm'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
   "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
   >>> scopeStack = [myVM.global_object]
@@ -1234,7 +1235,7 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
   >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
-  <avm2.vm.VirtualMachine object at 0x...>
+  VirtualMachine(traceHint='v.p:fE:...#...', class_ix=None, properties={('', 'TheMainVm'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
   "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
   >>> scopeStack = [myVM.global_object]
@@ -1486,8 +1487,8 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
           theName, # stack or machine.strings[multiname.nam_ix],
           theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
       )
-    except KeyError:
-      raise NotImplementedError('ReferenceError')
+    except KeyError as excp:
+      raise NotImplementedError(f'ReferenceError < KeyError({excp})')
     else:
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push object_=<{BM.DumpVar(object_)}> type={type(object_)}')
       environment.operand_stack.append(object_)
@@ -1591,7 +1592,7 @@ class GetLex(Instruction): # … => …, obj
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '', loggingLevel = logging.DEBUG)
   >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
-  <avm2.vm.VirtualMachine object at 0x...>
+  VirtualMachine(traceHint='v.p:fE:...#...', class_ix=None, properties={('', 'TheMainVm'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
   "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
   >>> scopeStack = [myVM.global_object]
@@ -1611,7 +1612,7 @@ class GetLex(Instruction): # … => …, obj
   >>> env.operand_stack.clear()
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[0]=[]'
-  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+  >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE, +REPORT_NDIFF
     ai.p:MEO:...: Extra@...:mn=ASMultinameBis(kind=<MultinameKind.Q_NAME: 7>, ns_ix=2, nam_ix=1332, ns_set_ix=None, q_nam_ix=None, type_ixs=None, ixCP=1334, ns_name='', nam_name='Math', ns_set_names=None, q_nam_name=None).
     ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
@@ -1625,7 +1626,7 @@ class GetLex(Instruction): # … => …, obj
     ai.p:MEO:...: Extra@...:tNs=[1]=[''].
     ai.p:MEO:...: Extra@...:(v.p)ResMulNam.name=<'Math'> SS#=1.
     ai.p:MEO:...: Extra@...:(v.p) ResMulNam.sobj=<ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('', 'Math'): Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})>.
-    ai.p:MEO:...: Extra@...:(v.p)  ResQNam try ns ''.
+    ai.p:MEO:...: Extra@...:(v.pD)  ResQNam try ns ''.
     ai.p:MEO:...: Extra@...:object_=Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), namespace='', name='Math'.
     ai.p:MEO:...: Extra@...:+os.push result=<Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={})>.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
@@ -1714,7 +1715,7 @@ class GetLocal0(Instruction): # … => …, value
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
   >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
-  <avm2.vm.VirtualMachine object at 0x...>
+  VirtualMachine(traceHint='v.p:fE:...#...', class_ix=None, properties={('', 'TheMainVm'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
   "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
   >>> scopeStack = [myVM.global_object]
@@ -1776,7 +1777,7 @@ class GetLocal3(Instruction): # … => …, value
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
   >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
-  <avm2.vm.VirtualMachine object at 0x...>
+  VirtualMachine(traceHint='v.p:fE:...#...', class_ix=None, properties={('', 'TheMainVm'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
   "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
   >>> scopeStack = [myVM.global_object]
@@ -1885,7 +1886,7 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, ' ')
     >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
     >>> myVM # doctest: +ELLIPSIS
-    <avm2.vm.VirtualMachine object at 0x...>
+    VirtualMachine(traceHint='v.p:fE:...#...', class_ix=None, properties={('', 'TheMainVm'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})
     >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
     "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
     >>> scopeStack = [myVM.global_object]
@@ -2535,7 +2536,7 @@ class PushScope(Instruction): # …, value => …
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
   >>> if True or False: myVM.cbOnInsExe = callback # this activates instruction logging and extra observations
   >>> myVM # doctest: +ELLIPSIS
-  <avm2.vm.VirtualMachine object at 0x...>
+  VirtualMachine(traceHint='v.p:fE:...#...', class_ix=None, properties={('', 'TheMainVm'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})
   >>> BM.DumpVar(myVM.global_object) # doctest: +ELLIPSIS
   "ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...', class_ix=None, properties={})})"
   >>> scopeStack = [myVM.global_object]
