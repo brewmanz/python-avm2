@@ -310,6 +310,10 @@ def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   ixClass = 67
   assert machine_EvonyClient_N.abc_file.classes[ixClass].nam_name == 'mx.utils:StringUtil' # right class
   assert machine_EvonyClient_N.abc_file.classes[ixClass].init_ix == 949 # right class init method
+
+  assert False, 'Dump StringUtil Class object to get Trait types, and fix classes_traits $txt'
+  assert False, 'Update to (new) docstest, to not stop on assert, but do multiple tests like ... somewhere (vm? instructions?'
+
   print(f'## @{BM.LINE()} pre call_static ...')
   act = machine_EvonyClient_N.call_static(machine_EvonyClient_N.abc_file.classes[ixClass].init_ix, '')
   print(f'## @{BM.LINE()} SU_T init=<{act}>')
