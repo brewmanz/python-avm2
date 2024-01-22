@@ -2212,6 +2212,21 @@ class IncrementInteger(Instruction): # …, value => …, incrementedvalue
 
 @instruction(104)
 class InitProperty(Instruction): # …, object, [ns], [name], value => …
+  '''
+  Initialize a property.
+
+  'value' is the value that the property will be set to. 'value' is popped off the stack and saved.
+  'index' is a u30 that must be an index into the multiname constant pool.
+  If the multiname at that index is a runtime multiname the name and/or namespace will also appear on the stack
+    so that the multiname can be constructed correctly at runtime.
+  The property with the name specified by the multiname will be resolved in object, and will be set to value.
+  This is used to initialize properties in the initializer method. When used in an initializer method it is able to set the value of const properties.
+
+  Runtime exceptions
+    A TypeError is thrown if object is null or undefined .
+    A ReferenceError is thrown if the property is not found and object is not dynamic,
+      or if the instruction is used to set a const property outside an initializer method.
+  '''
   index: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
@@ -2246,7 +2261,7 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
     except KeyError:
       raise NotImplementedError('ReferenceError')
     else:
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'<obj> name/ns/sce=<{BM.DumpVar(object_)} type={type(object_)}> {BM.DumpVar(theName)}/{BM.DumpVar(theNamespaces)}/{BM.DumpVar(scopeStackEntry)}')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'obj=<{BM.DumpVar(object_)}; type={type(object_)}>; name/ns/sce={BM.DumpVar(theName)}/{BM.DumpVar(theNamespaces)}/{BM.DumpVar(scopeStackEntry)}')
 
       # set property value on scopeStackEntry
       # HACK 2023-12-13 this is coded 'on a wing and a prayer'
@@ -2262,6 +2277,9 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
         else:
           if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'{BM.LINE()}: ## TODO-1 set some object\'s property . SSE is {BM.DumpVar(scopeStackEntry)}')
           assert False, f'\t{BM.LINE()}: ## TODO-1 set some object\'s property . SSE is {BM.DumpVar(scopeStackEntry)}'
+      elif isinstance(scopeStackEntry, avm2.vm.VirtualMachine):
+        scopeChosen = 'VM'
+        scopeStackEntry.properties[resKey] = resValue
       else:
         if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'{BM.LINE()}: ## TODO-2 set some object\'s property . SSE is {BM.DumpVar(scopeStackEntry)}')
         assert False, f'\t{BM.LINE()}: ## TODO-2 set some object\'s property. SSE is {BM.DumpVar(scopeStackEntry)}'

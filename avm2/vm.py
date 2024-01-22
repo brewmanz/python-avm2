@@ -17,7 +17,8 @@ from avm2.abc.abc_types import (
 )
 from avm2.exceptions import ASJumpException, ASReturnException
 from avm2.io import MemoryViewReader
-from avm2.runtime import ASObject, ASUndefined, undefined
+from avm2.runtime import ASObject, ASUndefined, ASPrimitive, undefined
+
 from avm2.swf.swf_types import DoABCTag, Tag, TagType
 
 import BrewMaths as BM
@@ -27,6 +28,8 @@ class VirtualMachine(ASObject):
         properties={
             # key seems to be tuple of (namespace, name)
             ('', 'TheMainVm'): ASObject(BM.LINE(False)),
+            # following VERSION set at run time to '3.5.0.12683' via InitProperty instruction
+            ('http://www.adobe.com/2006/flex/mx/internal', 'VERSION'): ASPrimitive(BM.LINE(False), 'MyVERSION'),
         }
         super().__init__(traceHint, None, properties)
         self.abc_file = abc_file
@@ -123,26 +126,26 @@ class VirtualMachine(ASObject):
             debug = True
 
         if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.name=<{BM.DumpVar(name)}> SS#={len(scopeStack)}')
-        for scopeObject_ in reversed(scopeStack):
-            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) ResMulNam.sobj=<{BM.DumpVar(scopeObject_)}>')
+        for scopeStackEntry in reversed(scopeStack):
+            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) ResMulNam.SSE=<{BM.DumpVar(scopeStackEntry)}>')
             for namespace in namespaces:
                 try:
                     if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)  ResQNam try ns {BM.DumpVar(namespace)}')
-                    return self.resolve_qname(scopeObject_, namespace, name), name, namespace, scopeObject_
+                    return self.resolve_qname(scopeStackEntry, namespace, name), name, namespace, scopeStackEntry
                 except KeyError:
                     if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)   ResQNam try *fail*')
                     pass
         raise KeyError(f'KeyError; name={BM.DumpVar(name)}, namespaces={BM.DumpVar(namespaces)}, scopeStack={BM.DumpVar(scopeStack)}')
         # KeyError; name='Math', namespaces=[1]=[''], scopeStack=[2]=[ASObject(traceHint='v.p:__i_:51#5', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:53#3', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:54#4', class_ix=None, properties={})}), ASObject(traceHint='@tEv.p:tTEV3000LUcAURL:49 dummyInstance#6', class_ix=None, properties={})]":
 
-    def resolve_qname(self, scopeObject_: ASObject, namespace: str, name: str) -> Any:
+    def resolve_qname(self, scopeStackEntry: ASObject, namespace: str, name: str) -> Any:
         # Typically, the order of the search for resolving multinames is
         # the object’s declared traits, its dynamic properties, and finally the prototype chain.
         # TODO: declared traits.
 
-        if isinstance(scopeObject_, str): # if a string, return as-is
-          return scopeObject_
-        return scopeObject_.properties[namespace, name]
+        if isinstance(scopeStackEntry, str): # if a string, return as-is
+          return scopeStackEntry
+        return scopeStackEntry.properties[namespace, name]
         # TODO: prototype chain.
 
     def lookup_class(self, qualified_name: str) -> ABCClassIndex:
