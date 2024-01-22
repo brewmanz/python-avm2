@@ -5,6 +5,7 @@ from avm2.abc.abc_instructions import CallbackOnInstructionExecuting_GenerateAVM
 import avm2.runtime as RT
 import inspect, sys
 import pytest
+import logging
 # to run selected tests # pytest -k "test_E_T1400 or test_T1400" -s
 # ln -s ~/git/BDL/Games/Evony/PythonBits/MyGamesHelper.py (in git/python-avm2_AdobeSwfActionScript)
 # ln -s ~/git/BDL/Games/Evony/PythonBits/BrewMaths.py (in git/python-avm2_AdobeSwfActionScript)
@@ -48,6 +49,7 @@ def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMach
   assert methodIx == 411, f'methodIx {methodIx} has unexpected value'
   callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
   machine_EvonyClient_N.cbOnInsExe = callback
+  machine_EvonyClient_N.cbOnInsExe = None # Stop callback
   dummyInstance = RT.ASObject(f'@{BM.LINE(False)} dummyInstance')
 
   # 2024-01-00
@@ -62,7 +64,7 @@ def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMach
   # .. set loc5 to rightmost / or \ in param1
   # .. if param2 starts with ./ then strip off 1st 2 chars
   # .. while param2 starts with ../ then strip off 1st 3 chars and loc5 is stepped back to previous rightmost / or \ in (param1 prior to loc5)
-  # .. if loc5 points to useable fwd or bwd slash, then
+  # .. if loc5 points to useable fwd or bwd slash in param1, then
   # .... return param1 up to and including fwd or bwd slash, plus param2
   # else return param2
 
@@ -89,54 +91,62 @@ def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMach
   if True: # colon in param2 with param1 with (nothing special) or ? or #
     print(f'@{BM.LINE()} ...')
     param1 = 'PARAM1'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'param1?a.b'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'param1#a.b'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'param1?a#b'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'param1#a?b'; param2 = 'p:aram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'p:aram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
   if True: # / in param2 with param1 with ? or # or not
     print(f'@{BM.LINE()} ...')
     param1 = 'PARAM1'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1par', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par/am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PARAM1?a.b'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par/am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PARAM1#a.b'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par/am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PARAM1?a#b'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par/am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PARAM1#a?b'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par/am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
   if True: # \ in param2 with param1 with ? or # or not
     print(f'@{BM.LINE()} ...')
     param1 = 'PARAM1'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1par', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par\\am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PARAM1?a.b'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par\\am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PARAM1#a.b'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par\\am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PARAM1?a#b'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par\\am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PARAM1#a?b'; param2 = 'par\\am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PARAM1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+    check.equal(act, 'par\\am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
   if True: # / twice in param1 with param2 starting with ./ or ../
     print(f'@{BM.LINE()} ...')
     param1 = 'PAR/AM/1?a'; param2 = 'param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
-    check.equal(act, 'PA/RA/M1param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
-    param1 = 'PAR/AM/1?a'; param2 = '/param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    check.equal(act, 'param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
+
+    # reset callback to show code flow
+    callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(200)
+    machine_EvonyClient_N.cbOnInsExe = callback
+
+    param1 = 'PAR/AM/1?a'; param2 = './param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
     check.equal(act, 'PA/RA/M1/param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
-    param1 = 'PAR/AM/1?a'; param2 = 'par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+
+    machine_EvonyClient_N.cbOnInsExe = None # stop callback
+
+    param1 = 'PAR/AM/1?a'; param2 = '././par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
     check.equal(act, 'PA/RA/M1par/am2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
-    param1 = 'PAR\\AM\\1?a'; param2 = './param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    param1 = 'PAR\\AM\\1?a'; param2 = './par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
     check.equal(act, 'PAR\\AM\\1/param2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
     param1 = 'PAR/AM/1?a'; param2 = '././pa/ram2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
     check.equal(act, 'PAR/AM/1pa/ram2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
-    param1 = 'PAR/AM/1?a'; param2 = '../param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    param1 = 'PAR/AM/1?a'; param2 = '../par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
     check.equal(act, 'PAR/AMparam2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
-    param1 = 'PAR/AM/1?a'; param2 = '../../param2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
+    param1 = 'PAR/AM/1?a'; param2 = '../../par/am2';   act = machine_EvonyClient_N.call_static(methodIx, dummyInstance, param1, param2)
     check.equal(act, 'PARparam2', f'@{BM.LINE()} {traitName}({BM.DumpVar(param1)}, {BM.DumpVar(param2)}) -> {act}')
 
   #assert False, f'TODO @{BM.LINE(False)} LoaderUtil.createAbsoluteURL'
@@ -291,7 +301,7 @@ def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()}    return ""; }}')
 
   # EvonyHuge.txt:147605 # public static function trim(param1:String) : String
-  callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
+  callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, loggingLevel = logging.DEBUG)
   machine_EvonyClient_N.cbOnInsExe = callback
 
   #machine_EvonyClient_N.abc_file.propagateStrings(BM.LINE(False)) # get class names etc propagated

@@ -532,10 +532,14 @@ class string_Methods: # check https://help.adobe.com/en_US/FlashPlatform/referen
     return
 
 
-def read_instruction(reader: MemoryViewReader) -> Instruction:
+def read_instruction(reader: MemoryViewReader) -> Instruction: # only used by test_XXX_abc.py
+    posAtStart = reader.position # mark start
     opcode: int = reader.read_u8()
     # noinspection PyCallingNonCallable
-    return opcode_to_instruction[opcode](opcode, reader)
+    inst = opcode_to_instruction[opcode](opcode, reader)
+    posAtEnd = reader.position # mark end
+    inst.instCodeLen = posAtEnd - posAtStart # calculate and save instruction code length
+    return inst
 
 
 u8 = NewType('u8', int)
@@ -567,12 +571,17 @@ class Instruction:
           machine.cbOnInsExe.ObserveInstructionExecuting(theInstance, machine, environment, offsetOfInstruction)
 
     opcode: int
+    instCodeLen: int
 
     def __init__(self, opcode: int, reader: MemoryViewReader):
+        posCodeStart = reader.position - 1  # Oops; unable to get actual start so calculate one byte back
         self.opcode = opcode
         for field in fields(self):
             if field.name == 'opcode': continue
+            if field.name == 'instCodeLen': continue
             setattr(self, field.name, self.readers[field.type](reader))
+        self.instCodeLen = reader.position - posCodeStart
+
 
     def doExecute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment, offsetOfInstruction: int) -> Optional[int]:
         self.tallyProgress(machine, environment, offsetOfInstruction)
@@ -749,7 +758,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   >>> inst.index=1391
   >>> inst.arg_count=1
   >>> inst
-  CallProperty(opcode=70, index=1391, arg_count=1)
+  CallProperty(opcode=70, instCodeLen=3, index=1391, arg_count=1)
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
@@ -802,7 +811,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   >>> inst.index=1335
   >>> inst.arg_count=2
   >>> inst
-  CallProperty(opcode=70, index=1335, arg_count=2)
+  CallProperty(opcode=70, instCodeLen=3, index=1335, arg_count=2)
   >>> env.operand_stack.clear()
   >>> mathObject = Math_Object_Singleton # myVM.global_object.properties['', 'Math'] # get Math object
   >>> mathObject # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
@@ -970,7 +979,7 @@ class CoerceString(Instruction): # coerce_s # …, value => …, stringvalue
   >>> # 2024-01-18
   >>> inst = CoerceString(CoerceString.at_inst, MemoryViewReader(bytes(99)))
   >>> inst
-  CoerceString(opcode=133)
+  CoerceString(opcode=133, instCodeLen=1)
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
@@ -1219,7 +1228,7 @@ class ConvertToString(Instruction): # convert_s # …, value => …, stringvalue
   >>> # 2024-01-18
   >>> inst = ConvertToString(ConvertToString.at_inst, MemoryViewReader(bytes(99)))
   >>> inst
-  ConvertToString(opcode=112)
+  ConvertToString(opcode=112, instCodeLen=1)
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
@@ -1576,7 +1585,7 @@ class GetLex(Instruction): # … => …, obj
   >>> inst = GetLex(GetLex.at_inst, MemoryViewReader(bytes(99)))
   >>> inst.index=1334
   >>> inst
-  GetLex(opcode=96, index=1334)
+  GetLex(opcode=96, instCodeLen=2, index=1334)
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '', loggingLevel = logging.DEBUG)
@@ -1662,7 +1671,7 @@ class GetLex(Instruction): # … => …, obj
       print(f'@{BM.LINE()} HACK SHOULD STOP BUT I WANT TO SEE NEXT BIT err={err}: ReferenceError: hint={hint}') # HACK
       # HACK must uncomment this # raise NotImplementedError(f'err={err}: ReferenceError: hint={hint}') # HACK must uncomment this
     else:
-      if machine.cbOnInsExe.GetLoggingLevel() == logging.DEBUG:
+      if machine.cbOnInsExe and machine.cbOnInsExe.GetLoggingLevel() == logging.DEBUG:
         machine.cbOnInsExe.MakeExtraObservation(f'object_={BM.DumpVar(object_)}, namespace={BM.DumpVar(namespace)}, name={BM.DumpVar(name)}')
       # NO! no need to access via key result = object_.properties[namespace, name]
       result = object_
@@ -1699,7 +1708,7 @@ class GetLocal0(Instruction): # … => …, value
   >>> # 2024-01-19
   >>> inst = GetLocal0(GetLocal0.at_inst, MemoryViewReader(bytes(99)))
   >>> inst
-  GetLocal0(opcode=208)
+  GetLocal0(opcode=208, instCodeLen=1)
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
@@ -1761,7 +1770,7 @@ class GetLocal3(Instruction): # … => …, value
   >>> # 2024-01-19
   >>> inst = GetLocal3(GetLocal3.at_inst, MemoryViewReader(bytes(99)))
   >>> inst
-  GetLocal3(opcode=211)
+  GetLocal3(opcode=211, instCodeLen=1)
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')
@@ -1870,7 +1879,7 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> # GreaterThan.__name__, GreaterThan.at_opcode # ('GreaterThan', 175)
     >>> inst = GreaterThan(GreaterThan.at_inst, MemoryViewReader(bytes(99)))
     >>> inst
-    GreaterThan(opcode=175)
+    GreaterThan(opcode=175, instCodeLen=1)
     >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
     @...
     >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, ' ')
@@ -2520,7 +2529,7 @@ class PushScope(Instruction): # …, value => …
   >>> # 2024-01-19
   >>> inst = PushScope(PushScope.at_inst, MemoryViewReader(bytes(99)))
   >>> inst
-  PushScope(opcode=48)
+  PushScope(opcode=48, instCodeLen=1)
   >>> myVM = avm2.vm.VirtualMachine.from_Evony() # doctest: +ELLIPSIS
   @...
   >>> callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100, '')

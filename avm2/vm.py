@@ -122,10 +122,10 @@ class VirtualMachine:
             if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) ResMulNam.sobj=<{BM.DumpVar(scopeObject_)}>')
             for namespace in namespaces:
                 try:
-                    if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.p)  ResQNam try ns {BM.DumpVar(namespace)}')
+                    if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)  ResQNam try ns {BM.DumpVar(namespace)}')
                     return self.resolve_qname(scopeObject_, namespace, name), name, namespace, scopeObject_
                 except KeyError:
-                    if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.p)   ResQNam try *fail*')
+                    if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)   ResQNam try *fail*')
                     pass
         raise KeyError(f'KeyError; name={BM.DumpVar(name)}, namespaces={BM.DumpVar(namespaces)}, scopeStack={BM.DumpVar(scopeStack)}')
         # KeyError; name='Math', namespaces=[1]=[''], scopeStack=[2]=[ASObject(traceHint='v.p:__i_:51#5', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:53#3', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:54#4', class_ix=None, properties={})}), ASObject(traceHint='@tEv.p:tTEV3000LUcAURL:49 dummyInstance#6', class_ix=None, properties={})]":
@@ -224,10 +224,14 @@ class VirtualMachine:
         # TODO: init script on demand.
         ixMB = self.method_to_body[index]
         method_body = self.abc_file.method_bodies[ixMB]
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, *args)
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
-        res =self.execute_code(method_body.code, environment)
+        if self.cbOnInsExe is not None:
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.regs={BM.DumpVar(environment.registers)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.SS={BM.DumpVar(environment.scope_stack)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.OS={BM.DumpVar(environment.operand_stack)}')
+        res = self.execute_code(method_body.code, environment)
         return res
     def call_ClassClassInit(self, index_or_name: Union[ABCMethodIndex, str], *args) -> Any:
         """
@@ -258,9 +262,13 @@ class VirtualMachine:
           print()
           raise
         method_body = self.abc_file.method_bodies[ixMB]
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, *args)
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
+        if self.cbOnInsExe is not None:
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.regs={BM.DumpVar(environment.registers)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.SS={BM.DumpVar(environment.scope_stack)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.OS={BM.DumpVar(environment.operand_stack)}')
         res =self.execute_code(method_body.code, environment)
         return res
 
@@ -281,10 +289,14 @@ class VirtualMachine:
         # TODO: init script on demand.
         ixMB = self.method_to_body[index]
         method_body = self.abc_file.method_bodies[ixMB]
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, *args)
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
-        res =self.execute_code(method_body.code, environment)
+        if self.cbOnInsExe is not None:
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.regs={BM.DumpVar(environment.registers)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.SS={BM.DumpVar(environment.scope_stack)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.OS={BM.DumpVar(environment.operand_stack)}')
+        res = self.execute_code(method_body.code, environment)
         return res
 
     def call_method(self, index_or_name: Union[ABCMethodIndex, str], this: Any, *args) -> Any:
@@ -302,10 +314,15 @@ class VirtualMachine:
 
         # TODO: init script on demand.
         method_body = self.abc_file.method_bodies[self.method_to_body[index]]
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
         environment = self.create_method_environment(method_body, this, *args)
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
-        return self.execute_code(method_body.code, environment)
+        if self.cbOnInsExe is not None:
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)method_body={BM.DumpVar(method_body)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)environment={BM.DumpVar(environment)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.regs={BM.DumpVar(environment.registers)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.SS={BM.DumpVar(environment.scope_stack)}')
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)env.OS={BM.DumpVar(environment.operand_stack)}')
+        res = self.execute_code(method_body.code, environment)
+        return res
 
     def execute_code(self, code: memoryview, environment: MethodEnvironment) -> Any:
         """
@@ -329,16 +346,26 @@ class VirtualMachine:
         """
         Create method execution environment: registers and stacks.
         """
+        debug = False
+        if self.cbOnInsExe:
+          if self.cbOnInsExe.GetLoggingLevel() == logging.DEBUG:
+            debug = True
         method = self.abc_file.methods[method_body.method_ix]
+
         # There are `method_body_info.local_count` registers.
         # registers: List[Any] = [undefined] * method_body.local_count
         registers: List[Any] = list() # [-1] = undefined2 # DEBUG aid in checking ASObject definitions
         for _ in range(method_body.local_count):
           registers.append(ASUndefined(BM.LINE(False)))
+        if debug:
+          self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
         # Register 0 holds the "this" object. This value is never null.
         registers[0] = this # Register 0 holds the “this” object. This value is never null .
         # Registers 1 through `method_info.param_count` holds parameter values coerced to the declared types
         # of the parameters.
+        if debug:
+          self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
+
         assert len(args) <= method.param_count
         registers[1:len(args) + 1] = args
         # If fewer than `method_body_info.local_count` values are supplied to the call then the remaining values are
@@ -347,15 +374,24 @@ class VirtualMachine:
             assert len(method.options) <= method.param_count
             for i, option in zip(range(len(args) + 1, method_body.local_count), method.options):
                 registers[i] = self.get_constant(option.kind, option.value)
+            if debug:
+              self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
+
         # If `NEED_REST` is set in `method_info.flags`, the `method_info.param_count + 1` register is set up to
         # reference an array that holds the superflous arguments.
         if MethodFlags.NEED_REST in method.flags:
             registers[method.param_count + 1] = args[method.param_count:]
+            if debug:
+              self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
+
         # If `NEED_ARGUMENTS` is set in `method_info.flags`, the `method_info.param_count + 1` register is set up
         # to reference an "arguments" object that holds all the actual arguments: see ECMA-262 for more
         # information.
         if MethodFlags.NEED_ARGUMENTS in method.flags:
             registers[method.param_count + 1] = args
+            if debug:
+              self.cbOnInsExe.MakeExtraObservation(f'(v.pD)regs={BM.DumpVar(registers)}')
+
         assert len(registers) == method_body.local_count
         # FIXME: unsure about the global object here.
         return MethodEnvironment(registers=registers, scope_stack=[self.global_object])
