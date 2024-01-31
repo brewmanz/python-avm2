@@ -3,6 +3,8 @@ from avm2.swf.swf_types import DoABCTag, Tag
 from avm2.vm import VirtualMachine, execute_do_abc_tag, execute_tag
 from avm2.abc.abc_instructions import CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace
 import avm2.runtime as RT
+import tests.helper_abc as HA
+import avm2.abc.abc_types as AT
 import inspect, sys
 import pytest
 import logging
@@ -310,7 +312,13 @@ def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   ixClass = 67
   assert machine_EvonyClient_N.abc_file.classes[ixClass].nam_name == 'mx.utils:StringUtil' # right class
   assert machine_EvonyClient_N.abc_file.classes[ixClass].init_ix == 949 # right class init method
+  myClass = machine_EvonyClient_N.abc_file.classes[ixClass]
+  assert myClass.nam_name == 'mx.utils:StringUtil' # right class
+  assert myClass.init_ix == 949 # right class init method
 
+  print(f'## @{BM.LINE()} myClass={myClass}')
+  print(f'## @{BM.LINE()} DumpVar myClass={BM.DumpVar(myClass)}')
+  print(f'## @{BM.LINE()} IndentedDumpVar myClass={BM.IndentedDumpVar(myClass)}')
   assert False, 'Dump StringUtil Class object to get Trait types, and fix classes_traits $txt'
   assert False, 'Update to (new) docstest, to not stop on assert, but do multiple tests like ... somewhere (vm? instructions?'
 

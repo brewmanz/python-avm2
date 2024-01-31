@@ -3,7 +3,7 @@ from typing import Iterable, List
 import BrewMaths as BM
 
 from avm2.abc.abc_instructions import Instruction, read_instruction
-from avm2.abc.abc_types import ABCFile, ASMethodBody, ASMultiname, ASNamespace, ASNamespaceBis
+from avm2.abc.abc_types import ABCFile, ASMethodBody, ASMultiname, ASNamespace, ASNamespaceBis, ASClass, ASClassBis
 from avm2.abc.abc_enums import NamespaceKind
 from avm2.io import MemoryViewReader
 from avm2.runtime import undefined, ASUndefined
