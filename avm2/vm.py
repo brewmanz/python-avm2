@@ -115,7 +115,7 @@ class VirtualMachine(ASObject):
 
     # Resolving.
     # ------------------------------------------------------------------------------------------------------------------
-    def resolve_multiname(self, scopeStack: List[ASObject], name: str, namespaces: Iterable[str]) -> Tuple[ASObject, str, str, Any]:
+    def resolve_multiname(self, scopeStack: List[ASObject], name: str, namespaces: Iterable[str], returnGlobalIfUnresolved: bool = False) -> Tuple[ASObject, str, str, Any]:
         '''
         Returns resolved object, its name, and its namespace. Also its scopeStack entry
         If the scopeStack entry is a string, then the string IS the resolved object
@@ -125,7 +125,8 @@ class VirtualMachine(ASObject):
           if self.cbOnInsExe.GetLoggingLevel() == logging.DEBUG:
             debug = True
 
-        if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.name=<{BM.DumpVar(name)}> SS#={len(scopeStack)}')
+        if self.cbOnInsExe is not None:
+          self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.name=<{BM.DumpVar(name)}> SS#={len(scopeStack)} rGIU={BM.DumpVar(returnGlobalIfUnresolved)}')
         for scopeStackEntry in reversed(scopeStack):
             if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) ResMulNam.SSE=<{BM.DumpVar(scopeStackEntry)}>')
             for namespace in namespaces:
@@ -135,6 +136,10 @@ class VirtualMachine(ASObject):
                 except KeyError:
                     if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)   ResQNam try *fail*')
                     pass
+        if returnGlobalIfUnresolved:
+          if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) UNRESOLVED: so use global')
+          return self.global_object, name, namespace, 'global'
+
         raise KeyError(f'KeyError; name={BM.DumpVar(name)}, namespaces={BM.DumpVar(namespaces)}, scopeStack={BM.DumpVar(scopeStack)}')
         # KeyError; name='Math', namespaces=[1]=[''], scopeStack=[2]=[ASObject(traceHint='v.p:__i_:51#5', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:53#3', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:54#4', class_ix=None, properties={})}), ASObject(traceHint='@tEv.p:tTEV3000LUcAURL:49 dummyInstance#6', class_ix=None, properties={})]":
 

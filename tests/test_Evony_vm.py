@@ -198,7 +198,7 @@ def test_TEV2110_InitAllClassClasses(machine_EvonyClient_N: VirtualMachine):
     print(f'{ix}, ', end='')
     if itemC.init_ix:
       n += 1
-      print(f'\n@{BM.LINE()} #{n} classes[{ix}]={itemC.nam_name} init_ix={itemC.init_ix}')
+      print(f'\n@{BM.LINE()} {BM.TERM_YLW()} #{n} classes[{ix}]={itemC.nam_name} init_ix={itemC.init_ix}{BM.TERM_RESET()}')
       callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)
       machine_EvonyClient_N.cbOnInsExe = callback
       act = machine_EvonyClient_N.call_ClassInstanceInit(itemC.init_ix, '')

@@ -1483,9 +1483,10 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
         machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
       object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
-          theSStack, # environment.scope_stack,
-          theName, # stack or machine.strings[multiname.nam_ix],
-          theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
+          theSStack # environment.scope_stack,
+          , theName # stack or machine.strings[multiname.nam_ix],
+          , theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
+          , True # True = return global object if not found
       )
     except KeyError as excp:
       raise NotImplementedError(f'ReferenceError < KeyError({excp})')
@@ -2254,10 +2255,11 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
         machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
       object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
-        theSStack, # environment.scope_stack,
-        theName, # stack or machine.strings[multiname.nam_ix],
-        theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
-      )
+        theSStack # environment.scope_stack,
+        , theName # stack or machine.strings[multiname.nam_ix],
+        , theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
+        , True # True = return global object if not found
+     )
     except KeyError:
       raise NotImplementedError('ReferenceError')
     else:
@@ -2271,7 +2273,7 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
 
       scopeChosen = '?'
       if isinstance(scopeStackEntry, str):
-        if scopeStackEntry == "": # global scope maybe
+        if scopeStackEntry == '' or scopeStackEntry == 'global': # global scope maybe
           scopeChosen = 'global'
           machine.global_object.properties[resKey] = resValue
         else:
