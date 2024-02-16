@@ -1125,13 +1125,14 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_4') # DEBUG
     findInternalMethod.findClassAndMethodFromBag(bag)
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_5') # DEBUG
-    assert False, f'!! ## TODO ## @{BM.LINE(False)} Check Method as a [[Construct]] ... somehow !!'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'TODO: Check Method as a [[Construct]] ... somehow !!')
+    # assert False, f'!! ## TODO ## @{BM.LINE(False)} Check Method as a [[Construct]] ... somehow !!'
 
     if bag.foundFunction:
       findInternalMethod.perform(bag)
       result = bag.result
     else:
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'Internal Method failure, bag={bag}')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'b.fF={BM.DumpVar(bag.foundFunction)} Internal Method failure, bag={bag}')
       assert False, f'@{BM.LINE(False)} Internal Method failure, bag={bag}'
 
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')

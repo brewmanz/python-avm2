@@ -61,7 +61,7 @@ class VirtualMachine(ASObject):
             # key seems to be tuple of (namespace, name)
             ('', 'Object'): ASObject(BM.LINE(False)),
             ('', 'Math'): avm2.abc.abc_instructions.Math_Object_Singleton, # for Math.max
-            ('flash.utils', 'Dictionary'): ASObject(BM.LINE(False)),
+            ('flash.utils', 'Dictionary'): ASObject(BM.LINE(False)), # cf https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/utils/Dictionary.html
         })  # FIXME: unsure, prototypes again?
 
         # HACK 2023-12-13 not sure how to set object properties; maybe create a dictionary? Let's see.
