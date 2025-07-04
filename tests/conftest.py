@@ -11,7 +11,7 @@ from avm2.swf.swf_parser import parse_swf
 from avm2.swf.swf_types import DoABCTag, Tag
 from avm2.vm import VirtualMachine
 
-# run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages. in ~/git/python-avm2_AdobeSwfActionScript
+# run via 'pytest -s' (that's pytest-3), to get 'being run ##' messages. in ~/git/swf_python-avm2_AdobeSwfActionScript  # was # python-avm2_AdobeSwfActionScript
 
 import MyGamesHelper as MGH
 import BrewMaths as BM

@@ -21,6 +21,9 @@ def BuildSymbolsLookup(): # global g_SymbolsLookupFromNumber from 'data/BryanHom
   with open(f'data/BryanHomeGamesEvonyCachstuffSwfMainflash/symbols.csv', 'r') as fCsv:
     strLines = fCsv.readlines()
   with open(f'dict_symbols.$txt', 'w') as fTxt:
+    fTxt.write("# created via helper_abc.py - BuildSymbolsLookup #") # 20250508
+    fTxt.write("# which is called from test_TEA2000_file_Dump_EvonyClient_1922 #") # 20250508
+    fTxt.write("# also from test_THA2000_file_Dump_Heroes #") # 20250508
     fTxt.writelines(strLines)
   kMin = 99999; kMax = -1
   for strLine in strLines:
