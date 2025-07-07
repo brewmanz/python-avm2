@@ -24,11 +24,11 @@ import avm2.abc.abc_enums as EN
 
 def test_TEV6000_EvC_HospitalWin_bits(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-  assert 1 == 2
+  assert 1 == 2, f'@{BM.LINE()}{BM.TERM_YLW()} TODO'
 
 def test_TEV5000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-  assert 1 == 2
+  assert 1 == 2, f'@{BM.LINE()}{BM.TERM_YLW()} TODO'
 
 def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
@@ -158,22 +158,18 @@ def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):
   # empty # for item in machine_EvonyClient_N.class_objects:
   print(f'@{BM.LINE()} class count = {len(machine_EvonyClient_N.abc_file.classes)}')
 
-  #bagClassNonZeroInitIx = [item.init_ix for item in filter(lambda x: x.init_ix > 0, machine_EvonyClient_N.abc_file.classes)]
-  #maxClassNonZeroInitIx = max(bagClassNonZeroInitIx)
-  #minClassNonZeroInitIx = min(bagClassNonZeroInitIx)
-  #print(f'@{BM.LINE()} ClassNonZeroInitIx range = {minClassNonZeroInitIx} to {maxClassNonZeroInitIx}')
   bagClassInitIx = [item.init_ix for item in machine_EvonyClient_N.abc_file.classes]
   classInitIxStats = BM.NullNanZeroMinMax(bagClassInitIx)
   print(f'@{BM.LINE()} Class InitIx stats = {classInitIxStats}')
 
   assert len(machine_EvonyClient_N.abc_file.classes) == len(machine_EvonyClient_N.abc_file.instances), 'Sanity check'
   print(f'@{BM.LINE()} l(abc.mb)={len(machine_EvonyClient_N.abc_file.method_bodies)}')
-  print(f'@{BM.LINE()} item \nC={machine_EvonyClient_N.abc_file.classes[0]} \nI={machine_EvonyClient_N.abc_file.instances[0]}')
+  # print(f'@{BM.LINE()} item \nC={machine_EvonyClient_N.abc_file.classes[0]} \nI={machine_EvonyClient_N.abc_file.instances[0]}')
   n = 0
   for ix in range(len(machine_EvonyClient_N.abc_file.classes)):
     itemC = machine_EvonyClient_N.abc_file.classes[ix]
     itemI = machine_EvonyClient_N.abc_file.instances[ix]
-    #print(f'@{BM.LINE()} item \nC={itemC} \nI={itemI}')
+    print(f'{BM.TERM_CYN()}@{BM.LINE(False)} item \nC={BM.TERM_RESET()}{itemC} \n{BM.TERM_CYN()}I={BM.TERM_RESET()}{itemI}')
     print(f'{ix}, ', end='')
     if itemI.init_ix:
       n += 1

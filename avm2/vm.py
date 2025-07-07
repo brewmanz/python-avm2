@@ -265,7 +265,7 @@ class VirtualMachine(ASObject):
         try:
           ixMB = self.method_to_body[index]
         except KeyError:
-          print(f'!! @{BM.LINE()} !! KeyError !! ... list of keys:', end='')
+          print(f'!! @{BM.LINE()}{BM.TERM_WHT_ON_RED()} !! KeyError !! index={index} {BM.TERM_RESET()}... list of keys:', end='')
           ix = 0
           for k in self.method_to_body.keys():
             v = self.method_to_body[k]
