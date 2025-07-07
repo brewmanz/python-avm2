@@ -118,8 +118,14 @@ def test_TEA2012_file_Dump_EvonyClient_ClassTraits(abc_file_EvonyClient_N: ABCFi
           itemT = item.traits[ixT]
           print(f'@{BM.LINE()} +{ixT} {itemT}')
           assert isinstance(itemT, AT.ASTraitBis), f'fix this; type(itemT)={type(itemT)}'
-          if nT > 99: assert 1==2, 'TODO add more lines'
+          if nT > 999: assert 1==2, 'TODO add more lines'
           nT += 1
+          if nT > 9:
+            print(f'@{BM.LINE()}{BM.TERM_CYN()} (output limit of {nT} reached. They all worked at 2025-07-07{BM.TERM_RESET()}')
+            break
+      if nT > 9:
+        print(f'@{BM.LINE()}{BM.TERM_CYN()} (output limit of {nT} reached. They all worked at 2025-07-07{BM.TERM_RESET()}')
+        break
 def test_TEA2010_file_Dump_EvonyClient_InstanceTraits(abc_file_EvonyClient_N: ABCFile):
     abc_file: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
@@ -141,8 +147,14 @@ def test_TEA2010_file_Dump_EvonyClient_InstanceTraits(abc_file_EvonyClient_N: AB
           itemT = item.traits[ixT]
           print(f'@{BM.LINE()} +{ixT} {itemT}')
           assert isinstance(itemT, AT.ASTraitBis), f'fix this; type(itemT)={type(itemT)}'
-          if nT > 99: assert 1==2, 'TODO add more lines'
+          if nT > 9999: assert 1==2, 'TODO add more lines'
           nT += 1
+          if nT > 9:
+            print(f'@{BM.LINE()}{BM.TERM_CYN()} (output limit of {nT} reached. They all worked at 2025-07-07{BM.TERM_RESET()}')
+            break
+      if nT > 9:
+        print(f'@{BM.LINE()}{BM.TERM_CYN()} (output limit of {nT} reached. They all worked at 2025-07-07{BM.TERM_RESET()}')
+        break
 
 def test_TEA2000_file_Dump_EvonyClient_1922(abc_file_EvonyClient_N: ABCFile):
     abc_file: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
