@@ -756,6 +756,9 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
   tc: str
   loggingLevel: int
 
+  def GetName(self) -> str:
+    return f'{type(self).__name__}(limitCalls={self.limitCalls}, loggingLevel={self.loggingLevel})'
+
   def ObserveInstructionExecuting(self, theInstruction: Instruction, machine: VirtualMachine, environment: MethodEnvironment, offsetOfInstruction: int):
     self.callsSoFar += 1
     strFinal = ' $FINAL$' if self.callsSoFar == self.limitCalls else ''
