@@ -693,7 +693,7 @@ class Instruction:
     # add some way to track things
     def tallyProgress(theInstance: Instruction, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment, offsetOfInstruction: int):
         environment.instrExeCnt += 1
-        environment.lastNInstr.append(f'+{hex(offsetOfInstruction)} SS#{len(environment.scope_stack)}, OS#{len(environment.operand_stack)}, I={type(theInstance).__name__}')
+        environment.lastNInstr.append(f'+{hex(offsetOfInstruction)} ScSt#{len(environment.scope_stack)}, OpSt#{len(environment.operand_stack)}, I={type(theInstance).__name__}')
         if len(environment.lastNInstr) > Instruction.maxlastNInstr:
           del environment.lastNInstr[0]
 
@@ -762,13 +762,13 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
 
   def ObserveInstructionExecuting(self, theInstruction: Instruction, machine: VirtualMachine, environment: MethodEnvironment, offsetOfInstruction: int):
     self.callsSoFar += 1
-    strFinal = ' $FINAL$' if self.callsSoFar == self.limitCalls else ''
+    strIfFinal = ' $FINAL$' if self.callsSoFar == self.limitCalls else ''
 
     if self.callsSoFar == 1 and self.callsSoFar <= self.limitCalls: # display on first call
       DumpEnvironmentRegisters(machine, environment)
 
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar <= self.limitCalls):
-      print(f'{self.tc}{BM.LINE(False)}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}{strFinal}')
+      print(f'{self.tc}{BM.LINE(False)}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} ScSt#{len(environment.scope_stack)} OpSt#{len(environment.operand_stack)}{strIfFinal}')
 
   def MakeExtraObservation(self, extraObservation, loggingLevel = logging.INFO):
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar <= self.limitCalls):
@@ -935,18 +935,18 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   "[2]=['some:kinda:string', ':']"
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    ai.p:MEO:...: Extra@...:ostack=<[2]=['some:kinda:string', ':']> CP_1.
+    ai.p:MEO:...: Extra@...:OpSt=<[2]=['some:kinda:string', ':']> CP_1.
     ai.p:MEO:...: Extra@...:-os.pop arg[0]=':'.
-    ai.p:MEO:...: Extra@...:ostack=<[1]=['some:kinda:string']> CP_2.
-    ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
-    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
+    ai.p:MEO:...: Extra@...:OpSt=<[1]=['some:kinda:string']> CP_2.
+    ai.p:MEO:...: Extra@...:get nam/ns from OpSt=False/False.
+    ai.p:MEO:...: Extra@...:tScSt#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
                       ('', 'Math'):                       Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
     ai.p:MEO:...: Extra@...:tN='indexOf'.
     ai.p:MEO:...: Extra@...:tNs='http://adobe.com/AS3/2006/builtin'.
     ai.p:MEO:...: Extra@...:-os.pop obj='some:kinda:string'.
-    ai.p:MEO:...: Extra@...:ostack=<[0]=[]> CP_3.
+    ai.p:MEO:...: Extra@...:OpSt=<[0]=[]> CP_3.
     ai.p:MEO:...: Extra@...:+os.push result=<4>.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[4]'
@@ -970,19 +970,19 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
   "[3]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), 45, 123.45]"
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    ai.p:MEO:...: Extra@...:ostack=<[3]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), 45, 123.45]> CP_1.
+    ai.p:MEO:...: Extra@...:OpSt=<[3]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), 45, 123.45]> CP_1.
     ai.p:MEO:...: Extra@...:-os.pop arg[1]=123.45.
     ai.p:MEO:...: Extra@...:-os.pop arg[0]=45.
-    ai.p:MEO:...: Extra@...:ostack=<[1]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={})]> CP_2.
-    ai.p:MEO:...: Extra@...:get nam/ns from stack=False/False.
-    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
+    ai.p:MEO:...: Extra@...:OpSt=<[1]=[Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={})]> CP_2.
+    ai.p:MEO:...: Extra@...:get nam/ns from OpSt=False/False.
+    ai.p:MEO:...: Extra@...:tScSt#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
                       ('', 'Math'):                       Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
     ai.p:MEO:...: Extra@...:tN='max'.
     ai.p:MEO:...: Extra@...:tNs=''.
     ai.p:MEO:...: Extra@...:-os.pop obj=Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}).
-    ai.p:MEO:...: Extra@...:ostack=<[0]=[]> CP_3.
+    ai.p:MEO:...: Extra@...:OpSt=<[0]=[]> CP_3.
     ai.p:MEO:...: Extra@...:+os.push result=<123.45>.
   >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
   '[1]=[123.45]'
@@ -996,12 +996,12 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   arg_count: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     argN=[]
     for ix in range(self.arg_count)[::-1]:
@@ -1009,25 +1009,25 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
       argN.insert(0, theArg)
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_2', logging.DEBUG) # DEBUG
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
-    theSStack = environment.scope_stack
+    theScopeStack = environment.scope_stack
     theName  = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
     theNS    = environment.operand_stack.pop() if getNsFromStk else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
 
     if machine.cbOnInsExe is not None:
-      machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
+      machine.cbOnInsExe.MakeExtraObservation(f'tScSt#{len(theScopeStack)}={BM.DumpVar(theScopeStack)}')
       machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
       machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNS)}')
 
     theObj = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={BM.DumpVar(theObj)}')
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_3', logging.DEBUG) # DEBUG
 
     bag = bagForFindingInternalMethod(theObj, theNS, theName, argN)
     if True: bag.debug = True # track bag process
@@ -1052,8 +1052,8 @@ class CallPropLex(Instruction): # …, obj, [ns], [name], arg1,...,argn => …, 
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(79)
 class CallPropVoid(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
@@ -1064,8 +1064,8 @@ class CallPropVoid(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(68)
 class CallStatic(Instruction): # …, receiver, arg1, arg2, ..., argn => …, value
@@ -1082,8 +1082,8 @@ class CallSuper(Instruction):
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(78)
 class CallSuperVoid(Instruction):
@@ -1094,8 +1094,8 @@ class CallSuperVoid(Instruction):
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(120)
 class CheckFilter(Instruction):
@@ -1235,12 +1235,12 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
   arg_count: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     argN=[]
     for ix in range(self.arg_count)[::-1]:
@@ -1248,31 +1248,30 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
       argN.insert(0, theArg)
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_2', logging.DEBUG) # DEBUG
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
-    theSStack = environment.scope_stack
+    theScopeStack = environment.scope_stack
     theName  = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
     theNS    = environment.operand_stack.pop() if getNsFromStk else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
 
     if machine.cbOnInsExe is not None:
-      machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
+      machine.cbOnInsExe.MakeExtraObservation(f'tScSt#{len(theScopeStack)}={BM.DumpVar(theScopeStack)}')
       machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
       machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNS)}')
 
     theObj = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={BM.DumpVar(theObj)}')
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_3', logging.DEBUG) # DEBUG
 
     bag = bagForFindingInternalMethod(theObj, theNS, theName, argN, debug = (machine.cbOnInsExe is not None) )
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_4', logging.DEBUG) # DEBUG
     findInternalMethod.findClassAndMethodFromBag(bag)
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_5', logging.DEBUG) # DEBUG
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'HELLO DEBUG !!', logging.DEBUG)
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'TODO: Check Method as a [[Construct]] ... somehow !!', logging.WARNING)
     # assert False, f'!! ## TODO ## @{BM.LINE(False)} Check Method as a [[Construct]] ... somehow !!'
 
@@ -1523,8 +1522,8 @@ class DeleteProperty(Instruction):
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(163)
 class Divide(Instruction): # …, value1, value2 => …, value3
@@ -1612,7 +1611,7 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
   """
   index: u30
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
@@ -1620,19 +1619,19 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     try:
-      theSStack     = environment.scope_stack
+      theScopeStack = environment.scope_stack
       theName       = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
       theNamespaces = [environment.operand_stack.pop()] if getNsFromStk else [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
 
       if machine.cbOnInsExe is not None:
-        #machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
+        #machine.cbOnInsExe.MakeExtraObservation(f'tScSt#{len(theScopeStack)}={BM.DumpVar(theScopeStack)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
       object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
-          theSStack # environment.scope_stack,
+          theScopeStack # environment.scope_stack,
           , theName # stack or machine.strings[multiname.nam_ix],
           , theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
           , True # True = return global object if not found
@@ -1666,7 +1665,7 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
   index: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
@@ -1674,19 +1673,19 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     try:
-      theSStack     = environment.scope_stack
+      theScopeStack = environment.scope_stack
       theName       = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
       theNamespaces = [environment.operand_stack.pop()] if getNsFromStk else [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
 
       if machine.cbOnInsExe is not None:
-        #machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
+        #machine.cbOnInsExe.MakeExtraObservation(f'tScSt#{len(theScopeStack)}={BM.DumpVar(theScopeStack)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
       object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
-          theSStack, # environment.scope_stack,
+          theScopeStack, # environment.scope_stack,
           theName, # stack or machine.strings[multiname.nam_ix],
           theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
       )
@@ -1705,8 +1704,8 @@ class GetDescendants(Instruction):
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(100)
 class GetGlobalScope(Instruction):
@@ -1764,7 +1763,7 @@ class GetLex(Instruction): # … => …, obj
   '[0]=[]'
   >>> inst.execute(myVM, env) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE, +REPORT_NDIFF
     ai.p:MEO:...: Extra@...:mn=ASMultinameBis(kind=<MultinameKind.Q_NAME: 7>, ns_ix=2, nam_ix=1332, ns_set_ix=None, q_nam_ix=None, type_ixs=None, ixCP=1334, ns_name='', nam_name='Math', ns_set_names=None, q_nam_name=None).
-    ai.p:MEO:...: Extra@...:tSS#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
+    ai.p:MEO:...: Extra@...:tScSt#1=[1]=[ASObject(traceHint='v.p:__i_:...#...', class_ix=None,
           properties={('', 'Object'):                     ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}),
                       ('', 'Math'):                       Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}),
                       ('flash.utils', 'Dictionary'):      ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})].
@@ -1774,7 +1773,7 @@ class GetLex(Instruction): # … => …, obj
     ai.p:MEO:...: Extra@...:  props[ns='flash.utils', n='Dictionary'] = ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}).
     ai.p:MEO:...: Extra@...:tN='Math'.
     ai.p:MEO:...: Extra@...:tNs=[1]=[''].
-    ai.p:MEO:...: Extra@...:(v.p)ResMulNam.name=<'Math'> SS#=1.
+    ai.p:MEO:...: Extra@...:(v.p)ResMulNam.name=<'Math'> ScSt#=1.
     ai.p:MEO:...: Extra@...:(v.p) ResMulNam.sobj=<ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={}), ('', 'Math'): Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:...#...', class_ix=None, properties={})})>.
     ai.p:MEO:...: Extra@...:(v.pD)  ResQNam try ns ''.
     ai.p:MEO:...: Extra@...:object_=Math_Object(traceHint='ai.p:<:...#...', class_ix=None, properties={}), namespace='', name='Math'.
@@ -1792,16 +1791,16 @@ class GetLex(Instruction): # … => …, obj
     multiname = machine.multinames[self.index]
     assert multiname.kind in (MultinameKind.Q_NAME, MultinameKind.Q_NAME_A)
     hint = '?'
-    hint = 'tS';   theSStack     = environment.scope_stack
+    hint = 'tScSt';theScopeStack = environment.scope_stack
     hint = 'tN';   theName       = machine.strings[multiname.nam_ix]
     hint = 'tNSs'; theNamespaces = [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]]
     hint = 'm.cOIE';
     if machine.cbOnInsExe is not None:
       machine.cbOnInsExe.MakeExtraObservation(f'mn={BM.DumpVar(multiname)}')
-      machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}')
+      machine.cbOnInsExe.MakeExtraObservation(f'tScSt#{len(theScopeStack)}={BM.DumpVar(theScopeStack)}')
       if machine.cbOnInsExe.GetLoggingLevel() == logging.DEBUG:
-        for ix in range(len(theSStack)):
-          item = theSStack[ix]
+        for ix in range(len(theScopeStack)):
+          item = theScopeStack[ix]
           machine.cbOnInsExe.MakeExtraObservation(f' [{ix}] props#{len(item.properties)}')
           for keyNS_N in item.properties:
             itemL = item.properties[keyNS_N]
@@ -1814,7 +1813,7 @@ class GetLex(Instruction): # … => …, obj
       machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
     try:
       hint = 'm.rmn';object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
-          theSStack, # environment.scope_stack,
+          theScopeStack, # environment.scope_stack,
           theName, # machine.strings[multiname.nam_ix],
           theNamespaces, # [machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
       )
@@ -1847,9 +1846,9 @@ class GetLocal(Instruction): # … => …, value
 def DumpEnvironmentRegisters(machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
   if machine.cbOnInsExe is not None:
     lenEnvReg = len(environment.registers)
-    machine.cbOnInsExe.MakeExtraObservation(f'BTW #ER={BM.DumpVar(lenEnvReg)} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}')
+    machine.cbOnInsExe.MakeExtraObservation(f'BTW #EnvReg={BM.DumpVar(lenEnvReg)} ScSt#{len(environment.scope_stack)} OpSt#{len(environment.operand_stack)}')
     for ix in range(lenEnvReg):
-      machine.cbOnInsExe.MakeExtraObservation(f'BTW ER{ix}={BM.DumpVar(environment.registers[ix])}')
+      machine.cbOnInsExe.MakeExtraObservation(f'BTW EnvReg{ix}={BM.DumpVar(environment.registers[ix])}')
 
 @instruction(208)
 class GetLocal0(Instruction): # … => …, value
@@ -1965,8 +1964,8 @@ class GetProperty(Instruction):
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(101)
 class GetScopeObject(Instruction): # … => …, scope
@@ -1997,8 +1996,8 @@ class GetSuper(Instruction):
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(176)
 class GreaterEquals(Instruction): # …, value1, value2 => …, result
@@ -2380,7 +2379,7 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
   index: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> IP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> IP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
@@ -2391,20 +2390,20 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'get nam/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
 
     try:
-      theSStack     = environment.scope_stack
+      theScopeStack = environment.scope_stack
       theName       = environment.operand_stack.pop() if getNamFromStk else machine.strings[multiname.nam_ix]
       theNamespace  = environment.operand_stack.pop() if getNsFromStk else machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]
       theNamespaces = [theNamespace]
 
       if machine.cbOnInsExe is not None:
-        #machine.cbOnInsExe.MakeExtraObservation(f'tSS#{len(theSStack)}={BM.DumpVar(theSStack)}') # TODO why did I stop logging this?
+        #machine.cbOnInsExe.MakeExtraObservation(f'tScSt#{len(theScopeStack)}={BM.DumpVar(theScopeStack)}') # TODO why did I stop logging this?
         machine.cbOnInsExe.MakeExtraObservation(f'tN={BM.DumpVar(theName)}')
         machine.cbOnInsExe.MakeExtraObservation(f'tNs={BM.DumpVar(theNamespaces)}')
       object_, name, namespace, scopeStackEntry = machine.resolve_multiname(
-        theSStack # environment.scope_stack,
+        theScopeStack # environment.scope_stack,
         , theName # stack or machine.strings[multiname.nam_ix],
         , theNamespaces # [stack or machine.strings[machine.namespaces[multiname.ns_ix].nam_ix]],
         , True # True = return global object if not found
@@ -2920,8 +2919,8 @@ class SetProperty(Instruction): # …, obj, [ns], [name], value => …
     # TODO is it a runtime multiname?
     # cf FindPropStrict for some ideas
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} ## TODO use findpropstrict for logic for name & ns from stack', logging.WARNING)
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} ## TODO use findpropstrict for logic for name & ns from OpSt', logging.WARNING)
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
     isMultinameRuntimeName = False # Add code to determine Name
     isMultinameRuntimeNS = False # Add code to determine Namespace
 
@@ -2938,8 +2937,8 @@ class SetProperty(Instruction): # …, obj, [ns], [name], value => …
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(109)
 class SetSlot(Instruction):
@@ -2954,8 +2953,8 @@ class SetSuper(Instruction):
     multiname = None
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)} n/ns from stack={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
-    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'multi={BM.DumpVar(multiname)}; n/ns from OpSt={BM.DumpVar(getNamFromStk)}/{BM.DumpVar(getNsFromStk)}')
+    assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from OpSt'
 
 @instruction(172)
 class StrictEquals(Instruction):
