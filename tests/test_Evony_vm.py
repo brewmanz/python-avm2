@@ -24,11 +24,11 @@ import avm2.abc.abc_enums as EN
 
 def test_TEV6000_EvC_HospitalWin_bits(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-  assert 1 == 2, f'@{BM.LINE()}{BM.TERM_YLW()} TODO'
+  assert 1 == 2, f'@{BM.LINE()}{BM.TERM_YLW()} TODO{BM.TERM_RESET()}'
 
 def test_TEV5000_EvC_toDebugString_VariousBeans(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-  assert 1 == 2, f'@{BM.LINE()}{BM.TERM_YLW()} TODO'
+  assert 1 == 2, f'@{BM.LINE()}{BM.TERM_YLW()} TODO{BM.TERM_RESET()}'
 
 def test_TEV3000_LoaderUtil_createAbsoluteURL(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
@@ -171,7 +171,7 @@ def test_TEV2120_InitAllClasseInstances(machine_EvonyClient_N: VirtualMachine):
     itemI = machine_EvonyClient_N.abc_file.instances[ix]
     print(f'{BM.TERM_CYN()}@{BM.LINE(False)} item \nC={BM.TERM_RESET()}{itemC} \n{BM.TERM_CYN()}I={BM.TERM_RESET()}{itemI}')
     print(f'{ix}, ', end='')
-    if itemI.init_ix:
+    if itemI.init_ix: # if class has a static initialiser ...
       n += 1
       print(f'\n@{BM.LINE()} #{n} instances[{ix}]={itemI.nam_name} init_ix={itemI.init_ix}')
       callback = CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(100)

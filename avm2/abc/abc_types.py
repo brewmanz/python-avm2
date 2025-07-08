@@ -65,6 +65,11 @@ class ABCFile: # abcfile
 
     def propagateStrings(self, callerInfo: str):
       print(f'@{BM.LINE()} {BM.TERM_YLW()}{BM.FUNC_NAME()}{BM.TERM_RESET()} running (called from {callerInfo}) ... ')
+
+      if (type(self.constant_pool.namespaces[-1]) == ASNamespaceBis):
+        print(f'@{BM.LINE()} {BM.TERM_YLW()}Been there, done that, carying on ...{BM.TERM_RESET()}')
+        return
+
       self.constant_pool._propagateStrings(callerInfo)
 
       # classes
@@ -74,6 +79,8 @@ class ABCFile: # abcfile
       firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
       if firstClassWithTraits_orNull:
         print(f'@{BM.LINE()}  type(firstClassWithTraits_orNull.traits[-1])={type(firstClassWithTraits_orNull.traits[-1])}')
+      else:
+        print(f'@{BM.LINE()}  no firstClassWithTraits_orNull.traits')
       newItemT = None # trait - just in case there are none
       newItemTS = None # traitSlot - just in case there are none
       newItemTM = None # traitMethod - just in case there are none
@@ -114,14 +121,16 @@ class ABCFile: # abcfile
       print(f'@{BM.LINE()}  type(classes[*].traitK[*])={type(newItemTK) if newItemTK else "(None)"}')
       print(f'@{BM.LINE()}  type(classes[*].trait* counts: {nItemTx}')
       print(f'@{BM.LINE()}  type(classes[-1])={type(self.classes[-1])} #={len(self.classes)}')
-      firstClassWithTraits_orNull = next((it for it in self.classes if len(it.traits) > 0), None)
-      if firstClassWithTraits_orNull:
-        print(f'@{BM.LINE()}  type(firstClassWithTraits_orNull.traits[-1])={type(firstClassWithTraits_orNull.traits[-1])}')
 
       # instances
       bagNumbers = [item.init_ix for item in self.instances]
       numberStats = BM.NullNanZeroMinMax(bagNumbers, 'for_instances')
       print(f'@{BM.LINE()}  type(instances[-1])={type(self.instances[-1])}, stats iinit(init_ix)={numberStats}')
+      firstInstanceWithTraits_orNull = next((it for it in self.instances if len(it.traits) > 0), None)
+      if firstInstanceWithTraits_orNull:
+        print(f'@{BM.LINE()}  type(firstInstanceWithTraits_orNull.traits[-1])={type(firstInstanceWithTraits_orNull.traits[-1])}')
+      else:
+        print(f'@{BM.LINE()}  no firstInstanceWithTraits_orNull.traits')
       newItemT = None # trait - just in case there are none
       newItemTS = None # traitSlot - just in case there are none
       newItemTM = None # traitMethod - just in case there are none
@@ -131,6 +140,7 @@ class ABCFile: # abcfile
       newItemTF = None # traitFunction - just in case there are none
       newItemTK = None # traitConst - just in case there are none
       nItemTx = dict()
+      # now convert from xxx to xxxBis
       for ix in range(len(self.instances)):
         item = self.instances[ix]
         if item != None:
@@ -170,6 +180,7 @@ class ABCFile: # abcfile
 
       # methods
       print(f'@{BM.LINE()}  type(methods[-1])={type(self.methods[-1])} #={len(self.methods)}')
+      # now convert from xxx to xxxBis
       for ix in range(len(self.methods)):
         item = self.methods[ix]
         if item != None:
@@ -197,6 +208,11 @@ class ABCFile: # abcfile
       bagNumbers = [item.method_ix for item in self.method_bodies]
       numberStats = BM.NullNanZeroMinMax(bagNumbers, 'for_method_bodies')
       print(f'@{BM.LINE()}  type(method_bodies[-1])={type(self.method_bodies[-1])}, stats method_ix={numberStats}')
+      firstMethodBodyWithTraits_orNull = next((it for it in self.method_bodies if len(it.traits) > 0), None)
+      if firstMethodBodyWithTraits_orNull:
+        print(f'@{BM.LINE()}  type(firstMethodBodyWithTraits_orNull.traits[-1])={type(firstMethodBodyWithTraits_orNull.traits[-1])}')
+      else:
+        print(f'@{BM.LINE()}  no firstMethodBodyWithTraits_orNull.traits')
       newItemE = None # exception - just in case there are none
       newItemT = None # trait - just in case there are none
       newItemTS = None # traitSlot - just in case there are none
@@ -207,6 +223,7 @@ class ABCFile: # abcfile
       newItemTF = None # traitFunction - just in case there are none
       newItemTK = None # traitConst - just in case there are none
       nItemTx = dict()
+      # now convert from xxx to xxxBis
       for ix in range(len(self.method_bodies)):
         item = self.method_bodies[ix]
         if item != None:
@@ -257,6 +274,11 @@ class ABCFile: # abcfile
       bagNumbers = [item.init_ix for item in self.scripts]
       numberStats = BM.NullNanZeroMinMax(bagNumbers, 'for_scripts')
       print(f'@{BM.LINE()}  type(scripts[-1])={type(self.scripts[-1])}, stats init_ix={numberStats}')
+      firstScriptWithTraits_orNull = next((it for it in self.scripts if len(it.traits) > 0), None)
+      if firstScriptWithTraits_orNull:
+        print(f'@{BM.LINE()}  type(firstScriptWithTraits_orNull.traits[-1])={type(firstMethodBodyWithTraits_orNull.traits[-1])}')
+      else:
+        print(f'@{BM.LINE()}  no firstScriptWithTraits_orNull.traits')
 
 @dataclass
 class ASConstantPool: # cpool_info
@@ -285,6 +307,7 @@ class ASConstantPool: # cpool_info
       print(f'@{BM.LINE()}  type(strings[-1])={type(self.strings[-1])} #={len(self.strings)}')
 
       print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])} #={len(self.namespaces)}')
+      # now convert from xxx to xxxBis
       for ix in range(len(self.namespaces)):
         item = self.namespaces[ix]
         if item != None:
@@ -293,6 +316,7 @@ class ASConstantPool: # cpool_info
       print(f'@{BM.LINE()}  type(namespaces[-1])={type(self.namespaces[-1])} #={len(self.namespaces)}')
 
       print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])} #={len(self.ns_sets)}')
+      # now convert from xxx to xxxBis
       for ix in range(len(self.ns_sets)):
         item = self.ns_sets[ix]
         if item != None:
@@ -301,6 +325,7 @@ class ASConstantPool: # cpool_info
       print(f'@{BM.LINE()}  type(ns_sets[-1])={type(self.ns_sets[-1])} #={len(self.ns_sets)}')
 
       print(f'@{BM.LINE()}  type(multinames[-1])={type(self.multinames[-1])} #={len(self.multinames)}')
+      # now convert from xxx to xxxBis
       for ix in range(len(self.multinames)):
         item = self.multinames[ix]
         if item != None:
@@ -836,10 +861,10 @@ class ASTraitMethodBis(ASTraitMethod):
 
 
 @dataclass
-class ASClass: # class_info
+class ASClass: # class_info # 4.9 of _Adobe. ActionScript Virtual Machine 2 (AVM2) Overview(2007-05,108pp)
     nam_name: str # not available at creation time
     super_name: str # not available at creation time
-    init_ix: ABCMethodIndex # u30 cinit
+    init_ix: ABCMethodIndex # u30 cinit This is an index into the method array of the abcFile
     traits: List[ASTrait] # u30 trait_count + traits_info traits[trait_count]
 
     def __init__(self, reader: MemoryViewReader):

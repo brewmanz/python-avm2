@@ -743,7 +743,7 @@ class ICallbackOnInstructionExecuting:
     return type(self).__name__
   def ObserveInstructionExecuting(self, theInstruction: Instruction, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment, offsetOfInstruction: int):
     raise NotImplementedError(F'Someone forgot to override {BM.FUNC_NAME()}, or derive their listener from here ({self})')
-  def MakeExtraObservation(self, extraObservation):
+  def MakeExtraObservation(self, extraObservation, loggingLevel = logging.INFO):
     raise NotImplementedError(F'Someone forgot to override {BM.FUNC_NAME()} ({self})')
 
 @dataclass
@@ -751,9 +751,10 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
   """
   set limitCalls to -1 for all, or 0+ to limit the number of calls processed.
   tc = 'tab char'
+  loggingLevel: int # logging.NOTSET=0, DEBUG=10. INFO=20, WARNING=30, ERROR=40, CRITICAL=50
   """
   limitCalls: int
-  tc: str
+  tc: str # tab char
   loggingLevel: int
 
   def GetName(self) -> str:
@@ -769,16 +770,26 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar <= self.limitCalls):
       print(f'{self.tc}{BM.LINE(False)}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} SS#{len(environment.scope_stack)} OS#{len(environment.operand_stack)}{strFinal}')
 
-  def MakeExtraObservation(self, extraObservation):
+  def MakeExtraObservation(self, extraObservation, loggingLevel = logging.INFO):
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar <= self.limitCalls):
-      callerF = inspect.currentframe() #getframeinfo(stack()[1][0])
-      callerLine = callerF.f_back.f_lineno
-      print(f'{self.tc}{BM.LINE(False)}: {self.tc}Extra@{callerLine}:{extraObservation}.')
+      if(loggingLevel >= self.loggingLevel):
+        callerF = inspect.currentframe() #getframeinfo(stack()[1][0])
+        callerFileName = callerF.f_back.f_code.co_filename
+        callerFuncName = callerF.f_back.f_code.co_name
+        callerLine = callerF.f_back.f_lineno
+        if(False):pass
+        elif(loggingLevel >= logging.CRITICAL): termCol = BM.TERM_WHT_ON_RED()
+        elif(loggingLevel >= logging.ERROR):    termCol = BM.TERM_GRY_ON_RED()
+        elif(loggingLevel >= logging.WARNING):  termCol = BM.TERM_YLW(True)
+        elif(loggingLevel > logging.INFO):      termCol = BM.TERM_YLW(False)
+        elif(loggingLevel <= logging.DEBUG):    termCol = BM.TERM_WHT(True)
+        else: termCol = ""
+        print(f'{self.tc}{BM.LINE(False)}: {self.tc}{loggingLevel} Extra@{callerFuncName}:{callerLine}:{termCol}{extraObservation}.{BM.TERM_RESET()}')
 
   def GetLoggingLevel(self) -> int:
     return self.loggingLevel
 
-  def __init__(self, limitCalls: int, tabChar: string = '\t', /, loggingLevel: int = logging.INFO):
+  def __init__(self, limitCalls: int, tabChar: string = '\t', /, loggingLevel: int = logging.DEBUG):
     self.limitCalls = limitCalls
     self.callsSoFar: int = 0
     self.tc = tabChar
@@ -985,7 +996,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   arg_count: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     getNamFromStk = multiname.getNameFromStack()
@@ -998,7 +1009,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
       argN.insert(0, theArg)
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2', logging.DEBUG) # DEBUG
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
@@ -1016,7 +1027,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
     theObj = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={BM.DumpVar(theObj)}')
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3', logging.DEBUG) # DEBUG
 
     bag = bagForFindingInternalMethod(theObj, theNS, theName, argN)
     if True: bag.debug = True # track bag process
@@ -1025,7 +1036,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       findInternalMethod.perform(bag)
       result = bag.result
     else:
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'Internal Method failure, bag={bag}')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'Internal Method failure, bag={bag}', logging.ERROR)
       assert False, f'@{BM.LINE(False)} Internal Method failure, tNs={BM.DumpVar(theNS)}, tN={BM.DumpVar(theName)}, bag={bag}'
 
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
@@ -1199,7 +1210,7 @@ class Construct(Instruction): # …, object, arg1, arg2, ..., argn => …, value
     theObj = environment.operand_stack.pop()
 
     result = f'!! ## TODO ## @{BM.LINE(False)} !!'
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>', logging.WARNING)
     environment.operand_stack.append(result)
 
 
@@ -1224,7 +1235,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
   arg_count: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     getNamFromStk = multiname.getNameFromStack()
@@ -1237,7 +1248,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
       argN.insert(0, theArg)
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_2', logging.DEBUG) # DEBUG
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
@@ -1255,20 +1266,21 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     theObj = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={BM.DumpVar(theObj)}')
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_3', logging.DEBUG) # DEBUG
 
     bag = bagForFindingInternalMethod(theObj, theNS, theName, argN, debug = (machine.cbOnInsExe is not None) )
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_4') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_4', logging.DEBUG) # DEBUG
     findInternalMethod.findClassAndMethodFromBag(bag)
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_5') # DEBUG
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'TODO: Check Method as a [[Construct]] ... somehow !!')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_5', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'HELLO DEBUG !!', logging.DEBUG)
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'TODO: Check Method as a [[Construct]] ... somehow !!', logging.WARNING)
     # assert False, f'!! ## TODO ## @{BM.LINE(False)} Check Method as a [[Construct]] ... somehow !!'
 
     if bag.foundFunction:
       findInternalMethod.perform(bag)
       result = bag.result
     else:
-      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'b.fF={BM.DumpVar(bag.foundFunction)} Internal Method failure, bag={bag}')
+      if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'b.fF={BM.DumpVar(bag.foundFunction)} Internal Method failure, bag={bag}', logging.ERROR)
       assert False, f'@{BM.LINE(False)} Internal Method failure, bag={bag}'
 
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'+os.push result=<{BM.DumpVar(result)}>')
@@ -1600,7 +1612,7 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
   """
   index: u30
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
@@ -1654,7 +1666,7 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
   index: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
@@ -2079,7 +2091,7 @@ class GreaterThan(Instruction): # …, value1, value2 => …, result
     >>> BM.DumpVar(env.operand_stack) # doctest: +ELLIPSIS
     '[1]=[False]'
     """
-    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f' @@##$$ $$##@@ =<{BM.DumpVar(GetLocal0.at_opcode)}>') # DEBUG
+    #if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f' @@##$$ $$##@@ =<{BM.DumpVar(GetLocal0.at_opcode)}>', logging.DEBUG) # DEBUG
     value_2 = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop value_2=<{BM.DumpVar(value_2)}>')
     value_1 = environment.operand_stack.pop()
@@ -2368,7 +2380,7 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
   index: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> IP_1') # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'ostack=<{BM.DumpVar(environment.operand_stack)}> IP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
@@ -2414,7 +2426,7 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
           scopeChosen = 'global'
           machine.global_object.properties[resKey] = resValue
         else:
-          if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'{BM.LINE()}: ## TODO-1 set some object\'s property . SSE is {BM.DumpVar(scopeStackEntry)}')
+          if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'{BM.LINE()}: ## TODO-1 set some object\'s property . SSE is {BM.DumpVar(scopeStackEntry)}', logging.WARNING)
           assert False, f'\t{BM.LINE()}: ## TODO-1 set some object\'s property . SSE is {BM.DumpVar(scopeStackEntry)}'
       elif isinstance(scopeStackEntry, avm2.vm.VirtualMachine):
         scopeChosen = 'VM'
@@ -2908,7 +2920,7 @@ class SetProperty(Instruction): # …, obj, [ns], [name], value => …
     # TODO is it a runtime multiname?
     # cf FindPropStrict for some ideas
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} ## TODO use findpropstrict for logic for name & ns from stack')
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'@{BM.LINE()} ## TODO use findpropstrict for logic for name & ns from stack', logging.WARNING)
     assert False, f'\t{BM.LINE()}: ## TODO use findpropstrict for logic for name & ns from stack'
     isMultinameRuntimeName = False # Add code to determine Name
     isMultinameRuntimeNS = False # Add code to determine Namespace

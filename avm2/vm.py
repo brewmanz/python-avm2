@@ -4,6 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, DefaultDict, Dict, Iterable, List, Tuple, Union
 import logging
+import inspect
 
 import avm2.abc.abc_instructions
 from avm2.abc.abc_enums import ConstantKind, MethodFlags, TraitKind
@@ -251,7 +252,12 @@ class VirtualMachine(ASObject):
         """
         Call the specified class class initialise method. Done once only
         """
-        print(f'## @{BM.LINE()} ## call_static ## ...')
+        callerF = inspect.currentframe() #getframeinfo(stack()[1][0])
+        callerFileName = callerF.f_back.f_code.co_filename
+        callerFuncName = callerF.f_back.f_code.co_name
+        callerLine = callerF.f_back.f_lineno
+
+        print(f'## @{BM.LINE()}{BM.TERM_CYN()} call_ClassClassInit from ..{callerFileName[-20:]}:{callerFuncName}:{callerLine}{BM.TERM_RESET()}')
         if isinstance(index_or_name, int):
             index = ABCMethodIndex(index_or_name)
         elif isinstance(index_or_name, str):

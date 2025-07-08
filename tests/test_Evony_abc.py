@@ -70,7 +70,8 @@ def test_TEA2100_CheckAddingFieldToDataclass():
 def test_TEA2014_file_Dump_EvonyClient_MethodBodiesTraits(abc_file_EvonyClient_N: ABCFile):
     abc_file: ABCFile = abc_file_EvonyClient_N # TODO fix HACK
     print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-    print(f'## @{BM.LINE()} gDebugLevel={gDebugLevel} (D={logging.DEBUG}, I={logging.INFO}, W={logging.WARNING})')
+    # logging.NOTSET=0, DEBUG=10. INFO=20, WARNING=30, ERROR=40, CRITICAL=50
+    print(f'## @{BM.LINE()} {BM.TERM_CYN()}gDebugLevel={gDebugLevel} (N 0={logging.NOTSET}, D 10={logging.DEBUG}, I 20={logging.INFO}, W 30={logging.WARNING}, E 40={logging.ERROR}, C 50={logging.CRITICAL}){BM.TERM_RESET()}')
 
     # add name strings from name indices
     abc_file.propagateStrings(BM.LINE(False))
