@@ -26,6 +26,7 @@ from avm2.io import MemoryViewReader
 
 ABCStringIndex = NewType('ABCStringIndex', int)
 ABCNamespaceIndex = NewType('ABCNamespaceIndex', int)
+ABCNamespaceIndex = NewType('ABCNamespaceIndex', int)
 ABCNamespaceSetIndex = NewType('ABCNamespaceSetIndex', int)
 ABCMultinameIndex = NewType('ABCMultinameIndex', int)
 ABCMethodIndex = NewType('ABCMethodIndex', int)

@@ -222,15 +222,28 @@ def test_TEV0100_EvC_SomeSizeInfo(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
   print(f'@{BM.LINE()} l(abc.mb)={len(machine_EvonyClient_N.abc_file.method_bodies)} l(m2b)={len(machine_EvonyClient_N.method_to_body)}')
   #print(f'@{BM.LINE()} m2b={machine_EvonyClient_N.method_to_body}')
-  m2bk_sorted = sorted(machine_EvonyClient_N.method_to_body.keys())
-  nPerLine = 15
   nM2B = len(machine_EvonyClient_N.method_to_body)
+  m2bk = machine_EvonyClient_N.method_to_body.keys()
+  m2bk_list = list(m2bk)
+  m2bk_sorted = sorted(m2bk)
+  nPerLine = 15
+
+  print(f'@{BM.LINE()} {BM.TERM_CYN()}unsorted (type(m2bk)={type(m2bk)}) ...{BM.TERM_RESET()}')
+  print(f'@{BM.LINE()} {BM.TERM_CYN()}unsorted (type(m2bk_list)={type(m2bk_list)}) ...{BM.TERM_RESET()}')
+  for ix1 in range(0, nM2B, nPerLine):
+    print(f'[{ix1}]: ', end='')
+    for ix2 in range(ix1, min(ix1 + nPerLine, nM2B), 1):
+      key = m2bk_list[ix2]
+      #print(f'\t[{key}]={machine_EvonyClient_N.method_to_body[key]},  ', end='')
+      print(f'[{key}]={machine_EvonyClient_N.method_to_body[key]},  ', end='')
+    print(f'')
+  print(f'@{BM.LINE()} {BM.TERM_CYN()}sorted (type(m2bk_sorted)={type(m2bk_sorted)}) ...{BM.TERM_RESET()}')
   for ix1 in range(0, nM2B, nPerLine):
     print(f'[{ix1}]: ', end='')
     for ix2 in range(ix1, min(ix1 + nPerLine, nM2B), 1):
       key = m2bk_sorted[ix2]
       #print(f'\t[{key}]={machine_EvonyClient_N.method_to_body[key]},  ', end='')
-      print(f'[{key}]={machine_EvonyClient_N.method_to_body[key]},  ', end='')
+      print(f'[{key}]={machine_EvonyClient_N.method_to_body[key]}/  ', end='')
     print(f'')
 
   assert 1==2, 'TODO'
@@ -285,7 +298,7 @@ def test_TEV1300_lookup_method(machine_EvonyClient_N: VirtualMachine):
 
 def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   print(f'## @{BM.LINE()} {BM.TERM_GRN()}{BM.FUNC_NAME()}{BM.TERM_RESET()} being run ##')
-  print(f'## @{BM.LINE()} ## ../mx/utils/StringUtil.as')
+  print(f'## @{BM.LINE()} {BM.TERM_CYN()}## BTW I have source for ../mx/utils/StringUtil.as ...{BM.TERM_RESET()}')
   print(f'## @{BM.LINE()} package mx.utils{{ .. import mx.core.mx_internal .. use namespace mx_internal ')
   print(f'## @{BM.LINE()}  public class StringUtil {{')
   print(f'## @{BM.LINE()}   ...')
@@ -312,9 +325,12 @@ def test_TEV1400_call_StringUtil_trim(machine_EvonyClient_N: VirtualMachine):
   assert myClass.nam_name == 'mx.utils:StringUtil' # right class
   assert myClass.init_ix == 949 # right class init method
 
-  print(f'## @{BM.LINE()} myClass={myClass}')
-  print(f'## @{BM.LINE()} DumpVar myClass={BM.DumpVar(myClass)}')
-  print(f'## @{BM.LINE()} IndentedDumpVar myClass={BM.IndentedDumpVar(myClass)}')
+  print(f'## @{BM.LINE()} {BM.TERM_BLU()}type:{BM.TERM_RESET()}{type(myClass).__dict__}')
+
+  print(f'## @{BM.LINE()} {BM.TERM_CYN()}different ways of dumping ASClassBis of mx.utils:StringUtil ...{BM.TERM_RESET()}')
+  print(f'## @{BM.LINE()} {BM.TERM_BLU()}myClass={BM.TERM_RESET()}{myClass}')
+  print(f'## @{BM.LINE()} {BM.TERM_BLU()}DumpVar myClass={BM.TERM_RESET()}{BM.DumpVar(myClass)}')
+  print(f'## @{BM.LINE()} {BM.TERM_BLU()}IndentedDumpVar myClass={BM.TERM_RESET()}{BM.IndentedDumpVar(myClass)}')
   assert False, 'Dump StringUtil Class object to get Trait types, and fix classes_traits $txt'
   assert False, 'Update to (new) docstest, to not stop on assert, but do multiple tests like ... somewhere (vm? instructions?'
 
