@@ -1,5 +1,8 @@
 # Bryan's notes for git/swf_python-avm2_AdobeSwfActionScript
 
+# ### PDF to help with emulation:
+# ### Technical/AdobeSwfActionScript/_Adobe. ActionScript Virtual Machine 2 (AVM2) Overview(2007-05,108pp).pdf
+
 # To run 'the usual' tests ...
 cd tests/
 pytest

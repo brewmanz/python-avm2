@@ -996,7 +996,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
   arg_count: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     getNamFromStk = multiname.getNameFromStack()
@@ -1009,7 +1009,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
       argN.insert(0, theArg)
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_2', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> CP_2', logging.DEBUG) # DEBUG
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
@@ -1027,7 +1027,7 @@ class CallProperty(Instruction): # …, obj, [ns], [name], arg1,...,argn => …,
     theObj = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={BM.DumpVar(theObj)}')
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_3', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> CP_3', logging.DEBUG) # DEBUG
 
     bag = bagForFindingInternalMethod(theObj, theNS, theName, argN)
     if True: bag.debug = True # track bag process
@@ -1235,7 +1235,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
   arg_count: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     getNamFromStk = multiname.getNameFromStack()
@@ -1248,7 +1248,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
       if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop arg[{ix}]={BM.DumpVar(theArg)}')
       argN.insert(0, theArg)
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_2', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> CP_2', logging.DEBUG) # DEBUG
 
     getNamFromStk = multiname.getNameFromStack()
     getNsFromStk = multiname.getNamespaceFromStack()
@@ -1266,7 +1266,7 @@ class ConstructProp(Instruction): # …, obj, [ns], [name], arg1,...,argn => …
     theObj = environment.operand_stack.pop()
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'-os.pop obj={BM.DumpVar(theObj)}')
 
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_3', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> CP_3', logging.DEBUG) # DEBUG
 
     bag = bagForFindingInternalMethod(theObj, theNS, theName, argN, debug = (machine.cbOnInsExe is not None) )
     if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'bag=<{BM.DumpVar(bag)}> CP_4', logging.DEBUG) # DEBUG
@@ -1611,7 +1611,7 @@ class FindProperty(Instruction): # …, [ns], [name] => …, obj
   """
   index: u30
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
@@ -1665,7 +1665,7 @@ class FindPropStrict(Instruction): # …, [ns], [name] => …, obj
   index: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> CP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> CP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
@@ -2379,7 +2379,7 @@ class InitProperty(Instruction): # …, object, [ns], [name], value => …
   index: u30
 
   def execute(self, machine: avm2.vm.VirtualMachine, environment: avm2.vm.MethodEnvironment):
-    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack)}> IP_1', logging.DEBUG) # DEBUG
+    if machine.cbOnInsExe is not None: machine.cbOnInsExe.MakeExtraObservation(f'OpSt=<{BM.DumpVar(environment.operand_stack, "split")}> IP_1', logging.DEBUG) # DEBUG
 
     multiname = machine.multinames[self.index]
     # TODO: other kinds of multinames.
