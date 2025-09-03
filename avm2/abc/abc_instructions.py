@@ -768,7 +768,7 @@ class CallbackOnInstructionExecuting_GenerateAVM2InstructionTrace(ICallbackOnIns
       DumpEnvironmentRegisters(machine, environment)
 
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar <= self.limitCalls):
-      print(f'{self.tc}{BM.LINE(False)}: {theInstruction}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} ScSt#{len(environment.scope_stack)} OpSt#{len(environment.operand_stack)}{strIfFinal}')
+      print(f'{self.tc}{BM.LINE(False)}: {BM.TERM_GRN(True)}{theInstruction}{BM.TERM_RESET()}{self.tc}{self.tc}// +{hex(offsetOfInstruction)} #{self.callsSoFar} ScSt#{len(environment.scope_stack)} OpSt#{len(environment.operand_stack)}{strIfFinal}')
 
   def MakeExtraObservation(self, extraObservation, loggingLevel = logging.INFO):
     if (self.limitCalls < 0) or (self.limitCalls >= 0 and self.callsSoFar <= self.limitCalls):

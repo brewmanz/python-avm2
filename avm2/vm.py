@@ -128,11 +128,15 @@ class VirtualMachine(ASObject):
 
         if self.cbOnInsExe is not None:
           self.cbOnInsExe.MakeExtraObservation(f'(v.p)ResMulNam.name=<{BM.DumpVar(name)}> SS#={len(scopeStack)} rGIU={BM.DumpVar(returnGlobalIfUnresolved)}')
+        nSSE = 0
         for scopeStackEntry in reversed(scopeStack):
-            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) ResMulNam.SSE=<{BM.DumpVar(scopeStackEntry)}>')
+            ++nSSE
+            if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) ResMulNam.SSE#{nSSE}=<{BM.DumpVar(scopeStackEntry)}>')
+            nNS = 0
             for namespace in namespaces:
+                ++nNS;
                 try:
-                    if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)  ResQNam try ns {BM.DumpVar(namespace)}')
+                    if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)  ResQNam try ns#{nSSE}.{nNS} {BM.DumpVar(namespace)}')
                     return self.resolve_qname(scopeStackEntry, namespace, name), name, namespace, scopeStackEntry
                 except KeyError:
                     if debug: self.cbOnInsExe.MakeExtraObservation(f'(v.pD)   ResQNam try *fail*')
@@ -141,7 +145,7 @@ class VirtualMachine(ASObject):
           if self.cbOnInsExe is not None: self.cbOnInsExe.MakeExtraObservation(f'(v.p) UNRESOLVED: so use global')
           return self.global_object, name, namespace, 'global'
 
-        raise KeyError(f'KeyError; name={BM.DumpVar(name)}, namespaces={BM.DumpVar(namespaces)}, scopeStack={BM.DumpVar(scopeStack)}')
+        raise KeyError(f'KeyError; name={BM.DumpVar(name)}, namespaces={BM.DumpVar(namespaces, "split")}, scopeStack={BM.DumpVar(scopeStack, "split")}')
         # KeyError; name='Math', namespaces=[1]=[''], scopeStack=[2]=[ASObject(traceHint='v.p:__i_:51#5', class_ix=None, properties={('', 'Object'): ASObject(traceHint='v.p:__i_:53#3', class_ix=None, properties={}), ('flash.utils', 'Dictionary'): ASObject(traceHint='v.p:__i_:54#4', class_ix=None, properties={})}), ASObject(traceHint='@tEv.p:tTEV3000LUcAURL:49 dummyInstance#6', class_ix=None, properties={})]":
 
     def resolve_qname(self, scopeStackEntry: ASObject, namespace: str, name: str) -> Any:
