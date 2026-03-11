@@ -1,12 +1,23 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, fields
 import sys
+import os
+
+from dataclasses import dataclass, field, fields
+
 from typing import Any, Callable, ClassVar, Dict, Tuple, Type, TypeVar, NewType, Optional
 
 import BrewMaths as BM
 
-import avm2.vm
+# import avm2.vm # ModuleNotFoundError: No module named 'avm2'
+# import ../vm # invalid systax
+# from .. import vm # ImportError: attempted relative import with no known parent package
+# from . import vm # ImportError: attempted relative import with no known parent package
+# from avm2 import vm # ModuleNotFoundError: No module named 'avm2'
+# from avm2.vm import vm # ModuleNotFoundError: No module named 'avm2'
+##from avm2.vm import vm
+#import avm2.vm
+
 from avm2.exceptions import ASReturnException, ASJumpException
 from avm2.runtime import undefined, ASPrimitive
 from avm2.abc.abc_parser import read_array
@@ -31,6 +42,8 @@ class bagForFindingInternalMethod:
   >>> myArgs.append(2.0)
   >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs)
   >>> bag
+  bagForFindingInternalMethod(instance='abcdef', namespaceName='http://adobe.com/AS3/2006/builtin', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundFunction=None, foundResultHint=[], result=None, debug=False)
+  >>> BM.DumpVar(bag)
   bagForFindingInternalMethod(instance='abcdef', namespaceName='http://adobe.com/AS3/2006/builtin', methodName='charAt', arguments=[1, 2.0], foundClass=None, foundFunction=None, foundResultHint=[], result=None, debug=False)
   >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
   >>> bag
@@ -273,97 +286,12 @@ def Math_method_min(itemIgnored, *args):
     raise NotImplementedError(f'@{BM.LINE()} expected 2+ args but {len(args)}')
   res = min(args)
   return res
-class Math_Object(RT.ASObject): # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/Math.html
-
-  dictSwfNameToMethod: ClassVar[dict[str, object]] = dict( \
-    [ ('max', Math_method_max ) \
-    , ('min', Math_method_min) \
-    ])
-
-  @classmethod
-  def findMethodFromBag(cls, bag: bagForFindingInternalMethod):
-    """
-    >>> # no find
-    >>> myObj = None
-    >>> myNamespace ='MathUnknown'
-    >>> myMethod = 'max'
-    >>> myArgs = list()
-    >>> myArgs.append(3)
-    >>> myArgs.append(4)
-    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
-    >>> Math_Object.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} FMFB_A {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> str(bag.foundClass)
-    'None'
-    >>> str(bag.foundFunction)[:33]
-    'None'
-    >>> # should not find
-    >>> myObj = Math_Object_Singleton
-    >>> myNamespace = '' # 'Math'
-    >>> myMethod = 'maxUnknown'
-    >>> myArgs = list()
-    >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
-    >>> Math_Object.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} FMFB_B {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> str(bag.foundClass)
-    'None'
-    >>> str(bag.foundFunction)[:33]
-    'None'
-    >>> # should find
-    >>> myObj = Math_Object_Singleton
-    >>> myNamespace = '' # 'Math'
-    >>> myMethod = 'max'
-    >>> myArgs = list()
-    >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
-    >>> Math_Object.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} FMFB_C {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> str(bag.foundClass)
-    "<class '__main__.Math_Object'>"
-    >>> str(bag.foundFunction)  # doctest: +ELLIPSIS
-    '<function Math_method_max at 0x...'
-    >>> # should find
-    >>> myObj = Math_Object_Singleton
-    >>> myNamespace = '' # 'Math'
-    >>> myMethod = 'min'
-    >>> myArgs = list()
-    >>> myArgs.append(3)
-    >>> bag = bagForFindingInternalMethod(myObj, myNamespace, myMethod, myArgs, debug=True)
-    >>> Math_Object.findMethodFromBag(bag)
-    >>> print(f'@{BM.LINE()} FMFB_D {bag.foundResultHint}', file=sys.stderr) # check output for any hints of what went wrong
-    >>> str(bag.foundClass)
-    "<class '__main__.Math_Object'>"
-    >>> str(bag.foundFunction)  # doctest: +ELLIPSIS
-    '<function Math_method_min at 0x...'
-    """
-    expectedNS = '' # was 'Math' but refactored out
-    expectedInstanceClass = Math_Object
-
-    if bag.namespaceName == expectedNS:
-      #if True or isinstance(bag.instance, str): # TODO Check what object type is
-      if isinstance(bag.instance, expectedInstanceClass): # TODO Check what object type is
-        for k, v in cls.dictSwfNameToMethod.items():
-          if k == bag.methodName:
-            bag.foundClass = Math_Object
-            bag.foundFunction = v
-            if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} matched <{bag.methodName}> with {v}')
-            return
-        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} could be Math but no match for <{bag.methodName}>')
-      else:
-        if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} {type(bag.instance)} not instance of {expectedInstanceClass}')
-        pass
-    else:
-      if bag.debug: bag.foundResultHint.append(f'@{BM.LINE(False)} {cls.__name__} <{bag.namespaceName}> not expected namespace of <{expectedNS}>')
-      pass
-    return
-Math_Object_Singleton = Math_Object(BM.LINE(False))
 
 class Math_Object(RT.ASObject): # check https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/Math.html
 
   dictSwfNameToMethod: ClassVar[dict[str, object]] = dict( \
-    [ ('max', Math_method_max ) \
-    , ('min', Math_method_min) \
+    [ ('min', Math_method_min) \
+    , ('max', Math_method_max) \
     ])
 
   @classmethod
@@ -3013,6 +2941,7 @@ class UnsignedRightShift(Instruction):
 
 if __name__ == '__main__':  # 2024-01-18 # when you run 'python thisModuleName.py' ...
   import doctest, os, sys
+  ##import BrewMaths as BM
   # vvvv use BM.LINE() in other modules (after 'import BrewMaths as BM')
   print(f'@{BM.LINE()} ### run embedded unit tests via \'python ' + os.path.basename(__file__) + '\'')
   if False and True: # 'and' = not verbose; 'or' = verbose
